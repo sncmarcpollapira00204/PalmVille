@@ -792,7 +792,8 @@ local function refreshTabs()
 			item.page.Visible = false
 			item.button.BackgroundColor3 = active and C.surface2 or C.background
 			item.button.BackgroundTransparency = active and 0 or 1
-			item.label.TextColor3 = C.text
+			item.label.TextColor3 = active and C.text or C.muted
+			if item.activeBar then item.activeBar.Visible = active end
 		end
 		homePage.Visible = false
 		activeUtilityPage.Visible = true
