@@ -1249,7 +1249,7 @@ do
 		end
 		for index, definition in ipairs(statDefinitions) do
 			local card = make("Frame", {LayoutOrder = index, Size = UDim2.new(0.2, -8, 1, 0),
-				BackgroundColor3 = Color3.fromRGB(139, 174, 106), BorderSizePixel = 0, ZIndex = 13}, statRow)
+				BackgroundColor3 = C.surface, BorderSizePixel = 0, ZIndex = 13}, statRow)
 			corner(card, 12)
 						make("TextLabel", {Position = UDim2.fromOffset(12, 10), Size = UDim2.new(1, -24, 0, 44),
 				BackgroundTransparency = 1, Text = definition[2], Font = Enum.Font.GothamMedium,
