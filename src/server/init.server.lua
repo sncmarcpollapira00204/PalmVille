@@ -1,0 +1,2 @@
+-- PalmVille server entry point.
+-- Add server-side game systems in this folder; Rojo syncs them to ServerScriptService/PalmVilleCode.
