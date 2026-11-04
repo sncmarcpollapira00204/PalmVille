@@ -1,11 +1,27 @@
-﻿{
+{
   "name": "PalmVille",
+  "servePort": 34872,
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "PalmVilleCode": {
-        "$path": "src/server"
+      "$path": "src/server",
+      "$ignoreUnknownInstances": true
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/client",
+        "$ignoreUnknownInstances": true
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "PalmVilleAdminGui": {
+        "$className": "ScreenGui",
+        "$path": "src/gui/PalmVilleAdminGui",
+        "$ignoreUnknownInstances": true
       }
     }
   }
