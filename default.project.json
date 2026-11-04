@@ -1,0 +1,12 @@
+{
+  "name": "PalmVille",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "PalmVilleCode": {
+        "$path": "src/server"
+      }
+    }
+  }
+}
