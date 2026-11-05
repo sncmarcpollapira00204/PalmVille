@@ -2041,8 +2041,7 @@ do
 		local GuiService=game:GetService("GuiService")
 		local colors={OWNER=Color3.fromRGB(234,197,108),["MASTER DEVELOPER"]=Color3.fromRGB(234,197,108),["HEAD ADMIN"]=Color3.fromRGB(166,201,133)}
 		local root=make("CanvasGroup",{Name="AnnouncementBanner",AnchorPoint=Vector2.new(0.5,0),Position=UDim2.new(0.5,0,0,86),Size=UDim2.fromOffset(900,100),BackgroundTransparency=1,Visible=false,ZIndex=55},gui)
-		local roleTagLabel=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,TextTruncate=Enum.TextTruncate.None,ZIndex=56},root)
-		local authorNameLabel=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,TextTruncate=Enum.TextTruncate.None,ZIndex=56},root)
+		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,TextTruncate=Enum.TextTruncate.None,ClipsDescendants=false,ZIndex=56},root)
 		local badge=make("Frame",{Size=UDim2.fromOffset(26,26),BackgroundColor3=Color3.fromRGB(0,149,255),BorderSizePixel=0,ZIndex=56},root);corner(badge,13)
 		make("Frame",{Position=UDim2.fromOffset(6,13),Size=UDim2.fromOffset(7,3),Rotation=45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
 		make("Frame",{Position=UDim2.fromOffset(10,11),Size=UDim2.fromOffset(12,3),Rotation=-45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
