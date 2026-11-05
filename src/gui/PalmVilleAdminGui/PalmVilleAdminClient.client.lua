@@ -2094,7 +2094,6 @@ do
 			local bounds = measure(messageText, messageWidth)
 			local messageHeight = math.max(fontSize + 12, bounds.Y + 10)
 			local contentWidth = prefixWidth + badgeGap + badgeSize + messageGap + messageWidth
-			local contentLeft = math.max(0, math.floor((available - contentWidth) / 2))
 			local totalHeight = math.max(fontSize + 14, messageHeight)
 
 			root.Size = UDim2.fromOffset(contentWidth, totalHeight)
