@@ -1261,7 +1261,7 @@ for _, mode in ipairs({"Player", "Self", "All"}) do
 	button(itemModeRow, string.upper(mode), function(b)
 		itemTargetMode = mode
 		for _, other in ipairs(itemModeRow:GetChildren()) do
-			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
+			if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 		end
 	end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
 end
@@ -1308,7 +1308,7 @@ local function renderStaff()
 				selectedLabel.Text = "SELECTED  ·  " .. name
 				updatePlayerDetails(row)
 				for _, other in ipairs(staffList:GetChildren()) do
-					if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
+					if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 				end
 			end, {size = UDim2.new(1, 0, 0, 44), textSize = 14})
 			setButtonBackground(item, selectedStaffId == tonumber(row.userId) and C.green or C.surface)
