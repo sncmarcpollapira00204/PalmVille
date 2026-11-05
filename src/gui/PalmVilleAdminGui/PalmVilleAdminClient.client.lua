@@ -326,11 +326,11 @@ local function showAnnouncement(data, preview)
 	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
 	local roleText = "[" .. roleLabel .. "] "
 	local authorText = author
-	local badgeText = " ✓ "
+	local badgeText = " ☑️ "
 	local fontSize = 27
 	local function measurePrefix()
 		local combined = roleText .. authorText .. badgeText
-		return combined, TextService:GetTextSize(combined, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+		return combined, TextService:GetTextSize(combined, fontSize, Enum.Font.GothamBold, Vector2.new(4000, 100)).X
 	end
 	local prefixText, prefixWidth = measurePrefix()
 	if prefixWidth > availableWidth * 0.68 then
@@ -347,23 +347,23 @@ local function showAnnouncement(data, preview)
 	end
 
 	local messageWidth = math.max(96, availableWidth - math.min(prefixWidth, availableWidth * 0.68) - 8)
-	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(messageWidth, 10000))
+	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.GothamBold, Vector2.new(messageWidth, 10000))
 	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
 	local bannerHeight = math.max(fontSize + 18, messageHeight)
 	local contentWidth = math.min(availableWidth, prefixWidth) + math.min(messageWidth, messageBounds.X + 8)
 	local totalWidth = math.max(220, math.min(availableWidth, contentWidth))
 
 	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
+	bannerLine.Font = Enum.Font.GothamBold
 	bannerLine.TextSize = fontSize
 	bannerLine.TextXAlignment = Enum.TextXAlignment.Left
 	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
 		and "rgb(234,197,108)" or "rgb(166,201,133)"
 	bannerLine.Text = string.format(
-		'<font color="%s"><b>%s</b></font><b>%s</b><font color="rgb(54,151,238)">%s</font><font color="rgb(241,245,239)"> : %s</font>',
+		'<font color="%s"><b>%s</b></font><b>%s</b> <font color="rgb(0,149,255)">☑️</font><font color="rgb(241,245,239)"> : %s</font>',
 		roleColor,
 		escapeRichText(roleText),
 		escapeRichText(authorText),
-		escapeRichText(" ✓ "),
 		escapeRichText(message)
 	)
 
@@ -523,30 +523,25 @@ local header = make("Frame", {
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
-local logoShield = make("TextLabel", {
-	Position = UDim2.fromOffset(28, 18),
-	Size = UDim2.fromOffset(66, 72),
-	BackgroundTransparency = 1,
-	Text = "⬡",
-	TextColor3 = C.amber,
-	Font = Enum.Font.GothamMedium,
-	TextSize = 66,
-	TextXAlignment = Enum.TextXAlignment.Center,
-	TextYAlignment = Enum.TextYAlignment.Center,
+local logoMark = make("Frame", {
+	Position = UDim2.fromOffset(30, 20),
+	Size = UDim2.fromOffset(62, 68),
+	BackgroundColor3 = C.amber,
+	BorderSizePixel = 0,
 	ZIndex = 24,
 }, header)
-local logoLeaf = make("TextLabel", {
-	Position = UDim2.fromOffset(44, 34),
-	Size = UDim2.fromOffset(34, 38),
-	BackgroundTransparency = 1,
-	Text = "❧",
-	TextColor3 = C.greenBright,
-	Font = Enum.Font.GothamMedium,
-	TextSize = 29,
-	TextXAlignment = Enum.TextXAlignment.Center,
-	TextYAlignment = Enum.TextYAlignment.Center,
+addCorner(logoMark, 17)
+local logoInset = make("Frame", {
+	Position = UDim2.fromOffset(3, 3),
+	Size = UDim2.new(1, -6, 1, -6),
+	BackgroundColor3 = C.panel,
+	BorderSizePixel = 0,
 	ZIndex = 25,
-}, header)
+}, logoMark)
+addCorner(logoInset, 14)
+local logoLetters = text(logoInset, "PV", 22, C.amber, 62, true)
+logoLetters.TextXAlignment = Enum.TextXAlignment.Center
+logoLetters.ZIndex = 26
 local pageTitle = text(header, "PalmVille Admin", 37, C.text, 48, true)
 pageTitle.Position = UDim2.fromOffset(116, 16)
 pageTitle.Size = UDim2.new(1, -220, 0, 48)
@@ -599,11 +594,11 @@ local navOrder = {
 
 local navGlyphs = {
 	OVERVIEW = "⌂",
-	PLAYERS = "♧",
-	ANNOUNCEMENTS = "⚑",
-	MODERATION = "⬡",
+	PLAYERS = "👥",
+	ANNOUNCEMENTS = "📢",
+	MODERATION = "🛡️",
 	STAFF = "⚙",
-	TOOLS = "⚒",
+	TOOLS = "🔧",
 	LOGS = "▤",
 }
 for navIndex, entry in ipairs(navOrder) do
@@ -614,22 +609,12 @@ for navIndex, entry in ipairs(navOrder) do
 	nav.Name = "Nav_" .. key
 	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 64))
 	nav.TextXAlignment = Enum.TextXAlignment.Left
+	nav.Font = Enum.Font.GothamBold
+	nav.RichText = true
 	setButtonBackground(nav, C.panel)
 	nav.BackgroundTransparency = 0.08
-	local padding = make("UIPadding", {PaddingLeft = UDim.new(0, 66), PaddingRight = UDim.new(0, 12)}, nav)
-	local glyph = make("TextLabel", {
-		Name = "NavIcon",
-		Position = UDim2.fromOffset(15, 0),
-		Size = UDim2.fromOffset(38, 54),
-		BackgroundTransparency = 1,
-		Text = navGlyphs[key] or "◇",
-		TextColor3 = C.amber,
-		Font = Enum.Font.GothamMedium,
-		TextSize = 31,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextYAlignment = Enum.TextYAlignment.Center,
-		ZIndex = nav.ZIndex + 1,
-	}, nav)
+	nav:SetAttribute("NavCaption", caption)
+	make("UIPadding", {PaddingLeft = UDim.new(0, 20), PaddingRight = UDim.new(0, 12)}, nav)
 	local navStroke = nav:FindFirstChildOfClass("UIStroke")
 	if navStroke then navStroke.Transparency = 0.72 end
 	navButtons[key] = nav
@@ -676,8 +661,8 @@ local function refreshNavigation()
 		setButtonBackground(nav, active and C.green or C.panel)
 		nav.BackgroundTransparency = active and 0 or 0.08
 		nav.TextColor3 = active and C.text or C.muted
-		local glyph = nav:FindFirstChild("NavIcon")
-		if glyph then glyph.TextColor3 = active and C.amber or C.muted end
+		local iconColor = active and "rgb(248,246,221)" or "rgb(239,226,170)"
+		nav.Text = string.format('<font color="%s">%s</font>    %s', iconColor, navGlyphs[key] or "◇", nav:GetAttribute("NavCaption") or key)
 		local navStroke = nav:FindFirstChildOfClass("UIStroke")
 		if navStroke then navStroke.Transparency = active and 0.02 or 0.78 end
 		pages[key].Visible = panelOpen and active and allowed
@@ -755,7 +740,7 @@ end
 
 local overviewCard = card(pages.OVERVIEW, "SERVER OVERVIEW", "Live session status from the PalmVille server.")
 local metricRow = addRow(overviewCard, 136)
-local metricPlayers = metric(metricRow, "ONLINE PLAYERS", "0 / 6", "♧")
+local metricPlayers = metric(metricRow, "ONLINE PLAYERS", "0 / 6", "👥")
 local metricUptime = metric(metricRow, "SERVER UPTIME", "0m 0s", "▣")
 local metricExtraRow = addRow(overviewCard, 92)
 local metricFps = metric(metricExtraRow, "SERVER FPS", "—", "◷", true)
@@ -804,7 +789,7 @@ local playersDetailsPanel = make("Frame", {
 addCorner(playersDetailsPanel, 18)
 addStroke(playersDetailsPanel, C.line, 0.06, 1.4)
 
-local playersHeadingIcon = text(playersListPanel, "♧", 37, C.amber, 48)
+local playersHeadingIcon = text(playersListPanel, "👥", 34, C.amber, 48)
 playersHeadingIcon.Position = UDim2.fromOffset(18, 16)
 playersHeadingIcon.Size = UDim2.fromOffset(48, 48)
 local playersHeading = text(playersListPanel, "Online Players", 25, C.text, 34, true)
@@ -1084,7 +1069,7 @@ end
 
 playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 
-local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "⚑")
+local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "📢")
 text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
 	Size = UDim2.new(1, 0, 0, 176),
@@ -1115,16 +1100,16 @@ text(announceCard, "Audience", 18, C.text, 26, true)
 local audienceRow = addRow(announceCard, 54)
 local serverAudience
 local allAudience
-serverAudience = button(audienceRow, "♧   This Server", function()
+serverAudience = button(audienceRow, "👥   This Server", function()
 	audience = "This Server"
-	serverAudience.Text = "♧   This Server  ✓"
+	serverAudience.Text = "👥   This Server  ✓"
 	allAudience.Text = "▱   All Servers"
 	setButtonBackground(serverAudience, C.green)
 	setButtonBackground(allAudience, C.surface)
 end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 17})
 allAudience = button(audienceRow, "▱   All Servers", function()
 	audience = "All Servers"
-	serverAudience.Text = "♧   This Server"
+	serverAudience.Text = "👥   This Server"
 	allAudience.Text = "▱   All Servers  ✓"
 	setButtonBackground(serverAudience, C.surface)
 	setButtonBackground(allAudience, C.green)
