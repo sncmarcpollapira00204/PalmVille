@@ -29,6 +29,7 @@ roleChanged.Name = "PalmVilleAdminRoleChanged"
 roleChanged.Parent = ServerScriptService
 
 local OWNER_ID = 7125208724
+local MASTER_USERNAME = "lupiners0"
 local MASTER_ID = 11199335797
 local HEAD_ADMIN_ID = 9419687160
 local BOOTSTRAP = {
@@ -63,6 +64,7 @@ local previousPositions = {}
 local spectators = {}
 local watchers = {}
 local requestTimes = {}
+local accessRequestLogged = {}
 local cameraTimes = {}
 local joinTimes = {}
 local serverStarted = os.clock()
@@ -1256,6 +1258,12 @@ remote.OnServerEvent:Connect(function(player, action, data)
 		if role then
 			player:SetAttribute("PalmVilleAdminRole", role)
 			remote:FireClient(player, "AccessGranted", {role = role, permissions = rolePermissions[role] or {}})
+		else
+			if not accessRequestLogged[player.UserId] then
+				accessRequestLogged[player.UserId] = true
+				warn(string.format("[PalmVille Admin] Access denied: %s (UserId %d). Configured developer: %s (UserId %d).", player.Name, player.UserId, MASTER_USERNAME, MASTER_ID))
+			end
+			remote:FireClient(player, "AccessDenied", {username = player.Name, userId = player.UserId, masterUsername = MASTER_USERNAME, masterUserId = MASTER_ID})
 		end
 		return
 	elseif action == "RequestAnnouncementHistory" then
@@ -1347,8 +1355,14 @@ local function onPlayerAdded(player)
 			end
 		end)
 	end)
-	if getRoleById(player.UserId) then
+	local currentRole = getRoleById(player.UserId)
+	if currentRole then
 		notifyRoleChanged(player.UserId)
+		task.defer(function()
+			if player.Parent == Players then
+				remote:FireClient(player, "AccessGranted", {role = currentRole, permissions = rolePermissions[currentRole] or {}})
+			end
+		end)
 	end
 end
 
@@ -1403,3 +1417,29 @@ end
 for userId in pairs(staff) do
 	notifyRoleChanged(userId)
 end
+
+task.spawn(function()
+	local ok, resolvedId = pcall(function()
+		return Players:GetUserIdFromNameAsync(MASTER_USERNAME)
+	end)
+	if not ok or type(resolvedId) ~= "number" or resolvedId < 1 then
+		warn("[PalmVille Admin] Could not verify the configured developer username through Roblox. Keeping the configured numeric UserId.")
+		return
+	end
+	if resolvedId ~= MASTER_ID then
+		local previousId = MASTER_ID
+		BOOTSTRAP[tostring(previousId)] = nil
+		MASTER_ID = resolvedId
+		BOOTSTRAP[tostring(MASTER_ID)] = {role = "MASTER DEVELOPER", name = MASTER_USERNAME}
+		staff[tostring(previousId)] = nil
+		staff[tostring(MASTER_ID)] = {role = "MASTER DEVELOPER", name = MASTER_USERNAME}
+		warn(string.format("[PalmVille Admin] Developer ID corrected using Roblox username lookup: %d -> %d (%s).", previousId, MASTER_ID, MASTER_USERNAME))
+	else
+		print(string.format("[PalmVille Admin] Developer identity verified: %s (%d).", MASTER_USERNAME, MASTER_ID))
+	end
+	local developer = Players:GetPlayerByUserId(MASTER_ID)
+	if developer then
+		developer:SetAttribute("PalmVilleAdminRole", "MASTER DEVELOPER")
+		remote:FireClient(developer, "AccessGranted", {role = "MASTER DEVELOPER", permissions = rolePermissions["MASTER DEVELOPER"] or {}})
+	end
+end)
