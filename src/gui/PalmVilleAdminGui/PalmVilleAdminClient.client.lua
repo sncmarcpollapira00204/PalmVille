@@ -2041,12 +2041,12 @@ do
 		local GuiService=game:GetService("GuiService")
 		local colors={OWNER=Color3.fromRGB(234,197,108),["MASTER DEVELOPER"]=Color3.fromRGB(234,197,108),["HEAD ADMIN"]=Color3.fromRGB(166,201,133)}
 		local root=make("CanvasGroup",{Name="AnnouncementBanner",AnchorPoint=Vector2.new(0.5,0),Position=UDim2.new(0.5,0,0,86),Size=UDim2.fromOffset(900,100),BackgroundTransparency=1,Visible=false,ZIndex=55},gui)
-		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=56},root)
+		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,ZIndex=56},root)
 		local badge=make("Frame",{Size=UDim2.fromOffset(26,26),BackgroundColor3=Color3.fromRGB(0,149,255),BorderSizePixel=0,ZIndex=56},root);corner(badge,13)
 		make("Frame",{Position=UDim2.fromOffset(6,13),Size=UDim2.fromOffset(7,3),Rotation=45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
 		make("Frame",{Position=UDim2.fromOffset(10,11),Size=UDim2.fromOffset(12,3),Rotation=-45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
-		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=56},root)
-		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-20),Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.Nunito,TextSize=12,TextColor3=C.text,TextStrokeTransparency=0.3,Visible=false,ZIndex=56},root)
+		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=true,ZIndex=56},root)
+		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-20),Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.Nunito,TextSize=12,TextColor3=C.text,TextStrokeTransparency=0.3,TextXAlignment=Enum.TextXAlignment.Center,Visible=false,ZIndex=56},root)
 		local announcementSound=make("Sound",{Name="AnnouncementSound",SoundId="rbxassetid://107498514393918",Volume=0.7},SoundService)
 		local serial=0
 		local running
@@ -2069,44 +2069,53 @@ do
 			end
 
 			local maxPrefixWidth = available * 0.48
-			local prefixWidth = measure(prefixText()).X + 14
+			local prefixPadding = 24
+			local prefixWidth = measure(prefixText()).X + prefixPadding
 			if prefixWidth > maxPrefixWidth then
 				local parts = {}
 				for _, codepoint in utf8.codes(name) do
 					table.insert(parts, utf8.char(codepoint))
 				end
-				while #parts > 4 and measure(prefixText()).X + 14 > maxPrefixWidth do
+				while #parts > 4 and measure(prefixText()).X + prefixPadding > maxPrefixWidth do
 					table.remove(parts)
 					name = table.concat(parts) .. "…"
 				end
-				prefixWidth = math.min(maxPrefixWidth, measure(prefixText()).X + 14)
+				prefixWidth = math.min(maxPrefixWidth, measure(prefixText()).X + prefixPadding)
 			end
 
 			local badgeSize = fontSize < 24 and 20 or 22
 			local badgeGap = 10
 			local messageGap = 14
 			local messageText = ": " .. tostring(current.text or ""):gsub("[\\r\\n]+", " ")
-			local messageWidth = math.max(88, available - prefixWidth - badgeGap - badgeSize - messageGap)
+			local minimumMessageWidth = math.min(88, math.max(56, available * 0.25))
+			local maxMessageWidth = math.max(minimumMessageWidth, available - prefixWidth - badgeGap - badgeSize - messageGap)
+			local naturalMessageWidth = measure(messageText).X + 6
+			local messageWidth = math.min(naturalMessageWidth, maxMessageWidth)
 			local bounds = measure(messageText, messageWidth)
 			local messageHeight = math.max(fontSize + 12, bounds.Y + 10)
-			local width = math.min(available, prefixWidth + badgeGap + badgeSize + messageGap + messageWidth)
+			local contentWidth = prefixWidth + badgeGap + badgeSize + messageGap + messageWidth
+			local contentLeft = math.max(0, math.floor((available - contentWidth) / 2))
 			local totalHeight = math.max(fontSize + 14, messageHeight)
 
-			root.Size = UDim2.fromOffset(width, totalHeight)
-			prefix.Position = UDim2.fromOffset(0, 2)
+			root.Size = UDim2.fromOffset(available, totalHeight)
+			prefix.Position = UDim2.fromOffset(contentLeft, 2)
 			prefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 12)
 			prefix.Font = measureFont
 			prefix.TextSize = fontSize
+			prefix.TextXAlignment = Enum.TextXAlignment.Center
+			prefix.TextYAlignment = Enum.TextYAlignment.Center
 			local color = colors[current.role]
 			prefix.Text = string.format('<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',
 				math.round(color.R * 255), math.round(color.G * 255), math.round(color.B * 255), escape(tag), escape(name))
 
 			badge.Size = UDim2.fromOffset(badgeSize, badgeSize)
-			badge.Position = UDim2.fromOffset(prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
-			message.Position = UDim2.fromOffset(prefixWidth + badgeGap + badgeSize + messageGap, 2)
+			badge.Position = UDim2.fromOffset(contentLeft + prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
+			message.Position = UDim2.fromOffset(contentLeft + prefixWidth + badgeGap + badgeSize + messageGap, 2)
 			message.Size = UDim2.fromOffset(messageWidth, messageHeight)
 			message.Font = measureFont
 			message.TextSize = fontSize
+			message.TextXAlignment = Enum.TextXAlignment.Center
+			message.TextYAlignment = Enum.TextYAlignment.Center
 			message.Text = messageText
 			previewTag.Font = measureFont
 			previewTag.TextSize = 12
