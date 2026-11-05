@@ -579,7 +579,7 @@ local navOrder = {
 	{"PLAYERS", "Players", "Players"},
 	{"ANNOUNCEMENTS", "Announcements", "Announcements"},
 	{"MODERATION", "Moderation", "Moderation"},
-	{"STAFF", "Staff & Roles", "MANAGER"},
+	{"STAFF", "Admin Management", "MANAGER"},
 	{"TOOLS", "Tools", "Tools"},
 	{"LOGS", "Logs", "Logs"},
 }
@@ -769,7 +769,7 @@ local overviewHint = text(pages.OVERVIEW, "PalmVille supports up to six players 
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
-	Size = UDim2.new(1, 0, 0, 650),
+	Size = UDim2.new(1, 0, 0, 750),
 	BackgroundTransparency = 1,
 }, pages.PLAYERS)
 
@@ -916,16 +916,49 @@ button(playerActionRow1, "Spectate", function()
 end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
 local playerActionRow2 = make("Frame", {
 	Position = UDim2.fromOffset(28, 643),
-	Size = UDim2.new(1, -56, 0, 1),
+	Size = UDim2.new(1, -56, 0, 44),
 	BackgroundTransparency = 1,
 }, playersDetailsPanel)
-playerActionRow2.Visible = false
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	Padding = UDim.new(0, 9),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+}, playerActionRow2)
+button(playerActionRow2, "Freeze", function()
+	if not selectedUserId then setStatus("Select a player first.", true); return end
+	sendAction("Freeze", targetData())
+end, {size = UDim2.new(0.34, -6, 0, 42), textSize = 14})
+button(playerActionRow2, "Unfreeze", function()
+	if not selectedUserId then setStatus("Select a player first.", true); return end
+	sendAction("Unfreeze", targetData())
+end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
+button(playerActionRow2, "Reset Player", function()
+	if not selectedUserId then setStatus("Select a player first.", true); return end
+	sendAction("ResetTarget", targetData())
+end, {size = UDim2.new(0.33, -6, 0, 42), danger = true, textSize = 14})
+local playerActionRow3 = make("Frame", {
+	Position = UDim2.fromOffset(28, 692),
+	Size = UDim2.new(1, -56, 0, 44),
+	BackgroundTransparency = 1,
+}, playersDetailsPanel)
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	Padding = UDim.new(0, 9),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+}, playerActionRow3)
+button(playerActionRow3, "Return to Previous Position", function()
+	sendAction("Return")
+end, {size = UDim2.new(0.5, -6, 0, 42), textSize = 14})
+button(playerActionRow3, "Stop Spectating", function()
+	sendAction("StopSpectate")
+end, {size = UDim2.new(0.5, -6, 0, 42), textSize = 14})
 
 local function updatePlayerDetails(row)
 	if not row then
 		detailName.Text = "Select a player"
 		detailUsername.Text = "@username"
 		detailOnline.Text = "●  Waiting for selection"
+		detailOnline.TextColor3 = C.muted
 		detailMetadata.Text = "User ID: —   ·   Role: —   ·   Health: —"
 		detailPosition.Text = "Position: —"
 		detailMoney.Text = "Not available"
@@ -964,6 +997,15 @@ local function renderPlayers()
 	local query = string.lower(playerSearch.Text or "")
 	local roster = snapshot.players or {}
 	local visibleCount = 0
+	local selectedStillOnline = false
+	for _, entry in ipairs(roster) do
+		if entry.userId == selectedUserId then selectedStillOnline = true break end
+	end
+	if selectedUserId and not selectedStillOnline then
+		selectedUserId, selectedUsername = nil, nil
+		selectedLabel.Text = "Select a player to view details."
+		updatePlayerDetails(nil)
+	end
 	playersScope.Text = string.format("This server · %d online", #roster)
 	for _, row in ipairs(roster) do
 		local username = tostring(row.username or "")
@@ -1245,6 +1287,7 @@ local function renderStaff()
 				selectedUsername = name
 				moderationUsername.Text = name
 				selectedLabel.Text = "SELECTED  ·  " .. name
+				updatePlayerDetails(row)
 				for _, other in ipairs(staffList:GetChildren()) do
 					if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 				end
