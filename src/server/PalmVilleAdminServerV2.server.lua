@@ -46,10 +46,19 @@ local DEFAULT_PERMISSIONS = {
 	MODERATOR = {Players = true, Monitoring = true, Moderation = true, Logs = true},
 	HELPER = {Monitoring = true, Logs = true},
 }
-local staffStore = DataStoreService:GetDataStore("PalmVilleAdminRoles_v2")
-local permissionStore = DataStoreService:GetDataStore("PalmVilleAdminPermissions_v2")
-local logStore = DataStoreService:GetDataStore("PalmVilleAdminLogs_v2")
-local moderationStore = DataStoreService:GetDataStore("PalmVilleAdminModeration_v2")
+local function tryGetDataStore(name)
+	local ok, store = pcall(function()
+		return DataStoreService:GetDataStore(name)
+	end)
+	if ok then return store end
+	warn(string.format("[PalmVille Admin] DataStore %s unavailable; using in-memory fallback for this Studio session. %s", name, tostring(store)))
+	return nil
+end
+
+local staffStore = tryGetDataStore("PalmVilleAdminRoles_v2")
+local permissionStore = tryGetDataStore("PalmVilleAdminPermissions_v2")
+local logStore = tryGetDataStore("PalmVilleAdminLogs_v2")
+local moderationStore = tryGetDataStore("PalmVilleAdminModeration_v2")
 local staff = {}
 local rolePermissions = {}
 local memoryLogs = {}
@@ -760,7 +769,7 @@ local announcements = {}
 do
 	local allowedRoles = {OWNER=true,["MASTER DEVELOPER"]=true,["HEAD ADMIN"]=true}
 	local prefix = RunService:IsStudio() and "PalmVilleAnnouncements_Test_v3" or "PalmVilleAnnouncements_v3"
-	local historyStore = DataStoreService:GetDataStore(prefix)
+	local historyStore = tryGetDataStore(prefix)
 	local topic = prefix
 	local history, seen, cooldown, historyRequests = {}, {}, {}, {}
 	local subscription
@@ -1417,6 +1426,8 @@ end
 for userId in pairs(staff) do
 	notifyRoleChanged(userId)
 end
+
+print(string.format("[PalmVille Admin] V2 server initialized. Developer: %s (UserId %d). DataStore mode: %s.", MASTER_USERNAME, MASTER_ID, staffStore and "persistent" or "Studio in-memory fallback"))
 
 task.spawn(function()
 	local ok, resolvedId = pcall(function()
