@@ -1024,6 +1024,9 @@ remote.OnClientEvent:Connect(function(event, data)
 		launcher.Visible = false
 	elseif event == "Notice" then
 		setStatus(tostring(data), true)
+		if activeTab == "ANNOUNCEMENTS" then
+			announceBox.Text = announceBox.Text
+		end
 	elseif event == "Snapshot" then
 		if type(data) == "table" then
 			snapshot = data
