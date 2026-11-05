@@ -818,7 +818,10 @@ do
 		if not permitted(player) then return end
 		if os.clock()<(historyRequests[player.UserId] or 0)then return end
 		historyRequests[player.UserId]=os.clock()+10
-		local ok,stored=pcall(function()return historyStore:GetAsync("recent")end)
+		local ok,stored=false,nil
+		if historyStore then
+			ok,stored=pcall(function()return historyStore:GetAsync("recent")end)
+		end
 		if not permitted(player) then return end
 		if ok and type(stored)=="table"then for _,row in ipairs(stored)do
 				if type(row)=="table" and type(row.id)=="string" and type(row.time)=="number" and allowedRoles[row.role]then remember(row)end
@@ -840,7 +843,8 @@ do
 		local text=filterBroadcast(player,raw,280)
 		if not text then notify(player,"Announcement could not be filtered. Nothing was sent.");return end
 		if not permitted(player)then notify(player,"Announcement permission changed. Nothing was sent.");return end
-		local row={id=HttpService:GenerateGUID(false),text=text,by=player.DisplayName~="" and player.DisplayName or player.Name,
+		local authorName = getRoleById(player.UserId) == "MASTER DEVELOPER" and "Lupin" or (player.DisplayName ~= "" and player.DisplayName or player.Name)
+		local row={id=HttpService:GenerateGUID(false),text=text,by=authorName,
 			userId=player.UserId,role=getRoleById(player.UserId),audience=data.audience,time=os.time(),duration=8,jobId=game.JobId}
 		deliver(row)
 		local published=true
@@ -848,16 +852,18 @@ do
 		notify(player,published and "Announcement sent." or "Shown in this server; cross-server delivery failed. Check Output.")
 		logActivity(player,"Announcement / "..row.audience,nil,published and "Success" or "Partial")
 		remote:FireClient(player,"AnnouncementSent",{id=row.id,message=raw,delivered=published})
-		task.spawn(function()
-			local ok,err=pcall(function()historyStore:UpdateAsync("recent",function(rows)
-					rows=type(rows)=="table" and rows or {}
-					for _,old in ipairs(rows)do if old.id==row.id then return rows end end
-					table.insert(rows,1,row);table.sort(rows,function(a,b)return a.time>b.time end)
-					while #rows>50 do table.remove(rows)end
-					return rows
-				end)end)
-			if not ok then warn("PalmVille announcement history save: "..tostring(err));notify(player,"Announcement sent, but history could not be saved.")end
-		end)
+		if historyStore then
+			task.spawn(function()
+				local ok,err=pcall(function()historyStore:UpdateAsync("recent",function(rows)
+						rows=type(rows)=="table" and rows or {}
+						for _,old in ipairs(rows)do if old.id==row.id then return rows end end
+						table.insert(rows,1,row);table.sort(rows,function(a,b)return a.time>b.time end)
+						while #rows>50 do table.remove(rows)end
+						return rows
+					end)end)
+				if not ok then warn("PalmVille announcement history save: "..tostring(err));notify(player,"Announcement sent, but history could not be saved.")end
+			end)
+		end
 	end
 	Players.PlayerRemoving:Connect(function(player)cooldown[player.UserId]=nil;historyRequests[player.UserId]=nil end)
 end
