@@ -257,7 +257,7 @@ local bannerLine = make("TextLabel", {
 	TextColor3 = C.text,
 	TextStrokeColor3 = Color3.new(0, 0, 0),
 	TextStrokeTransparency = 0.25,
-	TextXAlignment = Enum.TextXAlignment.Center,
+	TextXAlignment = Enum.TextXAlignment.Left,
 	TextYAlignment = Enum.TextYAlignment.Center,
 	TextWrapped = true,
 	RichText = true,
@@ -298,27 +298,28 @@ local function showAnnouncement(data, preview)
 	local viewport = gui.AbsoluteSize
 	local fontSize = math.clamp(math.floor(math.min(viewport.X, viewport.Y) / 28), 19, 27)
 	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
-	local prefixPlain = "[" .. roleLabel .. "] " .. author
-	local prefixWidth = TextService:GetTextSize(prefixPlain, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
-	local messageText = " : " .. message
-	local remainingWidth = math.max(100, availableWidth - prefixWidth - 38)
-	local messageBounds = TextService:GetTextSize(messageText, fontSize, Enum.Font.Nunito, Vector2.new(remainingWidth, 10000))
+	local roleText = "[" .. roleLabel .. "] "
+	local authorText = author
+	local badgeText = "  ✓  "
+	local prefixText = roleText .. authorText .. badgeText
+	local prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	local remainingWidth = math.max(96, availableWidth - prefixWidth - 6)
+	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(remainingWidth, 10000))
 	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
 	local bannerHeight = math.max(fontSize + 18, messageHeight)
-	local totalWidth = math.min(availableWidth, prefixWidth + 34 + math.min(remainingWidth, messageBounds.X + 8))
+	local totalWidth = math.min(availableWidth, prefixWidth + math.min(remainingWidth, messageBounds.X + 8))
 
 	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
 	bannerLine.TextSize = fontSize
 	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
 		and "rgb(234,197,108)" or "rgb(166,201,133)"
-	local badge = '<font color="rgb(54,151,238)"> ● </font>'
 	bannerLine.Text = string.format(
-		'<font color="%s"><b>[%s]</b></font> <b>%s</b>%s%s',
+		'<font color="%s"><b>%s</b></font><b>%s</b> <font color="rgb(54,151,238)">%s</font><font color="rgb(241,245,239)">%s</font>',
 		roleColor,
-		escapeRichText(roleLabel),
-		escapeRichText(author),
-		badge,
-		escapeRichText(messageText)
+		escapeRichText(roleText),
+		escapeRichText(authorText),
+		"✓",
+		escapeRichText(" : " .. message)
 	)
 
 	bannerToken += 1
