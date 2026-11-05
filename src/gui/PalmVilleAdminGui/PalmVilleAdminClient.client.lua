@@ -2058,7 +2058,7 @@ do
 			local fontSize = viewport.X < 650 and 22 or 28
 			local available = math.max(220, math.min(1080, viewport.X - 40))
 			local tag = displayRole(current.role)
-			local name = tostring(current.by or "Staff"):gsub("[\\r\\n]", " ")
+			local name = (current.role == "MASTER DEVELOPER" and "Lupin" or tostring(current.by or "Staff")):gsub("[\\r\\n]", " ")
 			local measureFont = Enum.Font.Nunito
 
 			local function measure(text, width)
