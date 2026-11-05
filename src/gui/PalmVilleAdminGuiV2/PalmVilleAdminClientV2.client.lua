@@ -59,6 +59,11 @@ local function make(className, properties, parent)
 	local object = Instance.new(className)
 	if object:IsA("GuiObject") and parent and parent:IsA("GuiObject") then
 		object.ZIndex = parent.ZIndex + 1
+		if parent:FindFirstChildOfClass("UIListLayout") and not (properties and properties.LayoutOrder ~= nil) then
+			local nextOrder = (parent:GetAttribute("_NextLayoutOrder") or 0) + 1
+			parent:SetAttribute("_NextLayoutOrder", nextOrder)
+			object.LayoutOrder = nextOrder
+		end
 	end
 	for key, value in pairs(properties or {}) do
 		object[key] = value
@@ -175,10 +180,8 @@ local function card(parent, titleText, subtitle)
 	local layout = vertical(root, 8)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	local heading = text(root, titleText, 14, C.text, 22, true)
-	heading.LayoutOrder = 1
 	if subtitle and subtitle ~= "" then
 		local sub = text(root, subtitle, 11, C.muted, 30)
-		sub.LayoutOrder = 2
 	end
 	return root
 end
@@ -199,9 +202,7 @@ end
 
 local function addField(parent, caption, placeholder, defaultText)
 	local label = text(parent, caption, 10, C.muted, 16, true)
-	label.LayoutOrder = #parent:GetChildren() + 1
 	local box = input(parent, placeholder, defaultText)
-	box.LayoutOrder = label.LayoutOrder + 1
 	return box
 end
 
