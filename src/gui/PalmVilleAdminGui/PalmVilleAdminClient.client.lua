@@ -2065,25 +2065,26 @@ do
 			local function measure(text, width)
 				return TextMeasure:GetTextSize(text, fontSize, measureFont, Vector2.new(width or 10000, 10000))
 			end
-			local function prefixText()
-				return "[" .. tag .. "] " .. name
-			end
-
-			local maxPrefixWidth = available * 0.48
-			local prefixPadding = 72
-			local prefixWidth = measure(prefixText()).X + prefixPadding
-			local roleTagWidth = measure("[" .. tag .. "]").X + 10
-			local authorNameWidth = math.max(measure(name).X + 18, prefixWidth - roleTagWidth - 8)
-			if prefixWidth > maxPrefixWidth then
+			local roleTagWidth = math.ceil(measure("[" .. tag .. "]").X + 24)
+			local authorNameWidth = current.role == "MASTER DEVELOPER" and 180 or math.ceil(measure(name).X + 40)
+			local prefixGap = 10
+			local prefixWidth = roleTagWidth + prefixGap + authorNameWidth
+			local maxPrefixWidth = available * 0.68
+			if prefixWidth > maxPrefixWidth and current.role ~= "MASTER DEVELOPER" then
 				local parts = {}
 				for _, codepoint in utf8.codes(name) do
 					table.insert(parts, utf8.char(codepoint))
 				end
-				while #parts > 6 and measure(prefixText()).X + prefixPadding > maxPrefixWidth do
+				while #parts > 1 do
+					local candidate = table.concat(parts) .. "…"
+					if roleTagWidth + prefixGap + measure(candidate).X + 40 <= maxPrefixWidth then
+						break
+					end
 					table.remove(parts)
-					name = table.concat(parts) .. "…"
 				end
-				prefixWidth = math.min(maxPrefixWidth, measure(prefixText()).X + prefixPadding)
+				name = table.concat(parts) .. "…"
+				authorNameWidth = math.ceil(measure(name).X + 40)
+				prefixWidth = roleTagWidth + prefixGap + authorNameWidth
 			end
 
 			local badgeSize = fontSize < 24 and 20 or 22
@@ -2111,7 +2112,7 @@ do
 			roleTagLabel.TextWrapped = false
 			roleTagLabel.TextTruncate = Enum.TextTruncate.None
 
-			authorNameLabel.Position = UDim2.fromOffset(roleTagWidth + 8, 2)
+			authorNameLabel.Position = UDim2.fromOffset(roleTagWidth + prefixGap, 2)
 			authorNameLabel.Size = UDim2.fromOffset(authorNameWidth, fontSize + 12)
 			authorNameLabel.Font = measureFont
 			authorNameLabel.TextSize = fontSize
