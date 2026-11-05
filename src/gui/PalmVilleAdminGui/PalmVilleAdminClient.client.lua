@@ -90,13 +90,180 @@ local function text(parent, value, size, color, height, bold)
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, height or 26),
 		Text = tostring(value or ""),
-		Font = Enum.Font.Nunito,
+		Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham,
 		TextSize = size or 15,
 		TextColor3 = color or C.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextYAlignment = Enum.TextYAlignment.Center,
 		TextWrapped = true,
 	}, parent)
+end
+
+local function drawIcon(parent, name, size, color)
+	local root = make("Frame", {
+		Size = UDim2.fromOffset(size, size),
+		BackgroundTransparency = 1,
+	}, parent)
+	local scale = size / 32
+	local strokeColor = color or C.amber
+	local thickness = math.max(1.4, 1.8 * scale)
+
+	local function line(x1, y1, x2, y2, weight)
+		local dx, dy = (x2 - x1) * scale, (y2 - y1) * scale
+		local length = math.sqrt(dx * dx + dy * dy)
+		local stroke = make("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromOffset((x1 + x2) * 0.5 * scale, (y1 + y2) * 0.5 * scale),
+			Size = UDim2.fromOffset(length, weight or thickness),
+			Rotation = math.deg(math.atan2(dy, dx)),
+			BackgroundColor3 = strokeColor,
+			BorderSizePixel = 0,
+		}, root)
+		addCorner(stroke, 2)
+	end
+
+	local function ring(x, y, diameter, weight)
+		local circle = make("Frame", {
+			Position = UDim2.fromOffset(x * scale, y * scale),
+			Size = UDim2.fromOffset(diameter * scale, diameter * scale),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+		}, root)
+		addCorner(circle, diameter * scale * 0.5)
+		addStroke(circle, strokeColor, 0, weight or thickness)
+	end
+
+	local function box(x, y, width, height, radius)
+		local outline = make("Frame", {
+			Position = UDim2.fromOffset(x * scale, y * scale),
+			Size = UDim2.fromOffset(width * scale, height * scale),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+		}, root)
+		addCorner(outline, (radius or 3) * scale)
+		addStroke(outline, strokeColor, 0, thickness)
+	end
+
+	if name == "users" then
+		ring(5, 4, 8)
+		ring(20, 5, 7)
+		line(1, 27, 1, 23)
+		line(1, 23, 5, 18)
+		line(5, 18, 12, 18)
+		line(12, 18, 16, 23)
+		line(16, 23, 16, 27)
+		line(17, 21, 20, 17)
+		line(20, 17, 26, 17)
+		line(26, 17, 30, 22)
+		line(30, 22, 30, 26)
+	elseif name == "home" then
+		line(3, 15, 16, 4)
+		line(16, 4, 29, 15)
+		line(7, 13, 7, 28)
+		line(25, 13, 25, 28)
+		line(7, 28, 25, 28)
+		line(13, 28, 13, 19)
+		line(13, 19, 19, 19)
+		line(19, 19, 19, 28)
+	elseif name == "megaphone" then
+		line(4, 12, 23, 5)
+		line(23, 5, 23, 26)
+		line(23, 26, 4, 19)
+		line(4, 19, 4, 12)
+		line(8, 20, 12, 29)
+		line(12, 29, 17, 28)
+		line(27, 9, 30, 7)
+		line(27, 16, 31, 16)
+		line(27, 23, 30, 25)
+	elseif name == "shield" then
+		line(16, 3, 27, 7)
+		line(27, 7, 26, 19)
+		line(26, 19, 16, 29)
+		line(16, 29, 6, 19)
+		line(6, 19, 5, 7)
+		line(5, 7, 16, 3)
+		line(11, 16, 15, 20)
+		line(15, 20, 22, 12)
+	elseif name == "settings" then
+		ring(9, 9, 14)
+		ring(13, 13, 6)
+		line(16, 2, 16, 7)
+		line(16, 25, 16, 30)
+		line(2, 16, 7, 16)
+		line(25, 16, 30, 16)
+		line(6, 6, 10, 10)
+		line(22, 22, 26, 26)
+		line(22, 10, 26, 6)
+		line(6, 26, 10, 22)
+	elseif name == "wrench" then
+		line(8, 25, 22, 11)
+		ring(3, 22, 8)
+		line(21, 7, 25, 3)
+		line(25, 3, 29, 7)
+		line(29, 7, 25, 11)
+		line(25, 11, 21, 7)
+	elseif name == "file" then
+		line(8, 3, 21, 3)
+		line(21, 3, 26, 8)
+		line(26, 8, 26, 29)
+		line(26, 29, 7, 29)
+		line(7, 29, 7, 3)
+		line(7, 3, 8, 3)
+		line(21, 3, 21, 8)
+		line(21, 8, 26, 8)
+		line(11, 15, 22, 15)
+		line(11, 20, 22, 20)
+		line(11, 25, 19, 25)
+	elseif name == "clock" then
+		ring(3, 3, 26)
+		line(16, 8, 16, 16)
+		line(16, 16, 22, 19)
+	elseif name == "server" then
+		box(4, 3, 24, 10, 2)
+		box(4, 19, 24, 10, 2)
+		ring(8, 6, 3, thickness)
+		ring(8, 22, 3, thickness)
+		line(15, 8, 25, 8)
+		line(15, 24, 25, 24)
+	elseif name == "globe" then
+		ring(3, 3, 26)
+		line(16, 3, 16, 29)
+		line(4, 16, 28, 16)
+		line(8, 6, 11, 16)
+		line(11, 16, 8, 26)
+		line(24, 6, 21, 16)
+		line(21, 16, 24, 26)
+	elseif name == "eye" then
+		line(2, 16, 8, 9)
+		line(8, 9, 16, 6)
+		line(16, 6, 24, 9)
+		line(24, 9, 30, 16)
+		line(30, 16, 24, 23)
+		line(24, 23, 16, 26)
+		line(16, 26, 8, 23)
+		line(8, 23, 2, 16)
+		ring(12, 12, 8)
+	elseif name == "send" then
+		line(3, 15, 29, 3)
+		line(29, 3, 20, 29)
+		line(20, 29, 14, 19)
+		line(14, 19, 3, 15)
+		line(14, 19, 29, 3)
+	end
+
+	return root
+end
+
+local function attachIcon(target, name, size, left)
+	local iconRoot = drawIcon(target, name, size or 20, C.amber)
+	iconRoot.AnchorPoint = Vector2.new(0, 0.5)
+	iconRoot.Position = UDim2.new(0, left or 16, 0.5, 0)
+	target.TextXAlignment = Enum.TextXAlignment.Left
+	make("UIPadding", {
+		PaddingLeft = UDim.new(0, (left or 16) + (size or 20) + 12),
+		PaddingRight = UDim.new(0, 12),
+	}, target)
+	return iconRoot
 end
 
 local function setButtonBackground(target, color)
@@ -118,7 +285,7 @@ local function button(parent, caption, callback, options)
 		AutoButtonColor = false,
 		Text = caption,
 		TextColor3 = options.danger and Color3.fromRGB(255, 226, 218) or C.text,
-		Font = Enum.Font.Nunito,
+		Font = options.bold and Enum.Font.GothamBold or Enum.Font.GothamMedium,
 		TextSize = options.textSize or 15,
 		TextWrapped = true,
 	}, parent)
@@ -148,7 +315,7 @@ local function input(parent, placeholder, defaultText, height)
 		BackgroundColor3 = C.bg,
 		BorderSizePixel = 0,
 		ClearTextOnFocus = false,
-		Font = Enum.Font.Nunito,
+		Font = Enum.Font.Gotham,
 		TextSize = 15,
 		TextColor3 = C.text,
 		PlaceholderColor3 = C.dim,
@@ -193,12 +360,8 @@ local function card(parent, titleText, subtitle, icon)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	if icon then
 		local head = make("Frame", {Size = UDim2.new(1, 0, 0, 62), BackgroundTransparency = 1}, root)
-		local iconLabel = make("TextLabel", {
-			Position = UDim2.fromOffset(0, 1), Size = UDim2.fromOffset(58, 56),
-			BackgroundTransparency = 1, Text = icon, Font = Enum.Font.GothamMedium,
-			TextSize = 42, TextColor3 = C.amber, TextXAlignment = Enum.TextXAlignment.Center,
-			TextYAlignment = Enum.TextYAlignment.Center,
-		}, head)
+		local headingIcon = drawIcon(head, icon, 38, C.amber)
+		headingIcon.Position = UDim2.fromOffset(10, 12)
 		local heading = text(head, titleText, 27, C.text, 34, true)
 		heading.Position = UDim2.fromOffset(66, 0)
 		heading.Size = UDim2.new(1, -66, 0, 34)
@@ -279,7 +442,7 @@ local banner = make("Frame", {
 local bannerLine = make("TextLabel", {
 	Name = "AnnouncementLine",
 	BackgroundTransparency = 1,
-	Font = Enum.Font.Nunito,
+	Font = Enum.Font.Gotham,
 	TextSize = 27,
 	TextColor3 = C.text,
 	TextStrokeColor3 = Color3.new(0, 0, 0),
@@ -300,7 +463,7 @@ local bannerPreview = make("TextLabel", {
 	BackgroundTransparency = 1,
 	Text = "PREVIEW · ONLY YOU CAN SEE THIS",
 	TextColor3 = C.muted,
-	Font = Enum.Font.Nunito,
+	Font = Enum.Font.Gotham,
 	TextSize = 11,
 	TextXAlignment = Enum.TextXAlignment.Center,
 	Visible = false,
@@ -500,7 +663,7 @@ local profileRole = make("TextLabel", {
 	BorderSizePixel = 0,
 	Text = "STAFF",
 	TextColor3 = Color3.fromRGB(17, 34, 18),
-	Font = Enum.Font.Nunito,
+	Font = Enum.Font.Gotham,
 	TextSize = 16,
 	TextXAlignment = Enum.TextXAlignment.Center,
 	ZIndex = 24,
@@ -592,14 +755,14 @@ local navOrder = {
 	{"LOGS", "Logs", "Logs"},
 }
 
-local navGlyphs = {
-	OVERVIEW = "⌂",
-	PLAYERS = "👥",
-	ANNOUNCEMENTS = "📢",
-	MODERATION = "🛡️",
-	STAFF = "⚙",
-	TOOLS = "🔧",
-	LOGS = "▤",
+local navIcons = {
+	OVERVIEW = "home",
+	PLAYERS = "users",
+	ANNOUNCEMENTS = "megaphone",
+	MODERATION = "shield",
+	STAFF = "settings",
+	TOOLS = "wrench",
+	LOGS = "file",
 }
 for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
@@ -610,11 +773,14 @@ for navIndex, entry in ipairs(navOrder) do
 	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 64))
 	nav.TextXAlignment = Enum.TextXAlignment.Left
 	nav.Font = Enum.Font.GothamBold
-	nav.RichText = true
+	nav.TextSize = 17
+	nav.RichText = false
 	setButtonBackground(nav, C.panel)
 	nav.BackgroundTransparency = 0.08
 	nav:SetAttribute("NavCaption", caption)
-	make("UIPadding", {PaddingLeft = UDim.new(0, 20), PaddingRight = UDim.new(0, 12)}, nav)
+	make("UIPadding", {PaddingLeft = UDim.new(0, 62), PaddingRight = UDim.new(0, 12)}, nav)
+	local navIcon = drawIcon(nav, navIcons[key], 23, C.amber)
+	navIcon.Position = UDim2.new(0, 18, 0.5, -11)
 	local navStroke = nav:FindFirstChildOfClass("UIStroke")
 	if navStroke then navStroke.Transparency = 0.72 end
 	navButtons[key] = nav
@@ -661,8 +827,10 @@ local function refreshNavigation()
 		setButtonBackground(nav, active and C.green or C.panel)
 		nav.BackgroundTransparency = active and 0 or 0.08
 		nav.TextColor3 = active and C.text or C.muted
-		local iconColor = active and "rgb(248,246,221)" or "rgb(239,226,170)"
-		nav.Text = string.format('<font color="%s">%s</font>    %s', iconColor, navGlyphs[key] or "◇", nav:GetAttribute("NavCaption") or key)
+		nav.Text = nav:GetAttribute("NavCaption") or key
+		nav.Font = Enum.Font.GothamBold
+		nav.TextSize = 17
+		nav.TextXAlignment = Enum.TextXAlignment.Left
 		local navStroke = nav:FindFirstChildOfClass("UIStroke")
 		if navStroke then navStroke.Transparency = active and 0.02 or 0.78 end
 		pages[key].Visible = panelOpen and active and allowed
@@ -701,73 +869,47 @@ local function showPageStatus(parent, message)
 	return item
 end
 
-local function metric(parent, caption, initial, glyph, compact)
-	local compactMode = compact == true
+local function metric(parent, caption, initial, iconName)
 	local box = make("Frame", {
-		Size = UDim2.new(0.5, -7, 1, 0),
+		Size = UDim2.new(0.5, -8, 1, 0),
 		BackgroundColor3 = C.surface,
 		BorderSizePixel = 0,
 	}, parent)
 	addCorner(box, 17)
-	addStroke(box, C.line, 0.08, 1.35)
-	local iconSize = compactMode and 52 or 82
+	addStroke(box, C.line, 0.06, 1.4)
 	local iconBox = make("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, compactMode and 16 or 22, 0.5, 0),
-		Size = UDim2.fromOffset(iconSize, iconSize),
+		Position = UDim2.new(0, 22, 0.5, 0),
+		Size = UDim2.fromOffset(72, 72),
 		BackgroundColor3 = C.green,
 		BorderSizePixel = 0,
 	}, box)
-	addCorner(iconBox, compactMode and 13 or 18)
-	local icon = text(iconBox, glyph or "◇", compactMode and 27 or 42, C.amber, iconSize, true)
-	icon.TextXAlignment = Enum.TextXAlignment.Center
-	local dividerX = compactMode and 82 or 124
+	addCorner(iconBox, 16)
+	local metricIcon = drawIcon(iconBox, iconName, 36, C.amber)
+	metricIcon.Position = UDim2.fromOffset(18, 18)
 	make("Frame", {
-		Position = UDim2.new(0, dividerX, 0.18, 0),
+		Position = UDim2.new(0, 112, 0.18, 0),
 		Size = UDim2.new(0, 1, 0.64, 0),
 		BackgroundColor3 = C.line,
 		BorderSizePixel = 0,
 	}, box)
-	local small = text(box, caption, compactMode and 14 or 19, C.muted, compactMode and 20 or 27, true)
-	small.Position = UDim2.fromOffset(dividerX + 22, compactMode and 14 or 25)
-	small.Size = UDim2.new(1, -dividerX - 38, 0, compactMode and 20 or 27)
-	local value = text(box, initial or "—", compactMode and 22 or 34, C.text, compactMode and 34 or 46, true)
-	value.Position = UDim2.fromOffset(dividerX + 22, compactMode and 38 or 60)
-	value.Size = UDim2.new(1, -dividerX - 38, 0, compactMode and 34 or 46)
+	local small = text(box, caption, 18, C.muted, 26, true)
+	small.Position = UDim2.fromOffset(136, 30)
+	small.Size = UDim2.new(1, -158, 0, 26)
+	local value = text(box, initial or "—", 32, C.text, 42, true)
+	value.Position = UDim2.fromOffset(136, 62)
+	value.Size = UDim2.new(1, -158, 0, 42)
 	value.TextTruncate = Enum.TextTruncate.AtEnd
 	return value
 end
 
-local overviewCard = card(pages.OVERVIEW, "SERVER OVERVIEW", "Live session status from the PalmVille server.")
-local metricRow = addRow(overviewCard, 136)
-local metricPlayers = metric(metricRow, "ONLINE PLAYERS", "0 / 6", "👥")
-local metricUptime = metric(metricRow, "SERVER UPTIME", "0m 0s", "▣")
-local metricExtraRow = addRow(overviewCard, 92)
-local metricFps = metric(metricExtraRow, "SERVER FPS", "—", "◷", true)
-local metricMemory = metric(metricExtraRow, "MEMORY", "—", "▤", true)
-local overviewActions = card(pages.OVERVIEW, "QUICK ACTIONS", "Refresh live server data or jump to the player directory.")
-local quickRow = addRow(overviewActions, 48)
-button(quickRow, "REFRESH OVERVIEW", function()
-	if canAccess("Monitoring") or canAccess("Server") then
-		remote:FireServer("RequestSnapshot")
-	else
-		setStatus("Monitoring permission required.", true)
-	end
-end, {size = UDim2.new(0.5, -6, 0, 46)})
-button(quickRow, "VIEW PLAYERS", function()
-	if not canAccess("Players") then setStatus("Players permission required.", true); return end
-	activeTab = "PLAYERS"
-	refreshNavigation()
-	remote:FireServer("RequestSnapshot")
-end, {size = UDim2.new(0.5, -6, 0, 46), primary = true})
-local identityCard = card(pages.OVERVIEW, "SESSION IDENTITY", "Your access is verified by PalmVilleAdminServerV2.")
-local identityLabel = text(identityCard, "Waiting for server authorization...", 15, C.muted, 48)
-identityLabel.TextYAlignment = Enum.TextYAlignment.Center
-local overviewHint = text(pages.OVERVIEW, "PalmVille supports up to six players per server. Studio DataStore fallback data is temporary for that test session.", 13, C.dim, 42)
+local overviewMetricRow = addRow(pages.OVERVIEW, 148)
+local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
+local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
-	Size = UDim2.new(1, 0, 0, 750),
+	Size = UDim2.new(1, 0, 0, 850),
 	BackgroundTransparency = 1,
 }, pages.PLAYERS)
 
@@ -789,9 +931,8 @@ local playersDetailsPanel = make("Frame", {
 addCorner(playersDetailsPanel, 18)
 addStroke(playersDetailsPanel, C.line, 0.06, 1.4)
 
-local playersHeadingIcon = text(playersListPanel, "👥", 34, C.amber, 48)
-playersHeadingIcon.Position = UDim2.fromOffset(18, 16)
-playersHeadingIcon.Size = UDim2.fromOffset(48, 48)
+local playersHeadingIcon = drawIcon(playersListPanel, "users", 30, C.amber)
+playersHeadingIcon.Position = UDim2.fromOffset(26, 23)
 local playersHeading = text(playersListPanel, "Online Players", 25, C.text, 34, true)
 playersHeading.Position = UDim2.fromOffset(72, 17)
 playersHeading.Size = UDim2.new(1, -90, 0, 34)
@@ -817,9 +958,8 @@ local playerRows = make("ScrollingFrame", {
 }, playersListPanel)
 vertical(playerRows, 9)
 
-local detailsIcon = text(playersDetailsPanel, "▣", 34, C.amber, 44)
-detailsIcon.Position = UDim2.fromOffset(24, 15)
-detailsIcon.Size = UDim2.fromOffset(48, 44)
+local detailsIcon = drawIcon(playersDetailsPanel, "file", 29, C.amber)
+detailsIcon.Position = UDim2.fromOffset(28, 22)
 local detailTitle = text(playersDetailsPanel, "Player Details", 25, C.text, 36, true)
 detailTitle.Position = UDim2.fromOffset(78, 18)
 detailTitle.Size = UDim2.new(1, -104, 0, 36)
@@ -890,66 +1030,73 @@ local playerActionHeading = text(playersDetailsPanel, "Player Actions", 19, C.te
 playerActionHeading.Position = UDim2.fromOffset(30, 563)
 playerActionHeading.Size = UDim2.new(1, -60, 0, 26)
 
-local playerActionRow1 = make("Frame", {
+local playerActionRow = make("Frame", {
 	Position = UDim2.fromOffset(28, 594),
-	Size = UDim2.new(1, -56, 0, 44),
+	Size = UDim2.new(1, -56, 0, 46),
 	BackgroundTransparency = 1,
 }, playersDetailsPanel)
 make("UIListLayout", {
 	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 9),
+	Padding = UDim.new(0, 10),
 	SortOrder = Enum.SortOrder.LayoutOrder,
-}, playerActionRow1)
-button(playerActionRow1, "Go to Player", function()
+}, playerActionRow)
+button(playerActionRow, "GO TO PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Teleport", targetData())
-end, {size = UDim2.new(0.34, -6, 0, 42), primary = true, textSize = 14})
-button(playerActionRow1, "Bring Player", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Bring", targetData())
-end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
-button(playerActionRow1, "Spectate", function()
+end, {size = UDim2.new(0.5, -5, 0, 44), primary = true, textSize = 14, bold = true})
+button(playerActionRow, "SPECTATE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Spectate", targetData())
-end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
-local playerActionRow2 = make("Frame", {
-	Position = UDim2.fromOffset(28, 643),
-	Size = UDim2.new(1, -56, 0, 44),
-	BackgroundTransparency = 1,
+end, {size = UDim2.new(0.5, -5, 0, 44), textSize = 14, bold = true})
+
+local moreActionsMenu = make("Frame", {
+	Position = UDim2.fromOffset(28, 700),
+	Size = UDim2.new(1, -56, 0, 126),
+	BackgroundColor3 = C.panel,
+	BorderSizePixel = 0,
+	Visible = false,
+	ZIndex = playersDetailsPanel.ZIndex + 2,
 }, playersDetailsPanel)
-make("UIListLayout", {
-	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 9),
-	SortOrder = Enum.SortOrder.LayoutOrder,
-}, playerActionRow2)
-button(playerActionRow2, "Freeze", function()
+addCorner(moreActionsMenu, 12)
+addStroke(moreActionsMenu, C.line, 0.08, 1.2)
+make("UIPadding", {
+	PaddingTop = UDim.new(0, 7),
+	PaddingBottom = UDim.new(0, 7),
+	PaddingLeft = UDim.new(0, 8),
+	PaddingRight = UDim.new(0, 8),
+}, moreActionsMenu)
+vertical(moreActionsMenu, 5)
+local moreRow1 = addRow(moreActionsMenu, 32)
+button(moreRow1, "BRING PLAYER", function()
+	if not selectedUserId then setStatus("Select a player first.", true); return end
+	sendAction("Bring", targetData())
+end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+button(moreRow1, "FREEZE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Freeze", targetData())
-end, {size = UDim2.new(0.34, -6, 0, 42), textSize = 14})
-button(playerActionRow2, "Unfreeze", function()
+end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+local moreRow2 = addRow(moreActionsMenu, 32)
+button(moreRow2, "UNFREEZE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Unfreeze", targetData())
-end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
-button(playerActionRow2, "Reset Player", function()
+end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+button(moreRow2, "RESET PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("ResetTarget", targetData())
-end, {size = UDim2.new(0.33, -6, 0, 42), danger = true, textSize = 14})
-local playerActionRow3 = make("Frame", {
-	Position = UDim2.fromOffset(28, 692),
-	Size = UDim2.new(1, -56, 0, 44),
-	BackgroundTransparency = 1,
-}, playersDetailsPanel)
-make("UIListLayout", {
-	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 9),
-	SortOrder = Enum.SortOrder.LayoutOrder,
-}, playerActionRow3)
-button(playerActionRow3, "Return to Previous Position", function()
+end, {size = UDim2.new(0.5, -5, 0, 32), danger = true, textSize = 12})
+local moreRow3 = addRow(moreActionsMenu, 32)
+button(moreRow3, "RETURN", function()
 	sendAction("Return")
-end, {size = UDim2.new(0.5, -6, 0, 42), textSize = 14})
-button(playerActionRow3, "Stop Spectating", function()
+end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+button(moreRow3, "STOP SPECTATING", function()
 	sendAction("StopSpectate")
-end, {size = UDim2.new(0.5, -6, 0, 42), textSize = 14})
+end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+
+local moreActionsButton = button(playersDetailsPanel, "MORE ACTIONS", function()
+	moreActionsMenu.Visible = not moreActionsMenu.Visible
+end, {size = UDim2.new(1, -56, 0, 42), textSize = 14})
+moreActionsButton.Position = UDim2.fromOffset(28, 648)
+moreActionsButton.TextXAlignment = Enum.TextXAlignment.Center
 
 local function updatePlayerDetails(row)
 	if not row then
@@ -1069,14 +1216,14 @@ end
 
 playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 
-local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "📢")
+local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "megaphone")
 text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
 	Size = UDim2.new(1, 0, 0, 176),
 	BackgroundColor3 = C.bg,
 	BorderSizePixel = 0,
 	ClearTextOnFocus = false,
-	Font = Enum.Font.Nunito,
+	Font = Enum.Font.Gotham,
 	TextSize = 17,
 	TextColor3 = C.text,
 	PlaceholderColor3 = C.dim,
@@ -1100,38 +1247,38 @@ text(announceCard, "Audience", 18, C.text, 26, true)
 local audienceRow = addRow(announceCard, 54)
 local serverAudience
 local allAudience
-serverAudience = button(audienceRow, "👥   This Server", function()
+serverAudience = button(audienceRow, "This Server", function()
 	audience = "This Server"
-	serverAudience.Text = "👥   This Server  ✓"
-	allAudience.Text = "▱   All Servers"
 	setButtonBackground(serverAudience, C.green)
 	setButtonBackground(allAudience, C.surface)
-end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 17})
-allAudience = button(audienceRow, "▱   All Servers", function()
+end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
+allAudience = button(audienceRow, "All Servers", function()
 	audience = "All Servers"
-	serverAudience.Text = "👥   This Server"
-	allAudience.Text = "▱   All Servers  ✓"
 	setButtonBackground(serverAudience, C.surface)
 	setButtonBackground(allAudience, C.green)
-end, {size = UDim2.new(0.5, -6, 0, 52)})
+end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
+attachIcon(serverAudience, "users", 20, 16)
+attachIcon(allAudience, "globe", 20, 16)
 setButtonBackground(serverAudience, C.green)
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
 local previewRow = addRow(announceCard, 52)
-button(previewRow, "◎   Preview", function()
+local previewButton = button(previewRow, "Preview", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	showAnnouncement({role = role, by = managerRole() and "Lupin" or player.DisplayName, text = value, duration = 8}, true)
 	setStatus("Preview shown. Only you can see it.")
 end, {size = UDim2.new(1, 0, 0, 50), textSize = 17})
+attachIcon(previewButton, "eye", 20, 18)
 local sendRow = addRow(announceCard, 56)
-button(sendRow, "➤   Send Announcement", function()
+local sendAnnouncementButton = button(sendRow, "Send Announcement", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	sendAction("Announce", {message = value, audience = audience})
 	setStatus("Sending announcement...")
-end, {size = UDim2.new(1, 0, 0, 54), primary = true, textSize = 18})
+end, {size = UDim2.new(1, 0, 0, 54), primary = true, textSize = 18, bold = true})
+attachIcon(sendAnnouncementButton, "send", 21, 18)
 showPageStatus(announceCard, "Only Owner, Developer, and Head Admin can send announcements. All Servers is disabled in Studio.")
 local moderationCard = card(pages.MODERATION, "TARGET PLAYER", "Online targets are required for warning, mute, kick, and bans. Unban/history can use a username.")
 local moderationUsername = addField(moderationCard, "USERNAME", "Select from Players or enter username")
@@ -1346,11 +1493,9 @@ end
 
 local function updateMetrics()
 	local metrics = snapshot.metrics or {}
-	metricPlayers.Text = string.format("%s / %s", tostring(metrics.playerCount or #snapshot.players), tostring(metrics.maxPlayers or 6))
-	metricFps.Text = tostring(metrics.serverFps or "—")
+	metricPlayers.Text = tostring(metrics.playerCount or #snapshot.players or 0)
 	local uptime = math.max(0, math.floor(tonumber(metrics.uptime) or 0))
 	metricUptime.Text = string.format("%dm %02ds", math.floor(uptime / 60), uptime % 60)
-	metricMemory.Text = metrics.memoryMb and (tostring(metrics.memoryMb) .. " MB") or "—"
 	renderPlayers()
 end
 
@@ -1418,7 +1563,6 @@ remote.OnClientEvent:Connect(function(event, data)
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
 		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
-		identityLabel.Text = string.format("Signed in as %s  ·  %s\nUserId: %d", player.Name, role, player.UserId)
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
 		if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
