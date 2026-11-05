@@ -20,19 +20,19 @@ gui.DisplayOrder = 96
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local C = {
-	bg = Color3.fromRGB(12, 17, 15),
-	panel = Color3.fromRGB(19, 27, 22),
-	surface = Color3.fromRGB(26, 36, 30),
-	surfaceHover = Color3.fromRGB(36, 51, 41),
-	green = Color3.fromRGB(54, 105, 72),
-	greenBright = Color3.fromRGB(94, 157, 109),
-	line = Color3.fromRGB(53, 68, 58),
-	text = Color3.fromRGB(241, 245, 239),
-	muted = Color3.fromRGB(170, 183, 172),
-	dim = Color3.fromRGB(119, 135, 123),
-	red = Color3.fromRGB(184, 72, 72),
-	amber = Color3.fromRGB(222, 181, 105),
-	blue = Color3.fromRGB(54, 151, 238),
+	bg = Color3.fromRGB(4, 22, 12),
+	panel = Color3.fromRGB(8, 34, 19),
+	surface = Color3.fromRGB(17, 49, 28),
+	surfaceHover = Color3.fromRGB(31, 75, 41),
+	green = Color3.fromRGB(83, 124, 52),
+	greenBright = Color3.fromRGB(137, 166, 76),
+	line = Color3.fromRGB(127, 148, 82),
+	text = Color3.fromRGB(248, 246, 221),
+	muted = Color3.fromRGB(216, 218, 185),
+	dim = Color3.fromRGB(164, 177, 136),
+	red = Color3.fromRGB(184, 72, 65),
+	amber = Color3.fromRGB(239, 226, 170),
+	blue = Color3.fromRGB(112, 192, 61),
 }
 
 local role = ""
@@ -73,14 +73,14 @@ local function make(className, properties, parent)
 end
 
 local function addCorner(object, radius)
-	make("UICorner", {CornerRadius = UDim.new(0, radius or 8)}, object)
+	make("UICorner", {CornerRadius = UDim.new(0, radius or 10)}, object)
 end
 
 local function addStroke(object, color, transparency, thickness)
 	make("UIStroke", {
 		Color = color or C.line,
 		Transparency = transparency == nil and 0 or transparency,
-		Thickness = thickness or 1,
+		Thickness = thickness or 1.3,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	}, object)
 end
@@ -88,10 +88,10 @@ end
 local function text(parent, value, size, color, height, bold)
 	return make("TextLabel", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, height or 24),
+		Size = UDim2.new(1, 0, 0, height or 26),
 		Text = tostring(value or ""),
-		Font = bold and Enum.Font.Nunito or Enum.Font.Nunito,
-		TextSize = size or 13,
+		Font = Enum.Font.Nunito,
+		TextSize = size or 15,
 		TextColor3 = color or C.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextYAlignment = Enum.TextYAlignment.Center,
@@ -102,19 +102,19 @@ end
 local function button(parent, caption, callback, options)
 	options = options or {}
 	local b = make("TextButton", {
-		Size = options.size or UDim2.new(1, 0, 0, 36),
+		Size = options.size or UDim2.new(1, 0, 0, 46),
 		BackgroundColor3 = options.primary and C.green or C.surface,
 		BackgroundTransparency = 0,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = caption,
-		TextColor3 = options.danger and Color3.fromRGB(255, 226, 226) or C.text,
+		TextColor3 = options.danger and Color3.fromRGB(255, 226, 218) or C.text,
 		Font = Enum.Font.Nunito,
-		TextSize = options.textSize or 12,
+		TextSize = options.textSize or 15,
 		TextWrapped = true,
 	}, parent)
-	addCorner(b, options.radius or 8)
-	addStroke(b, options.danger and C.red or (options.primary and C.greenBright or C.line), 0.2)
+	addCorner(b, options.radius or 11)
+	addStroke(b, options.danger and C.red or (options.primary and C.amber or C.line), 0.08, 1.3)
 	b.MouseEnter:Connect(function()
 		if not options.disabled then
 			b.BackgroundColor3 = options.danger and Color3.fromRGB(111, 45, 45) or C.surfaceHover
@@ -131,12 +131,12 @@ end
 
 local function input(parent, placeholder, defaultText, height)
 	local box = make("TextBox", {
-		Size = UDim2.new(1, 0, 0, height or 38),
+		Size = UDim2.new(1, 0, 0, height or 46),
 		BackgroundColor3 = C.bg,
 		BorderSizePixel = 0,
 		ClearTextOnFocus = false,
 		Font = Enum.Font.Nunito,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = C.text,
 		PlaceholderColor3 = C.dim,
 		PlaceholderText = placeholder,
@@ -145,65 +145,79 @@ local function input(parent, placeholder, defaultText, height)
 		TextYAlignment = Enum.TextYAlignment.Center,
 		TextWrapped = false,
 	}, parent)
-	addCorner(box, 7)
-	addStroke(box, C.line, 0.12)
+	addCorner(box, 10)
+	addStroke(box, C.line, 0.08, 1.3)
 	make("UIPadding", {
-		PaddingLeft = UDim.new(0, 11),
-		PaddingRight = UDim.new(0, 11),
+		PaddingLeft = UDim.new(0, 14),
+		PaddingRight = UDim.new(0, 12),
 	}, box)
 	return box
 end
 
 local function vertical(parent, padding)
-	local layout = make("UIListLayout", {
+	return make("UIListLayout", {
 		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, padding or 8),
+		Padding = UDim.new(0, padding or 12),
 	}, parent)
-	return layout
 end
 
-local function card(parent, titleText, subtitle)
+local function card(parent, titleText, subtitle, icon)
 	local root = make("Frame", {
 		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = C.panel,
 		BorderSizePixel = 0,
 	}, parent)
-	addCorner(root, 11)
-	addStroke(root, C.line, 0.18)
+	addCorner(root, 17)
+	addStroke(root, C.line, 0.04, 1.4)
 	make("UIPadding", {
-		PaddingTop = UDim.new(0, 14),
-		PaddingBottom = UDim.new(0, 14),
-		PaddingLeft = UDim.new(0, 15),
-		PaddingRight = UDim.new(0, 15),
+		PaddingTop = UDim.new(0, 24),
+		PaddingBottom = UDim.new(0, 24),
+		PaddingLeft = UDim.new(0, 26),
+		PaddingRight = UDim.new(0, 26),
 	}, root)
-	local layout = vertical(root, 8)
+	local layout = vertical(root, 13)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	local heading = text(root, titleText, 14, C.text, 22, true)
-	if subtitle and subtitle ~= "" then
-		local sub = text(root, subtitle, 11, C.muted, 30)
+	if icon then
+		local head = make("Frame", {Size = UDim2.new(1, 0, 0, 62), BackgroundTransparency = 1}, root)
+		local iconLabel = make("TextLabel", {
+			Position = UDim2.fromOffset(0, 1), Size = UDim2.fromOffset(58, 56),
+			BackgroundTransparency = 1, Text = icon, Font = Enum.Font.GothamMedium,
+			TextSize = 42, TextColor3 = C.amber, TextXAlignment = Enum.TextXAlignment.Center,
+			TextYAlignment = Enum.TextYAlignment.Center,
+		}, head)
+		local heading = text(head, titleText, 27, C.text, 34, true)
+		heading.Position = UDim2.fromOffset(66, 0)
+		heading.Size = UDim2.new(1, -66, 0, 34)
+		local sub = text(head, subtitle or "", 17, C.muted, 25)
+		sub.Position = UDim2.fromOffset(66, 34)
+		sub.Size = UDim2.new(1, -66, 0, 25)
+	else
+		text(root, titleText, 24, C.text, 32, true)
+		if subtitle and subtitle ~= "" then
+			text(root, subtitle, 15, C.muted, 24)
+		end
 	end
 	return root
 end
 
 local function addRow(parent, height)
 	local row = make("Frame", {
-		Size = UDim2.new(1, 0, 0, height or 38),
+		Size = UDim2.new(1, 0, 0, height or 46),
 		BackgroundTransparency = 1,
 	}, parent)
 	make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 8),
+		Padding = UDim.new(0, 12),
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 	}, row)
 	return row
 end
 
 local function addField(parent, caption, placeholder, defaultText)
-	local label = text(parent, caption, 10, C.muted, 16, true)
-	local box = input(parent, placeholder, defaultText)
-	return box
+	text(parent, caption, 13, C.muted, 20, true)
+	return input(parent, placeholder, defaultText)
 end
 
 local function managerRole()
@@ -403,84 +417,155 @@ local panel = make("Frame", {
 	Name = "AdminPanelV2",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(1080, 690),
+	Size = UDim2.fromOffset(1540, 900),
 	BackgroundColor3 = C.bg,
 	BorderSizePixel = 0,
 	Visible = false,
 	Active = true,
+	ClipsDescendants = true,
 	ZIndex = 21,
 }, gui)
-addCorner(panel, 15)
-addStroke(panel, C.line, 0.05)
+addCorner(panel, 25)
+addStroke(panel, C.amber, 0.02, 1.7)
+make("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(7, 31, 17)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(3, 18, 10)),
+	}),
+	Rotation = 90,
+}, panel)
 local panelScale = make("UIScale", {Scale = 1}, panel)
 
 local sidebar = make("Frame", {
-	Size = UDim2.new(0, 218, 1, 0),
+	Name = "Sidebar",
+	Size = UDim2.new(0, 340, 1, 0),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
-addCorner(sidebar, 15)
-local sideMask = make("Frame", {
-	Position = UDim2.new(1, -15, 0, 0),
-	Size = UDim2.new(0, 15, 1, 0),
-	BackgroundColor3 = C.panel,
-	BorderSizePixel = 0,
-	ZIndex = 22,
-}, sidebar)
-local profileName = text(sidebar, "PalmVille Admin", 17, C.text, 24, true)
-profileName.Position = UDim2.fromOffset(18, 20)
-profileName.Size = UDim2.new(1, -36, 0, 24)
-local profileUser = text(sidebar, "Verifying account...", 11, C.muted, 18)
-profileUser.Position = UDim2.fromOffset(18, 48)
-profileUser.Size = UDim2.new(1, -36, 0, 18)
-local profileRole = make("TextLabel", {
-	Position = UDim2.fromOffset(18, 78),
-	Size = UDim2.fromOffset(90, 22),
-	BackgroundColor3 = C.green,
-	BorderSizePixel = 0,
-	Text = "STAFF",
-	TextColor3 = C.text,
-	Font = Enum.Font.Nunito,
-	TextSize = 10,
-}, sidebar)
-addCorner(profileRole, 6)
-local sideDivider = make("Frame", {
-	Position = UDim2.fromOffset(16, 117),
-	Size = UDim2.new(1, -32, 0, 1),
+addCorner(sidebar, 24)
+make("Frame", {
+	Position = UDim2.new(1, -1, 0, 0),
+	Size = UDim2.new(0, 1, 1, 0),
 	BackgroundColor3 = C.line,
 	BorderSizePixel = 0,
+	ZIndex = 25,
+}, sidebar)
+
+local profileAvatar = make("ImageLabel", {
+	Name = "AdminAvatar",
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 38),
+	Size = UDim2.fromOffset(140, 140),
+	BackgroundColor3 = C.surface,
+	BorderSizePixel = 0,
+	ScaleType = Enum.ScaleType.Crop,
+	ZIndex = 24,
+}, sidebar)
+addCorner(profileAvatar, 70)
+addStroke(profileAvatar, C.amber, 0.02, 1.5)
+task.spawn(function()
+	local ok, thumbnail = pcall(function()
+		return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+	end)
+	if ok and profileAvatar.Parent then profileAvatar.Image = thumbnail end
+end)
+
+local profileName = text(sidebar, player.Name, 25, C.text, 34, true)
+profileName.Position = UDim2.fromOffset(18, 186)
+profileName.Size = UDim2.new(1, -36, 0, 34)
+profileName.TextXAlignment = Enum.TextXAlignment.Center
+local profileUser = text(sidebar, "@" .. player.Name, 14, C.muted, 22)
+profileUser.Position = UDim2.fromOffset(18, 218)
+profileUser.Size = UDim2.new(1, -36, 0, 22)
+profileUser.TextXAlignment = Enum.TextXAlignment.Center
+local profileRole = make("TextLabel", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 249),
+	Size = UDim2.fromOffset(174, 38),
+	BackgroundColor3 = C.amber,
+	BorderSizePixel = 0,
+	Text = "STAFF",
+	TextColor3 = Color3.fromRGB(17, 34, 18),
+	Font = Enum.Font.Nunito,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	ZIndex = 24,
+}, sidebar)
+addCorner(profileRole, 20)
+make("Frame", {
+	Position = UDim2.fromOffset(28, 305),
+	Size = UDim2.new(1, -56, 0, 1),
+	BackgroundColor3 = C.line,
+	BorderSizePixel = 0,
+	ZIndex = 24,
 }, sidebar)
 
 local header = make("Frame", {
-	Position = UDim2.fromOffset(218, 0),
-	Size = UDim2.new(1, -218, 0, 66),
+	Name = "Header",
+	Position = UDim2.fromOffset(340, 0),
+	Size = UDim2.new(1, -340, 0, 110),
 	BackgroundColor3 = C.panel,
+	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
-local pageTitle = text(header, "Overview", 18, C.text, 26, true)
-pageTitle.Position = UDim2.fromOffset(24, 12)
-pageTitle.Size = UDim2.new(1, -100, 0, 26)
-local pageSubtitle = text(header, "PalmVille server administration", 10, C.muted, 16)
-pageSubtitle.Position = UDim2.fromOffset(24, 37)
-pageSubtitle.Size = UDim2.new(1, -100, 0, 16)
+local logoShield = make("TextLabel", {
+	Position = UDim2.fromOffset(28, 18),
+	Size = UDim2.fromOffset(66, 72),
+	BackgroundTransparency = 1,
+	Text = "⬡",
+	TextColor3 = C.amber,
+	Font = Enum.Font.GothamMedium,
+	TextSize = 66,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	TextYAlignment = Enum.TextYAlignment.Center,
+	ZIndex = 24,
+}, header)
+local logoLeaf = make("TextLabel", {
+	Position = UDim2.fromOffset(44, 34),
+	Size = UDim2.fromOffset(34, 38),
+	BackgroundTransparency = 1,
+	Text = "❧",
+	TextColor3 = C.greenBright,
+	Font = Enum.Font.GothamMedium,
+	TextSize = 29,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	TextYAlignment = Enum.TextYAlignment.Center,
+	ZIndex = 25,
+}, header)
+local pageTitle = text(header, "PalmVille Admin", 37, C.text, 48, true)
+pageTitle.Position = UDim2.fromOffset(116, 16)
+pageTitle.Size = UDim2.new(1, -220, 0, 48)
+local pageSubtitle = text(header, "Overview", 18, C.muted, 26)
+pageSubtitle.Position = UDim2.fromOffset(118, 64)
+pageSubtitle.Size = UDim2.new(1, -220, 0, 26)
 local closeButton = button(header, "×", function()
 	panelOpen = false
-end, {size = UDim2.fromOffset(36, 36), textSize = 22})
+end, {size = UDim2.fromOffset(58, 58), textSize = 35, radius = 12})
 closeButton.AnchorPoint = Vector2.new(1, 0.5)
-closeButton.Position = UDim2.new(1, -16, 0.5, 0)
+closeButton.Position = UDim2.new(1, -20, 0.5, 0)
+addStroke(closeButton, C.line, 0.02, 1.5)
+make("Frame", {
+	Position = UDim2.new(0, 0, 1, -1),
+	Size = UDim2.new(1, 0, 0, 1),
+	BackgroundColor3 = C.line,
+	BorderSizePixel = 0,
+	ZIndex = 24,
+}, header)
 
 local content = make("Frame", {
-	Position = UDim2.fromOffset(218, 66),
-	Size = UDim2.new(1, -218, 1, -100),
+	Name = "Content",
+	Position = UDim2.fromOffset(340, 110),
+	Size = UDim2.new(1, -340, 1, -110),
 	BackgroundTransparency = 1,
 	ClipsDescendants = true,
 	ZIndex = 22,
 }, panel)
-local footer = text(panel, "READY", 10, C.dim, 22)
-footer.Position = UDim2.new(0, 240, 1, -28)
-footer.Size = UDim2.new(1, -260, 0, 18)
+local footer = text(panel, "READY", 12, C.dim, 22)
+footer.Position = UDim2.new(0, 360, 1, -26)
+footer.Size = UDim2.new(1, -390, 0, 18)
+footer.TextXAlignment = Enum.TextXAlignment.Right
 
 local function setStatus(message, isError)
 	footer.Text = tostring(message or "")
@@ -499,15 +584,41 @@ local navOrder = {
 	{"LOGS", "Logs", "Logs"},
 }
 
+local navGlyphs = {
+	OVERVIEW = "⌂",
+	PLAYERS = "♧",
+	ANNOUNCEMENTS = "⚑",
+	MODERATION = "⬡",
+	STAFF = "⚙",
+	TOOLS = "⚒",
+	LOGS = "▤",
+}
 for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
 	local nav = button(sidebar, caption, function()
 		activeTab = key
-	end, {size = UDim2.new(1, -26, 0, 38), textSize = 12})
+	end, {size = UDim2.new(1, -48, 0, 56), textSize = 17, radius = 12})
 	nav.Name = "Nav_" .. key
-	nav.Position = UDim2.fromOffset(13, 134 + ((navIndex - 1) * 45))
+	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 64))
 	nav.TextXAlignment = Enum.TextXAlignment.Left
-	make("UIPadding", {PaddingLeft = UDim.new(0, 12)}, nav)
+	nav.BackgroundColor3 = C.panel
+	nav.BackgroundTransparency = 0.08
+	local padding = make("UIPadding", {PaddingLeft = UDim.new(0, 66), PaddingRight = UDim.new(0, 12)}, nav)
+	local glyph = make("TextLabel", {
+		Name = "NavIcon",
+		Position = UDim2.fromOffset(15, 0),
+		Size = UDim2.fromOffset(38, 54),
+		BackgroundTransparency = 1,
+		Text = navGlyphs[key] or "◇",
+		TextColor3 = C.amber,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 31,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		ZIndex = nav.ZIndex + 1,
+	}, nav)
+	local navStroke = nav:FindFirstChildOfClass("UIStroke")
+	if navStroke then navStroke.Transparency = 0.72 end
 	navButtons[key] = nav
 
 	local page = make("ScrollingFrame", {
@@ -516,43 +627,59 @@ for navIndex, entry in ipairs(navOrder) do
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		ScrollBarThickness = 4,
-		ScrollBarImageColor3 = C.dim,
+		ScrollBarImageColor3 = C.line,
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		Visible = false,
 	}, content)
 	make("UIPadding", {
-		PaddingTop = UDim.new(0, 20),
-		PaddingBottom = UDim.new(0, 24),
-		PaddingLeft = UDim.new(0, 22),
-		PaddingRight = UDim.new(0, 22),
+		PaddingTop = UDim.new(0, 24),
+		PaddingBottom = UDim.new(0, 34),
+		PaddingLeft = UDim.new(0, 30),
+		PaddingRight = UDim.new(0, 30),
 	}, page)
-	vertical(page, 12)
+	vertical(page, 18)
 	pages[key] = page
 end
 
 local function refreshNavigation()
+	local requiredAreas = {
+		PLAYERS = "Players",
+		ANNOUNCEMENTS = "Announcements",
+		MODERATION = "Moderation",
+		TOOLS = "Tools",
+		LOGS = "Logs",
+	}
+	if activeTab == "STAFF" and not managerRole() then activeTab = "OVERVIEW" end
+	local required = requiredAreas[activeTab]
+	if required and not canAccess(required) then activeTab = "OVERVIEW" end
+
 	for _, entry in ipairs(navOrder) do
 		local key, area = entry[1], entry[3]
 		local allowed = area == nil or (area == "MANAGER" and managerRole()) or (area ~= "MANAGER" and canAccess(area))
 		local nav = navButtons[key]
 		nav.Visible = allowed
 		local active = activeTab == key
-		nav.BackgroundColor3 = active and C.green or C.surface
+		nav.BackgroundColor3 = active and C.green or C.panel
+		nav.BackgroundTransparency = active and 0 or 0.08
 		nav.TextColor3 = active and C.text or C.muted
+		local glyph = nav:FindFirstChild("NavIcon")
+		if glyph then glyph.TextColor3 = active and C.amber or C.muted end
+		local navStroke = nav:FindFirstChildOfClass("UIStroke")
+		if navStroke then navStroke.Transparency = active and 0.02 or 0.78 end
 		pages[key].Visible = panelOpen and active and allowed
 	end
-	if activeTab == "STAFF" and not managerRole() then activeTab = "OVERVIEW" end
-	if activeTab == "PLAYERS" and not canAccess("Players") then activeTab = "OVERVIEW" end
-	pageTitle.Text = ({
+
+	local captions = {
 		OVERVIEW = "Overview",
 		PLAYERS = "Players",
 		ANNOUNCEMENTS = "Announcements",
 		MODERATION = "Moderation",
-		STAFF = "Staff & Roles",
+		STAFF = "Admin Management",
 		TOOLS = "Tools",
 		LOGS = "Logs",
-	})[activeTab] or "Overview"
+	}
+	pageSubtitle.Text = captions[activeTab] or "Overview"
 end
 
 for key, nav in pairs(navButtons) do
@@ -960,7 +1087,7 @@ end
 local function fitPanel()
 	local size = gui.AbsoluteSize
 	if size.X <= 0 or size.Y <= 0 then return end
-	panelScale.Scale = math.min(1, (size.X - 24) / 1080, (size.Y - 24) / 690)
+	panelScale.Scale = math.min(1, (size.X - 32) / 1540, (size.Y - 32) / 900)
 end
 
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
@@ -1012,8 +1139,9 @@ remote.OnClientEvent:Connect(function(event, data)
 		permissions = type(data.permissions) == "table" and data.permissions or {}
 		authorized = true
 		launcher.Visible = true
+		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
-		profileRole.Text = displayRole(role)
+		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
 		identityLabel.Text = string.format("Signed in as %s  ·  %s\nUserId: %d", player.Name, role, player.UserId)
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
