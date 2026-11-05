@@ -1,6 +1,6 @@
 # PalmVille — Rojo-managed source
 
-This source bundle imports the project-owned scripts from the supplied `COPY OF PALM.rbxlx` while leaving the hand-built world, terrain, models, and other manually managed instances in Studio.
+This repository manages project-owned scripts while leaving the hand-built world, Terrain, models, meshes, unions, and other manually managed Studio instances intact.
 
 ## What Rojo manages
 
@@ -8,33 +8,42 @@ This source bundle imports the project-owned scripts from the supplied `COPY OF 
 - `src/client` → `StarterPlayer/StarterPlayerScripts`
 - `src/gui/PalmVilleAdminGui` → `StarterGui/PalmVilleAdminGui` (`ScreenGui`)
 
-Each mapped service/container uses `$ignoreUnknownInstances: true`, so Studio instances not represented in these source folders are intentionally left alone. Do not change these flags without reviewing the place hierarchy first.
+Each mapped container uses `$ignoreUnknownInstances: true`. Unmanaged Studio objects are intentionally preserved; do not change these flags without reviewing the full place hierarchy.
 
-## Conflict cleanup
+## Admin architecture
 
-The uploaded place already has the following legacy scripts set to `Disabled = true`. Matching `.meta.json` files are included so Rojo keeps them disabled:
+The Admin system now has one main client LocalScript and one main server Script:
 
-- `ServerScriptService/PalmVilleAdminServer` — legacy admin event handler; its announcement branch broadcasts raw, unfiltered text. The current V2 admin server applies Roblox text filtering and owns the admin role resolver.
-- `ServerScriptService/RoleTitleSystem` — duplicates the V2 BillboardGui title and labels the master developer as `ALIPIN`; V2 displays `DEV` and listens for role/visibility updates.
-- `StarterGui/PalmVilleAdminGui/AdminClient` — second client-side panel/launcher in the same ScreenGui. `PalmVilleAdminClient` is the current admin interface.
-- `ServerScriptService/PalmVilleCode` — old empty Rojo placeholder; real service scripts now map directly under `ServerScriptService`. The clean place copy disables this no-op placeholder.
+- `src/gui/PalmVilleAdminGui/PalmVilleAdminClient.client.lua` — the complete Admin V2 interface: Overview, Players, Announcements, Moderation, Staff & Roles, Tools, and Logs.
+- `src/server/PalmVilleAdminServerV2.server.lua` — the authoritative server backend: role verification, permissions, admin actions, moderation, announcements, logs, cross-server Players directory, and overview analytics.
+- `src/server/PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
+- `src/server/PalmVilleRoleTitlesV2.server.lua` — role title billboards using the Admin role resolver.
 
-The two dated `PalmVilleAdminClient` backups are under `archive/admin-client-backups/` and are not part of the Rojo project tree.
+The former standalone `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in `PalmVilleAdminServerV2`. Their data-store names and RemoteFunction endpoints are retained. Their old standalone Script files are removed from the active source tree and from the clean full-place test artifact.
 
-## Runtime dependencies to keep in Studio
+The former 120 KB Admin client is archived under `archive/admin-client-backups/`. The former Players and Analytics server files are archived under `archive/merged-server-backups/`. Archive files are not mapped into Roblox Studio.
 
-- `ServerStorage/PalmVilleAdminItems/RICE_SEED` is required by `PalmVilleItemRegistry`. It is a model/tool asset, so it is intentionally not replaced by source-only Rojo mapping.
-- `PalmVilleAdminServerV2` creates `PalmVilleGetAdminRole` and `PalmVilleAdminRoleChanged`; analytics, players directory, and role titles use those services. Keep V2 enabled.
-- `PalmVillePlayersServer` optionally reads a `BindableFunction` named `PalmVilleAdminPlayerData` for money, earned-today, level, XP, and playtime. That adapter is not present in the uploaded place, so those progress values will remain unavailable until connected to the real player-data system. Do not fill them with placeholder values.
-- Analytics and cross-server player directory features rely on Roblox DataStore/MemoryStore/MessagingService APIs. Studio tests may need API access enabled, and cross-server travel must be tested in a published experience.
+## Other active server systems
+
+- `FarmVilleGraphicsSettingsPersistence.server.lua` — graphics preferences; separate from Admin.
+- `PalmVilleRoleTitlesV2.server.lua` — role title display.
+- `PalmVilleItemRegistry.lua` — required item templates for Give Item.
+
+Keep `ServerStorage/PalmVilleAdminItems/RICE_SEED`; the item registry requires this Tool template. The optional `PalmVilleAdminPlayerData` BindableFunction can provide money, earned-today, level, XP, and playtime to the cross-server player directory. It is not present in the current place, so those values remain unavailable rather than fabricated.
+
+## Legacy scripts
+
+The old `ServerScriptService/PalmVilleAdminServer`, `RoleTitleSystem`, and `PalmVilleCode` entries are retired disabled placeholders. They are not part of the active Rojo source. Keep them disabled if they remain in a Studio copy; the validated full-place builder removes them only when their `Disabled = true` state is confirmed.
+
+The duplicate `StarterGui/PalmVilleAdminGui/AdminClient` placeholder is removed from the managed source tree. Rojo should remove that mapped child on sync. The active client is `PalmVilleAdminClient`.
 
 ## Safe sync process
 
-1. Back up the current place.
-2. Extract this ZIP into the root of your existing local `PalmVille` Git repository. Replace `default.project.json` and `README.md` when prompted; keep your existing `.git` folder.
-3. Review `git status`, then commit and push the imported source files to your chosen branch.
-4. Run `rojo serve default.project.json` and connect the Studio Rojo plugin to `localhost:34872`.
-5. Check Explorer: the three legacy scripts above and `PalmVilleCode` should show `Disabled = true`; the V2 scripts should remain enabled.
-6. Test with a private server before publishing.
+1. Save a backup of the current place before syncing.
+2. In the local PalmVille repository, run `git pull --ff-only origin feature/admin-menu-redesign`.
+3. Keep `rojo serve default.project.json` running and connect Studio to `localhost:34872`.
+4. Review the Rojo changes. Expect the Admin client/server source updates and deletion of the mapped standalone Players/Analytics scripts and duplicate `AdminClient`. Do not accept unrelated map or Workspace changes.
+5. Stop Play before accepting changes, then Play-test access, Overview, Players, Announcements, Moderation, Staff & Roles, Tools, and Logs.
+6. Do not publish until the Studio test is successful.
 
-This setup does not change the game's max-player setting or any place geometry. The uploaded place file does not contain a `MaxPlayers` value, so verify the six-player cap in the experience/place settings.
+The workflow does not change the place geometry or six-player cap. Verify the six-player limit in the Roblox experience/place settings.
