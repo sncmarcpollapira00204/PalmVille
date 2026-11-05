@@ -1,5 +1,13 @@
 # PalmVille server scripts
 
-Place server-side Luau scripts in this folder. Rojo syncs this folder into `ServerScriptService/PalmVilleCode`.
+Server-side scripts and ModuleScripts in this folder map directly into Roblox `ServerScriptService` through `default.project.json`.
 
-Keep the existing Studio world and models in Roblox Studio; this project mapping only manages this dedicated script folder.
+Active server systems:
+- `PalmVilleAdminServerV2.server.lua` — admin backend and role resolver.
+- `PalmVilleRoleTitlesV2.server.lua` — role-title billboards driven by the V2 role resolver.
+- `PalmVilleAnalyticsServer.server.lua` — admin overview analytics.
+- `PalmVillePlayersServer.server.lua` — admin player directory and player actions.
+- `FarmVilleGraphicsSettingsPersistence.server.lua` — persistent graphics preferences.
+- `PalmVilleItemRegistry.lua` — ModuleScript required by the admin backend.
+
+Retired duplicate/placeholder scripts are intentionally removed from this source tree. Preserve unrelated Studio-only services and scripts unless separately audited.
