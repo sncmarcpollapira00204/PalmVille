@@ -971,14 +971,20 @@ local function updatePlayerDetails(row)
 	end
 	detailName.Text = tostring(row.displayName or row.username or "Player")
 	detailUsername.Text = "@" .. tostring(row.username or "unknown")
-	detailOnline.Text = "●  Online"
-	detailOnline.TextColor3 = C.greenBright
-	detailMetadata.Text = string.format("User ID: %s   ·   Role: %s   ·   Health: %s/%s",
-		tostring(row.userId or "—"), displayRole(row.role), tostring(row.health or 0), tostring(row.maxHealth or 0))
-	detailPosition.Text = "Position: " .. tostring(row.position or "—")
-	detailPlaytime.Text = string.format("%dm %02ds",
-		math.floor((tonumber(row.playtime) or 0) / 60),
-		math.floor((tonumber(row.playtime) or 0) % 60))
+	local isOnline = row.online == nil or row.online == true
+	detailOnline.Text = isOnline and "●  Online" or "●  Offline"
+	detailOnline.TextColor3 = isOnline and C.greenBright or C.dim
+	local healthText = row.health ~= nil and (tostring(row.health) .. "/" .. tostring(row.maxHealth or row.health)) or "Not available"
+	detailMetadata.Text = string.format("User ID: %s   ·   Role: %s   ·   Health: %s",
+		tostring(row.userId or "—"), displayRole(row.role), healthText)
+	detailPosition.Text = "Position: " .. tostring(row.position or "Not available")
+	if row.playtime ~= nil then
+		detailPlaytime.Text = string.format("%dm %02ds",
+			math.floor((tonumber(row.playtime) or 0) / 60),
+			math.floor((tonumber(row.playtime) or 0) % 60))
+	else
+		detailPlaytime.Text = "Not available"
+	end
 	local userId = tonumber(row.userId)
 	if userId then
 		task.spawn(function()
