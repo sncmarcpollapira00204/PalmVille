@@ -985,7 +985,6 @@ do
 			end
 			return b
 		end
-		button(right,"View Transactions",8,function()showPlayersMessage("Transaction tracking is not connected yet.")end)
 
 
 		local function selected()return detailsRow and detailsRow.userId==selectedUserId and detailsRow end
@@ -1606,6 +1605,9 @@ do
 		sendButton.Size = UDim2.fromOffset(190, 42)
 		sendButton.TextSize = 13
 		sendButton.BackgroundColor3 = C.surface2
+		sendButton.MouseLeave:Connect(function()
+			sendButton.BackgroundColor3 = C.surface2
+		end)
 		function announcementUI.sent(data)
 			if announcementBox.Text == data.message then announcementBox.Text = "" end
 			feedback.Text = data.delivered and "Announcement sent." or "Shown in this server; all-server delivery failed."
