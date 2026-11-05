@@ -1129,7 +1129,7 @@ allAudience = button(audienceRow, "▱   All Servers", function()
 	setButtonBackground(serverAudience, C.surface)
 	setButtonBackground(allAudience, C.green)
 end, {size = UDim2.new(0.5, -6, 0, 52)})
-serverAudience.BackgroundColor3 = C.green
+setButtonBackground(serverAudience, C.green)
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
 local previewRow = addRow(announceCard, 52)
 button(previewRow, "◎   Preview", function()
@@ -1245,7 +1245,7 @@ for _, permissionRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER
 	button(permissionRoleRow, permissionRoleName, function(b)
 		permissionRole = permissionRoleName
 		for _, other in ipairs(permissionRoleRow:GetChildren()) do
-			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
+			if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 		end
 		remote:FireServer("RequestStaff")
 	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
