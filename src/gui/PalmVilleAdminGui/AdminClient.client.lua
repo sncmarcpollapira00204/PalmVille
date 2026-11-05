@@ -1,1 +1,0 @@
--- Legacy duplicate admin client retired. PalmVilleAdminClient is the only active admin interface.
