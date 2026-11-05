@@ -30,6 +30,7 @@ local C = {
 }
 
 local authorized = false
+local accessDeniedLogged = false
 local role = ""
 local permissions = {}
 local panelOpen = false
@@ -2414,10 +2415,16 @@ end
 
 remote.OnClientEvent:Connect(function(event, data)
 	if event == "AccessGranted" then
+		if type(data) ~= "table" or type(data.role) ~= "string" or data.role == "" then
+			warn("[PalmVille Admin] Ignored an incomplete AccessGranted response.")
+			return
+		end
 		authorized = true
-		role = type(data) == "table" and tostring(data.role or "") or ""
-		permissions = type(data) == "table" and data.permissions or {}
+		accessDeniedLogged = false
+		role = data.role
+		permissions = type(data.permissions) == "table" and data.permissions or {}
 		launcher.Visible = true
+		print(string.format("[PalmVille Admin] Access granted: %s (%s).", player.Name, role))
 		local visibleRole = displayRole(role)
 		roleLabel.Text = visibleRole
 		profile.role.Text = visibleRole
@@ -2430,6 +2437,11 @@ remote.OnClientEvent:Connect(function(event, data)
 			task.delay(0.6, function()
 				if authorized and isManager() then remote:FireServer("RequestStaff") end
 			end)
+		end
+	elseif event == "AccessDenied" then
+		if not accessDeniedLogged and type(data) == "table" and tonumber(data.userId) == player.UserId then
+			accessDeniedLogged = true
+			warn(string.format("[PalmVille Admin] Server denied access for %s (UserId %d). Configured developer: %s (UserId %s).", player.Name, player.UserId, tostring(data.masterUsername or "unknown"), tostring(data.masterUserId or "unknown")))
 		end
 	elseif event == "Notice" then
 		if announcementUI.notice then announcementUI.notice(data)end
@@ -2737,4 +2749,15 @@ task.spawn(function()
 	end
 end)
 
-remote:FireServer("RequestAccess")
+task.spawn(function()
+	local attempts = 0
+	print(string.format("[PalmVille Admin] Starting access handshake for %s (UserId %d).", player.Name, player.UserId))
+	while gui.Parent and not authorized do
+		attempts += 1
+		remote:FireServer("RequestAccess")
+		if attempts == 8 and not authorized then
+			warn("[PalmVille Admin] Access is still pending. Retrying; check Server Output for the server-side identity diagnostic.")
+		end
+		task.wait(attempts < 8 and 1.5 or 5)
+	end
+end)
