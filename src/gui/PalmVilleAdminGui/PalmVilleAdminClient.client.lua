@@ -1101,27 +1101,27 @@ local function moderationTarget()
 	end
 	return {targetUserId = userId, username = username}
 end
-local modActionRow1 = addRow(moderationCard, 36)
+local modActionRow1 = addRow(moderationCard, 48)
 button(modActionRow1, "WARN", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
 	target.reason = reasonBox.Text
 	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
 	sendAction("Warn", target)
-end, {size = UDim2.new(0.33, -5, 0, 34)})
+end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
 button(modActionRow1, "TOGGLE CHAT MUTE", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
 	sendAction("MuteChat", target)
-end, {size = UDim2.new(0.33, -5, 0, 34)})
+end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
 button(modActionRow1, "KICK", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
 	target.reason = reasonBox.Text
 	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
 	sendAction("Kick", target)
-end, {size = UDim2.new(0.34, -5, 0, 34), danger = true})
-local modActionRow2 = addRow(moderationCard, 36)
+end, {size = UDim2.new(0.34, -5, 0, 46), danger = true, textSize = 14})
+local modActionRow2 = addRow(moderationCard, 48)
 button(modActionRow2, "TEMP BAN", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
@@ -1129,20 +1129,20 @@ button(modActionRow2, "TEMP BAN", function()
 	target.durationDays = math.clamp(math.floor(tonumber(durationBox.Text) or 1), 1, 365)
 	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
 	sendAction("TempBan", target)
-end, {size = UDim2.new(0.33, -5, 0, 34), danger = true})
+end, {size = UDim2.new(0.33, -5, 0, 46), danger = true, textSize = 14})
 button(modActionRow2, "PERMANENT BAN", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
 	target.reason = reasonBox.Text
 	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
 	sendAction("PermanentBan", target)
-end, {size = UDim2.new(0.33, -5, 0, 34), danger = true})
+end, {size = UDim2.new(0.33, -5, 0, 46), danger = true, textSize = 14})
 button(modActionRow2, "UNBAN", function()
 	local target = moderationTarget()
 	target.username = moderationUsername.Text
 	target.reason = reasonBox.Text
 	sendAction("Unban", target)
-end, {size = UDim2.new(0.34, -5, 0, 34)})
+end, {size = UDim2.new(0.34, -5, 0, 46), textSize = 14})
 local historyCard = card(pages.MODERATION, "MODERATION HISTORY", "Saved actions for the entered or selected account.")
 local historyButton = button(historyCard, "LOAD HISTORY", function()
 	local target = moderationTarget()
@@ -1150,36 +1150,36 @@ local historyButton = button(historyCard, "LOAD HISTORY", function()
 	if not target.targetUserId and target.username == "" then setStatus("Enter a username or select a player.", true); return end
 	sendAction("ModerationHistory", target)
 end, {primary = true})
-local historyText = text(historyCard, "No history loaded.", 11, C.muted, 90)
+local historyText = text(historyCard, "No history loaded.", 14, C.muted, 110)
 historyText.TextYAlignment = Enum.TextYAlignment.Top
 
 local staffCard = card(pages.STAFF, "STAFF MANAGEMENT", "Owner and Developer only. The server validates all role changes.")
 local staffUsername = addField(staffCard, "ROBLOX USERNAME", "Username to assign")
 local staffRole = "ADMIN"
-local staffRoleRow = addRow(staffCard, 34)
+local staffRoleRow = addRow(staffCard, 48)
 for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) do
 	button(staffRoleRow, staffRoleName, function(b)
 		staffRole = staffRoleName
 		for _, other in ipairs(staffRoleRow:GetChildren()) do
 			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 		end
-	end, {size = UDim2.new(0.25, -6, 0, 32), textSize = 10})
+	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
 end
-local staffActions = addRow(staffCard, 36)
+local staffActions = addRow(staffCard, 48)
 button(staffActions, "ASSIGN ROLE", function()
 	if staffUsername.Text:gsub("%s", "") == "" then setStatus("Enter a Roblox username.", true); return end
 	sendAction("AddStaff", {username = staffUsername.Text, role = staffRole})
-end, {size = UDim2.new(0.5, -4, 0, 34), primary = true})
+end, {size = UDim2.new(0.5, -6, 0, 46), primary = true, textSize = 14})
 button(staffActions, "REMOVE SELECTED", function()
 	if not selectedStaffId then setStatus("Select a staff account first.", true); return end
 	sendAction("RemoveStaff", {targetUserId = selectedStaffId})
-end, {size = UDim2.new(0.5, -4, 0, 34), danger = true})
+end, {size = UDim2.new(0.5, -6, 0, 46), danger = true, textSize = 14})
 local staffListCard = card(pages.STAFF, "AUTHORIZED STAFF", "Select a row to prepare removal.")
 local staffList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, staffListCard)
 vertical(staffList, 4)
 local permissionsCard = card(pages.STAFF, "ROLE PERMISSIONS", "Change which sections an assignable role may access.")
 local permissionRole = "ADMIN"
-local permissionRoleRow = addRow(permissionsCard, 34)
+local permissionRoleRow = addRow(permissionsCard, 48)
 for _, permissionRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) do
 	button(permissionRoleRow, permissionRoleName, function(b)
 		permissionRole = permissionRoleName
@@ -1187,7 +1187,7 @@ for _, permissionRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER
 			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 		end
 		remote:FireServer("RequestStaff")
-	end, {size = UDim2.new(0.25, -6, 0, 32), textSize = 10})
+	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
 end
 local permissionList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, permissionsCard)
 vertical(permissionList, 4)
@@ -1195,14 +1195,14 @@ vertical(permissionList, 4)
 local toolsCard = card(pages.TOOLS, "GIVE ITEM", "Uses the registered item catalog and server-enforced role limits.")
 local itemCode = addField(toolsCard, "ITEM CODE", "Registered item code", "RICE_SEED")
 local itemAmount = addField(toolsCard, "AMOUNT", "1–99", "1")
-local itemModeRow = addRow(toolsCard, 34)
+local itemModeRow = addRow(toolsCard, 48)
 for _, mode in ipairs({"Player", "Self", "All"}) do
 	button(itemModeRow, string.upper(mode), function(b)
 		itemTargetMode = mode
 		for _, other in ipairs(itemModeRow:GetChildren()) do
 			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 		end
-	end, {size = UDim2.new(0.33, -5, 0, 32)})
+	end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
 end
 button(toolsCard, "GIVE REGISTERED ITEM", function()
 	if itemTargetMode == "Player" and not selectedUserId then setStatus("Select a player in Players first.", true); return end
@@ -1248,7 +1248,7 @@ local function renderStaff()
 				for _, other in ipairs(staffList:GetChildren()) do
 					if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 				end
-			end, {size = UDim2.new(1, 0, 0, 34)})
+			end, {size = UDim2.new(1, 0, 0, 44), textSize = 14})
 			item.BackgroundColor3 = selectedStaffId == tonumber(row.userId) and C.green or C.surface
 		end
 	end
@@ -1261,7 +1261,7 @@ local function renderStaff()
 		local enabled = current[area] == true
 		button(permissionList, area .. "   ·   " .. (enabled and "ON" or "OFF"), function()
 			sendAction("SetPermission", {role = permissionRole, area = area, enabled = not enabled})
-		end, {size = UDim2.new(1, 0, 0, 32), primary = enabled})
+		end, {size = UDim2.new(1, 0, 0, 42), primary = enabled, textSize = 14})
 	end
 end
 
@@ -1277,14 +1277,14 @@ local function renderLogs()
 		local row = logs[index]
 		local titleLine = tostring(row.action or row.event or "Admin action")
 		local detail = string.format("%s  ·  %s  ·  %s", tostring(row.actor or row.username or "Unknown"), tostring(row.target or "—"), tostring(row.result or row.status or "Recorded"))
-		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 48), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
-		addCorner(line, 7)
-		local titleLabel = text(line, titleLine, 12, C.text, 18, true)
-		titleLabel.Position = UDim2.fromOffset(10, 5)
-		titleLabel.Size = UDim2.new(1, -20, 0, 18)
-		local detailLabel = text(line, detail, 10, C.muted, 16)
-		detailLabel.Position = UDim2.fromOffset(10, 25)
-		detailLabel.Size = UDim2.new(1, -20, 0, 16)
+		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
+		addCorner(line, 11)
+		local titleLabel = text(line, titleLine, 15, C.text, 22, true)
+		titleLabel.Position = UDim2.fromOffset(14, 7)
+		titleLabel.Size = UDim2.new(1, -28, 0, 22)
+		local detailLabel = text(line, detail, 13, C.muted, 20)
+		detailLabel.Position = UDim2.fromOffset(14, 32)
+		detailLabel.Size = UDim2.new(1, -28, 0, 20)
 	end
 end
 
@@ -1301,7 +1301,8 @@ local function updateMetrics()
 	local metrics = snapshot.metrics or {}
 	metricPlayers.Text = string.format("%s / %s", tostring(metrics.playerCount or #snapshot.players), tostring(metrics.maxPlayers or 6))
 	metricFps.Text = tostring(metrics.serverFps or "—")
-	metricUptime.Text = tostring(metrics.uptime or 0) .. "s"
+	local uptime = math.max(0, math.floor(tonumber(metrics.uptime) or 0))
+	metricUptime.Text = string.format("%dm %02ds", math.floor(uptime / 60), uptime % 60)
 	metricMemory.Text = metrics.memoryMb and (tostring(metrics.memoryMb) .. " MB") or "—"
 	renderPlayers()
 end
