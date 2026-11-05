@@ -59,7 +59,7 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromScale(2.1, 0.48)
+	billboard.Size = UDim2.fromScale(2.4, 0.56)
 	billboard.StudsOffset = Vector3.new(0, 2.65, 0)
 	billboard.MaxDistance = 80
 	billboard.AlwaysOnTop = false
@@ -70,7 +70,7 @@ local function createTitle(player, character)
 	label.Name = "Title"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.GothamBold
+	label.Font = Enum.Font.Nunito
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextStrokeColor3 = style.outline
