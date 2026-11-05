@@ -292,7 +292,7 @@ local function showAnnouncement(data, preview)
 	local incomingRole = tostring(data.role or "")
 	local roleLabel = displayRole(incomingRole)
 	local author = incomingRole == "MASTER DEVELOPER" and "Lupin" or tostring(data.by or "Staff")
-	local message = tostring(data.text or ""):gsub("[\\r\\n]+", " ")
+	local message = tostring(data.text or "")
 	if message:gsub("%s", "") == "" then return end
 
 	local viewport = gui.AbsoluteSize
