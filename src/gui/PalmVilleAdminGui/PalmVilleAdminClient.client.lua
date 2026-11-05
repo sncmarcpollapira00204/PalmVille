@@ -2041,7 +2041,8 @@ do
 		local GuiService=game:GetService("GuiService")
 		local colors={OWNER=Color3.fromRGB(234,197,108),["MASTER DEVELOPER"]=Color3.fromRGB(234,197,108),["HEAD ADMIN"]=Color3.fromRGB(166,201,133)}
 		local root=make("CanvasGroup",{Name="AnnouncementBanner",AnchorPoint=Vector2.new(0.5,0),Position=UDim2.new(0.5,0,0,86),Size=UDim2.fromOffset(900,100),BackgroundTransparency=1,Visible=false,ZIndex=55},gui)
-		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,TextTruncate=Enum.TextTruncate.None,ClipsDescendants=false,ZIndex=56},root)
+		local roleTagLabel=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,ZIndex=56},root)
+		local authorNameLabel=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=28,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.2,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=false,ZIndex=56},root)
 		local badge=make("Frame",{Size=UDim2.fromOffset(26,26),BackgroundColor3=Color3.fromRGB(0,149,255),BorderSizePixel=0,ZIndex=56},root);corner(badge,13)
 		make("Frame",{Position=UDim2.fromOffset(6,13),Size=UDim2.fromOffset(7,3),Rotation=45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
 		make("Frame",{Position=UDim2.fromOffset(10,11),Size=UDim2.fromOffset(12,3),Rotation=-45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
@@ -2071,6 +2072,8 @@ do
 			local maxPrefixWidth = available * 0.48
 			local prefixPadding = 72
 			local prefixWidth = measure(prefixText()).X + prefixPadding
+			local roleTagWidth = measure("[" .. tag .. "]").X + 10
+			local authorNameWidth = math.max(measure(name).X + 18, prefixWidth - roleTagWidth - 8)
 			if prefixWidth > maxPrefixWidth then
 				local parts = {}
 				for _, codepoint in utf8.codes(name) do
@@ -2099,17 +2102,23 @@ do
 			root.Size = UDim2.fromOffset(contentWidth, totalHeight)
 			root.AnchorPoint = Vector2.new(0.5, 0)
 			root.Position = UDim2.new(0.5, 0, root.Position.Y.Scale, root.Position.Y.Offset)
-			prefix.Position = UDim2.fromOffset(0, 2)
-			prefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 12)
-			prefix.Font = measureFont
-			prefix.TextSize = fontSize
-			prefix.TextWrapped = false
-			prefix.TextTruncate = Enum.TextTruncate.None
-			prefix.TextXAlignment = Enum.TextXAlignment.Left
-			prefix.TextYAlignment = Enum.TextYAlignment.Center
-			local color = colors[current.role]
-			prefix.Text = string.format('<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',
-				math.round(color.R * 255), math.round(color.G * 255), math.round(color.B * 255), escape(tag), escape(name))
+			roleTagLabel.Position = UDim2.fromOffset(0, 2)
+			roleTagLabel.Size = UDim2.fromOffset(roleTagWidth, fontSize + 12)
+			roleTagLabel.Font = measureFont
+			roleTagLabel.TextSize = fontSize
+			roleTagLabel.Text = "[" .. tag .. "]"
+			roleTagLabel.TextColor3 = colors[current.role]
+			roleTagLabel.TextWrapped = false
+			roleTagLabel.TextTruncate = Enum.TextTruncate.None
+
+			authorNameLabel.Position = UDim2.fromOffset(roleTagWidth + 8, 2)
+			authorNameLabel.Size = UDim2.fromOffset(authorNameWidth, fontSize + 12)
+			authorNameLabel.Font = measureFont
+			authorNameLabel.TextSize = fontSize
+			authorNameLabel.Text = name
+			authorNameLabel.TextColor3 = C.text
+			authorNameLabel.TextWrapped = false
+			authorNameLabel.TextTruncate = Enum.TextTruncate.None
 
 			badge.Size = UDim2.fromOffset(badgeSize, badgeSize)
 			badge.Position = UDim2.fromOffset(prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
@@ -2129,6 +2138,8 @@ do
 				announcementSound:Stop();announcementSound.TimePosition=0;announcementSound:Play()
 			end
 			serial+=1;local token=serial;current=data
+			local resolvedName = current.role == "MASTER DEVELOPER" and "Lupin" or tostring(current.by or "Staff")
+			print(string.format("[PalmVille Announcement] role=%s author=%s", tostring(current.role), resolvedName))
 			if running then running:Cancel()end
 			fit();previewTag.Visible=isPreview==true
 			local inset=GuiService:GetGuiInset()
