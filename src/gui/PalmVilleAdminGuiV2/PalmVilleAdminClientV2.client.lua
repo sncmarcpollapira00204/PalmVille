@@ -57,6 +57,9 @@ local savedCamera
 
 local function make(className, properties, parent)
 	local object = Instance.new(className)
+	if object:IsA("GuiObject") and parent and parent:IsA("GuiObject") then
+		object.ZIndex = parent.ZIndex + 1
+	end
 	for key, value in pairs(properties or {}) do
 		object[key] = value
 	end
@@ -341,11 +344,7 @@ local function showAnnouncement(data, preview)
 	print(string.format("[PalmVille Admin V2] Announcement role=%s author=%s", incomingRole, author))
 end
 
-local launcher = button(gui, "ADMIN", function()
-	if authorized then
-		panelOpen = not panelOpen
-	end
-end, {size = UDim2.fromOffset(116, 40), primary = true, textSize = 12})
+local launcher = button(gui, "ADMIN", function() end, {size = UDim2.fromOffset(116, 40), primary = true, textSize = 12})
 launcher.Name = "PalmVilleAdminLauncherV2"
 launcher.AnchorPoint = Vector2.new(1, 0)
 launcher.Position = UDim2.new(1, -22, 0, 20)
@@ -462,13 +461,13 @@ local navOrder = {
 	{"LOGS", "Logs", "Logs"},
 }
 
-for _, entry in ipairs(navOrder) do
+for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
 	local nav = button(sidebar, caption, function()
 		activeTab = key
 	end, {size = UDim2.new(1, -26, 0, 38), textSize = 12})
 	nav.Name = "Nav_" .. key
-	nav.Position = UDim2.fromOffset(13, 134 + (#navButtons * 45))
+	nav.Position = UDim2.fromOffset(13, 134 + ((navIndex - 1) * 45))
 	nav.TextXAlignment = Enum.TextXAlignment.Left
 	make("UIPadding", {PaddingLeft = UDim.new(0, 12)}, nav)
 	navButtons[key] = nav
@@ -640,14 +639,16 @@ announceBox:GetPropertyChangedSignal("Text"):Connect(function()
 	announceCount.TextColor3 = #announceBox.Text > 280 and C.red or C.dim
 end)
 local audienceRow = addRow(announceCard, 38)
-local serverAudience = button(audienceRow, "THIS SERVER  ✓", function()
+local serverAudience
+local allAudience
+serverAudience = button(audienceRow, "THIS SERVER  ✓", function()
 	audience = "This Server"
 	serverAudience.Text = "THIS SERVER  ✓"
 	allAudience.Text = "ALL SERVERS"
 	serverAudience.BackgroundColor3 = C.green
 	allAudience.BackgroundColor3 = C.surface
 end, {size = UDim2.new(0.5, -4, 0, 36), primary = true})
-local allAudience = button(audienceRow, "ALL SERVERS", function()
+allAudience = button(audienceRow, "ALL SERVERS", function()
 	audience = "All Servers"
 	serverAudience.Text = "THIS SERVER"
 	allAudience.Text = "ALL SERVERS  ✓"
