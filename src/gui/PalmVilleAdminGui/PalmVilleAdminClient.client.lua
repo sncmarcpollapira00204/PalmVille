@@ -178,7 +178,7 @@ local launcher = make("TextButton", {
 	BorderSizePixel = 0,
 	Text = "ADMIN",
 	TextColor3 = C.white,
-	Font = Enum.Font.GothamBold,
+	Font = Enum.Font.Nunito,
 	TextSize = 15,
 	Visible = false,
 	AutoButtonColor = false,
@@ -235,7 +235,7 @@ local brand = make("TextLabel", {
 	Size = UDim2.new(0.32, 0, 1, 0),
 	Text = "Admin",
 	TextColor3 = C.text,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.Nunito,
 	TextSize = 34,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	ZIndex = 12,
@@ -259,7 +259,7 @@ local roleLabel = make("TextLabel", {
 	Size = UDim2.new(0.3, 0, 1, 0),
 	Text = "",
 	TextColor3 = C.muted,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.Nunito,
 	TextSize = 10,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	ZIndex = 12,
@@ -275,7 +275,7 @@ local function headerButton(name, label, width, callback)
 		BackgroundTransparency = 1,
 		Text = label,
 		TextColor3 = C.text,
-		Font = Enum.Font.Gotham,
+		Font = Enum.Font.Nunito,
 		TextSize = 36,
 		AutoButtonColor = false,
 		ZIndex = 13,
@@ -341,7 +341,7 @@ statusLabel = make("TextLabel", {
 	Size = UDim2.new(1, -32, 1, 0),
 	Text = "READY",
 	TextColor3 = C.muted,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.Nunito,
 	TextSize = 10,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	ZIndex = 12,
@@ -362,12 +362,12 @@ local profile = {}
 profile.root = make("Frame", {Name = "AdminProfile", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 104), ZIndex = 12}, sidebar)
 profile.avatar = make("ImageLabel", {Position = UDim2.fromOffset(12, 16), Size = UDim2.fromOffset(44, 44), BackgroundColor3 = C.surface, BorderSizePixel = 0, ZIndex = 13}, profile.root)
 corner(profile.avatar, 22)
-profile.name = make("TextLabel", {Position = UDim2.fromOffset(68, 14), Size = UDim2.new(1, -80, 0, 22), BackgroundTransparency = 1, Text = player.Name, TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 15, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, profile.root)
-profile.role = make("TextLabel", {AnchorPoint = Vector2.zero, Position = UDim2.fromOffset(68, 40), Size = UDim2.fromOffset(124, 20), BackgroundColor3 = Color3.fromRGB(74, 132, 91), BorderSizePixel = 0, Text = "STAFF", TextColor3 = C.white, Font = Enum.Font.GothamBold, TextSize = 10, TextScaled = true, ZIndex = 13}, profile.root)
+profile.name = make("TextLabel", {Position = UDim2.fromOffset(68, 14), Size = UDim2.new(1, -80, 0, 22), BackgroundTransparency = 1, Text = player.Name, TextColor3 = C.text, Font = Enum.Font.Nunito, TextSize = 15, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, profile.root)
+profile.role = make("TextLabel", {AnchorPoint = Vector2.zero, Position = UDim2.fromOffset(68, 40), Size = UDim2.fromOffset(124, 20), BackgroundColor3 = Color3.fromRGB(74, 132, 91), BorderSizePixel = 0, Text = "STAFF", TextColor3 = C.white, Font = Enum.Font.Nunito, TextSize = 10, TextScaled = true, ZIndex = 13}, profile.root)
 corner(profile.role, 6)
 make("UITextSizeConstraint", {MinTextSize = 9, MaxTextSize = 16}, profile.role)
 make("Frame", {Position = UDim2.new(0, 16, 1, -1), Size = UDim2.new(1, -32, 0, 2), BackgroundColor3 = C.line, BorderSizePixel = 0, ZIndex = 13}, profile.root)
-profile.subtitle = make("TextLabel", {Position = UDim2.fromOffset(82, 48), Size = UDim2.new(1, -210, 0, 20), BackgroundTransparency = 1, Text = "Server overview", TextColor3 = C.muted, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, header)
+profile.subtitle = make("TextLabel", {Position = UDim2.fromOffset(82, 48), Size = UDim2.new(1, -210, 0, 20), BackgroundTransparency = 1, Text = "Server overview", TextColor3 = C.muted, Font = Enum.Font.Nunito, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, header)
 headerDots.Visible = false
 task.spawn(function()
 	local ok, thumbnail = pcall(function()
@@ -441,7 +441,7 @@ local function section(parent, text, order)
 		Size = UDim2.new(1, 0, 0, 32),
 		Text = text,
 		TextColor3 = C.text,
-		Font = Enum.Font.GothamBold,
+		Font = Enum.Font.Nunito,
 		TextSize = 19,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 13,
@@ -455,7 +455,7 @@ local function textLabel(parent, text, height, order, properties)
 		Size = UDim2.new(1, 0, 0, height or 26),
 		Text = text or "",
 		TextColor3 = C.text,
-		Font = Enum.Font.Gotham,
+		Font = Enum.Font.Nunito,
 		TextSize = 12,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -475,7 +475,7 @@ local function inputBox(parent, placeholder, order, height)
 		PlaceholderColor3 = C.dim,
 		PlaceholderText = placeholder,
 		Text = "",
-		Font = Enum.Font.Gotham,
+		Font = Enum.Font.Nunito,
 		TextSize = 13,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ClearTextOnFocus = false,
@@ -495,7 +495,7 @@ local function actionButton(parent, label, callback, order, widthScale)
 		BackgroundColor3 = C.surface,
 		Text = label,
 		TextColor3 = C.text,
-		Font = Enum.Font.Gotham,
+		Font = Enum.Font.Nunito,
 		TextSize = UserInputService.TouchEnabled and 12 or 13,
 		TextWrapped = true,
 		AutoButtonColor = false,
@@ -543,7 +543,7 @@ local function createTab(name, area, managerOnly, page, label)
 		BackgroundTransparency = 1,
 		Text = "",
 		TextColor3 = C.text,
-		Font = Enum.Font.GothamMedium,
+		Font = Enum.Font.Nunito,
 		TextSize = 13,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		AutoButtonColor = false,
@@ -568,7 +568,7 @@ local function createTab(name, area, managerOnly, page, label)
 		BackgroundTransparency = 1,
 		Text = label or name,
 		TextColor3 = C.muted,
-		Font = Enum.Font.GothamMedium,
+		Font = Enum.Font.Nunito,
 		TextSize = 13,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 14,
@@ -653,7 +653,7 @@ local function createMoreTab(name, area, managerOnly, page)
 		BackgroundColor3 = C.background,
 		Text = name,
 		TextColor3 = C.muted,
-		Font = Enum.Font.Gotham,
+		Font = Enum.Font.Nunito,
 		TextSize = 9,
 		AutoButtonColor = false,
 		Visible = false,
@@ -697,22 +697,18 @@ end
 createTab("OVERVIEW", nil, false, homePage, "Overview")
 createTab("PLAYERS", "Players", false, playersPage, "Players")
 createTab("ANNOUNCEMENT", "Announcements", false, announcementPage, "Announcements")
-createTab("ENVIRONMENT", "Environment", false, worldPage, "World")
 createTab("MODERATION", "Moderation", false, moderationPage, "Moderation")
 createTab("ADMIN_MANAGEMENT", nil, true, staffPage, "Staff & Roles")
 createTab("TOOLS", "Tools", false, togglePage, "Tools")
-createTab("PERFORMANCE", "Monitoring", false, statusPage, "Performance")
 createTab("LOGS", "Logs", false, logsPage, "Logs")
 
 local TAB_DESCRIPTIONS = {
 	OVERVIEW = "Server overview and activity",
 	PLAYERS = "Player directory and details",
 	ANNOUNCEMENT = "Server-wide messages",
-	ENVIRONMENT = "World and weather controls",
 	MODERATION = "Player safety and moderation",
 	ADMIN_MANAGEMENT = "Staff access and permissions",
 	TOOLS = "Admin abilities and item tools",
-	PERFORMANCE = "Server and client performance",
 	LOGS = "Administrative activity history",
 }
 
@@ -735,10 +731,9 @@ activateTab = function(name)
 	profile.subtitle.Text = TAB_DESCRIPTIONS[name] or "Admin controls"
 	giveItemPage.Visible = name == "TOOLS" and toolsSubpage == "GIVE ITEM"
 	togglePage.Visible = name == "TOOLS" and toolsSubpage == "ABILITIES"
-	if name == "OVERVIEW" or name == "PLAYERS" or name == "MODERATION" or name == "TOOLS" or name == "PERFORMANCE" then
+	if name == "OVERVIEW" or name == "PLAYERS" or name == "MODERATION" or name == "TOOLS" then
 		remote:FireServer("RequestSnapshot")
 	elseif name == "ANNOUNCEMENT" then
-		remote:FireServer("RequestAnnouncementHistory")
 		return
 	end
 end
@@ -801,7 +796,7 @@ local function refreshTabs()
 		activateTab(activeTab)
 	else
 		activeTab = nil
-		for _, name in ipairs({"OVERVIEW", "PLAYERS", "ANNOUNCEMENT", "ENVIRONMENT", "MODERATION", "ADMIN_MANAGEMENT", "TOOLS", "PERFORMANCE", "LOGS"}) do
+		for _, name in ipairs({"OVERVIEW", "PLAYERS", "ANNOUNCEMENT", "MODERATION", "ADMIN_MANAGEMENT", "TOOLS", "LOGS"}) do
 			local item = tabs[name]
 			if item and item.button.Visible then
 				activateTab(name)
@@ -844,7 +839,7 @@ local function askConfirm(title, detail, callback)
 	if previous then previous:Destroy() end
 	local shade=make("TextButton",{Name="ConfirmShade",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),
 		BackgroundTransparency=0.42,Text="",AutoButtonColor=false,ZIndex=50},gui)
-	local bodyHeight=math.clamp(game:GetService("TextService"):GetTextSize(tostring(detail),21,Enum.Font.Gotham,Vector2.new(428,10000)).Y+10,76,330)
+	local bodyHeight=math.clamp(game:GetService("TextService"):GetTextSize(tostring(detail),21,Enum.Font.Nunito,Vector2.new(428,10000)).Y+10,76,330)
 	local modalHeight=bodyHeight+170
 	local modal=make("Frame",{Name="ConfirmModal",AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),
 		Size=UDim2.fromOffset(480,modalHeight),BackgroundColor3=C.panel,BorderSizePixel=0,Active=true,ZIndex=51},shade)
@@ -859,10 +854,10 @@ local function askConfirm(title, detail, callback)
 	task.defer(fit)
 	local readableTitle=tostring(title):lower():gsub("(%a)([%w']*)",function(first,rest)return first:upper()..rest end)
 	make("TextLabel",{Position=UDim2.fromOffset(26,22),Size=UDim2.new(1,-52,0,42),BackgroundTransparency=1,
-		Text=readableTitle,Font=Enum.Font.Gotham,TextSize=30,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,
+		Text=readableTitle,Font=Enum.Font.Nunito,TextSize=30,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,
 		TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=true,ZIndex=52},modal)
 	make("TextLabel",{Position=UDim2.fromOffset(26,76),Size=UDim2.new(1,-52,0,bodyHeight),BackgroundTransparency=1,
-		Text=tostring(detail),Font=Enum.Font.Gotham,TextSize=21,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,
+		Text=tostring(detail),Font=Enum.Font.Nunito,TextSize=21,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,
 		TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=52},modal)
 	local actions=make("Frame",{Position=UDim2.new(0,26,1,-74),Size=UDim2.new(1,-52,0,48),BackgroundTransparency=1,ZIndex=52},modal)
 	local cancel=actionButton(actions,"Cancel",function()shade:Destroy()end,1)
@@ -926,16 +921,16 @@ do
 
 		local function label(parent,text,size,height,order,color)
 			return make("TextLabel",{LayoutOrder=order,Size=UDim2.new(1,0,0,height),BackgroundTransparency=1,Text=text,
-				Font=Enum.Font.Gotham,TextSize=size,TextColor3=color or C.text,TextXAlignment=Enum.TextXAlignment.Left,
+				Font=Enum.Font.Nunito,TextSize=size,TextColor3=color or C.text,TextXAlignment=Enum.TextXAlignment.Left,
 				TextWrapped=true,ZIndex=15},parent)
 		end
 		make("TextLabel",{Position=UDim2.fromOffset(14,10),Size=UDim2.new(1,-28,0,32),BackgroundTransparency=1,
-			Text="Players",Font=Enum.Font.GothamBold,TextSize=20,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
+			Text="Players",Font=Enum.Font.Nunito,TextSize=20,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
 		local scope=make("TextLabel",{Position=UDim2.fromOffset(14,44),Size=UDim2.new(1,-28,0,22),BackgroundTransparency=1,
-			Text="All servers · Loading...",Font=Enum.Font.Gotham,TextSize=12,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
+			Text="All servers · Loading...",Font=Enum.Font.Nunito,TextSize=12,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
 		playerSearch=make("TextBox",{Position=UDim2.fromOffset(14,74),Size=UDim2.new(1,-28,0,38),BackgroundColor3=C.background,
 			PlaceholderText="Search name or username",PlaceholderColor3=C.dim,Text="",ClearTextOnFocus=false,
-			Font=Enum.Font.Gotham,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
+			Font=Enum.Font.Nunito,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=14},left)
 		corner(playerSearch,8);stroke(playerSearch,C.line)
 		make("UIPadding",{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,8)},playerSearch)
 		playerList=make("ScrollingFrame",{Position=UDim2.fromOffset(14,124),Size=UDim2.new(1,-28,1,-138),BackgroundTransparency=1,
@@ -946,16 +941,16 @@ do
 		local avatar=make("ImageLabel",{Position=UDim2.fromOffset(0,2),Size=UDim2.fromOffset(84,84),BackgroundColor3=C.surface,BorderSizePixel=0,ZIndex=15},profile)
 		corner(avatar,42)
 		local display=make("TextLabel",{Position=UDim2.fromOffset(96,0),Size=UDim2.new(1,-96,0,38),Text="Select a player",
-			BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=15},profile)
+			BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=18,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=15},profile)
 		local handle=make("TextLabel",{Position=UDim2.fromOffset(96,39),Size=UDim2.new(1,-96,0,28),Text="",BackgroundTransparency=1,
-			Font=Enum.Font.Gotham,TextSize=13,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=15},profile)
+			Font=Enum.Font.Nunito,TextSize=13,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=15},profile)
 		local online=make("TextLabel",{Position=UDim2.fromOffset(96,70),Size=UDim2.new(1,-96,0,26),Text="",BackgroundTransparency=1,
-			Font=Enum.Font.GothamMedium,TextSize=12,TextColor3=Color3.fromRGB(112,184,130),TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},profile)
+			Font=Enum.Font.Nunito,TextSize=12,TextColor3=Color3.fromRGB(112,184,130),TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},profile)
 		local metadata=make("Frame",{LayoutOrder=3,Size=UDim2.new(1,0,0,58),BackgroundColor3=C.surface,BorderSizePixel=0,ZIndex=14},right)
 		corner(metadata,8);stroke(metadata,C.line)
 		local idTitle=label(metadata,"User ID",18,24,1,C.muted);idTitle.Position=UDim2.fromOffset(8,2);idTitle.Size=UDim2.new(0.32,-12,0,24)
 		local idBox=make("TextBox",{Position=UDim2.fromOffset(8,27),Size=UDim2.new(0.32,-12,0,28),BackgroundTransparency=1,Text="--",
-			TextEditable=false,ClearTextOnFocus=false,Font=Enum.Font.GothamMedium,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},metadata)
+			TextEditable=false,ClearTextOnFocus=false,Font=Enum.Font.Nunito,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},metadata)
 		local serverTitle=label(metadata,"Server",18,24,1,C.muted);serverTitle.Position=UDim2.new(0.33,6,0,2);serverTitle.Size=UDim2.new(0.32,-12,0,24)
 		local serverValue=label(metadata,"--",21,28,2);serverValue.Position=UDim2.new(0.33,6,0,27);serverValue.Size=UDim2.new(0.32,-12,0,28)
 		local sessionTitle=label(metadata,"Current Session",18,24,1,C.muted);sessionTitle.Position=UDim2.new(0.66,6,0,2);sessionTitle.Size=UDim2.new(0.34,-12,0,24);sessionTitle.TextWrapped=false;sessionTitle.TextScaled=true;make("UITextSizeConstraint",{MinTextSize=14,MaxTextSize=18},sessionTitle)
@@ -968,12 +963,12 @@ do
 		for i,definition in ipairs({{"money","Money"},{"earnedToday","Earned Today"},{"level","Level"},{"totalPlaytime","Total Playtime"}}) do
 			local box=make("Frame",{LayoutOrder=i,BackgroundColor3=C.surface,BorderSizePixel=0,ZIndex=14},stats);corner(box,8)
 			local text=make("TextLabel",{Position=UDim2.fromOffset(8,3),Size=UDim2.new(1,-16,1,-6),BackgroundTransparency=1,
-				Text=definition[2].."\nNot available",Font=Enum.Font.GothamMedium,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},box)
+				Text=definition[2].."\nNot available",Font=Enum.Font.Nunito,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},box)
 			statLabels[definition[1]]={label=text,title=definition[2]}
 		end
 		local xpBox=make("Frame",{LayoutOrder=7,Size=UDim2.new(1,0,0,46),BackgroundColor3=C.surface,BorderSizePixel=0,ZIndex=14},right);corner(xpBox,8)
 		local xp=make("TextLabel",{Position=UDim2.fromOffset(8,2),Size=UDim2.new(1,-16,0,24),BackgroundTransparency=1,
-			Text="XP · Not available",Font=Enum.Font.GothamMedium,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},xpBox)
+			Text="XP · Not available",Font=Enum.Font.Nunito,TextSize=13,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=15},xpBox)
 		local track=make("Frame",{Position=UDim2.new(0,8,1,-12),Size=UDim2.new(1,-16,0,6),BackgroundColor3=C.background,BorderSizePixel=0,ZIndex=15},xpBox);corner(track,4)
 		local fill=make("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=Color3.fromRGB(163,197,130),BorderSizePixel=0,ZIndex=16},track);corner(fill,4)
 		local function button(parent,text,order,callback)
@@ -1134,11 +1129,11 @@ do
 					local thumb=make("ImageLabel",{Position=UDim2.fromOffset(8,11),Size=UDim2.fromOffset(60,60),BackgroundColor3=C.panel,BorderSizePixel=0,ZIndex=16},b)
 					corner(thumb,30);avatarImage(thumb,row.userId)
 					make("TextLabel",{Position=UDim2.fromOffset(78,6),Size=UDim2.new(1,-86,0,32),BackgroundTransparency=1,Text=row.displayName or row.username,
-						Font=Enum.Font.Gotham,TextSize=29,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16},b)
+						Font=Enum.Font.Nunito,TextSize=29,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16},b)
 					make("TextLabel",{Position=UDim2.fromOffset(78,39),Size=UDim2.new(1,-86,0,26),BackgroundTransparency=1,Text="@"..row.username,
-						Font=Enum.Font.Gotham,TextSize=22,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16},b)
+						Font=Enum.Font.Nunito,TextSize=22,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16},b)
 					make("TextLabel",{Position=UDim2.fromOffset(78,66),Size=UDim2.new(1,-86,0,23),BackgroundTransparency=1,Text=row.serverLabel or "This server",
-						Font=Enum.Font.Gotham,TextSize=20,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16},b)
+						Font=Enum.Font.Nunito,TextSize=20,TextColor3=C.muted,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16},b)
 					b.Activated:Connect(function()
 						selectedUserId,selectedName=row.userId,row.username
 						if moderatorUsername then moderatorUsername.Text=row.username end
@@ -1252,11 +1247,11 @@ do
 				BackgroundColor3 = C.surface, BorderSizePixel = 0, ZIndex = 13}, statRow)
 			corner(card, 12)
 						make("TextLabel", {Position = UDim2.fromOffset(12, 10), Size = UDim2.new(1, -24, 0, 44),
-				BackgroundTransparency = 1, Text = definition[2], Font = Enum.Font.GothamMedium,
+				BackgroundTransparency = 1, Text = definition[2], Font = Enum.Font.Nunito,
 				TextColor3 = C.text, TextSize = 13, TextScaled = true, ZIndex = 14}, card)
 			statValues[definition[1]] = make("TextLabel", {Position = UDim2.new(0, 8, 0, 57),
 				Size = UDim2.new(1, -16, 0, 46), BackgroundTransparency = 1, Text = "--",
-				Font = Enum.Font.GothamBold, TextColor3 = C.text, TextSize = 28, TextScaled = true, ZIndex = 14}, card)
+				Font = Enum.Font.Nunito, TextColor3 = C.text, TextSize = 28, TextScaled = true, ZIndex = 14}, card)
 			make("UITextSizeConstraint", {MinTextSize = 14, MaxTextSize = 34}, statValues[definition[1]])
 		end
 		local activity = make("Frame", {Name = "DailyActivity", LayoutOrder = 2,
@@ -1264,11 +1259,11 @@ do
 		corner(activity, 14)
 		stroke(activity, C.line, 0.35)
 		make("TextLabel", {Position = UDim2.fromOffset(18, 12), Size = UDim2.new(0.65, -18, 0, 40),
-			BackgroundTransparency = 1, Text = "Daily Activity", Font = Enum.Font.Gotham,
+			BackgroundTransparency = 1, Text = "Daily Activity", Font = Enum.Font.Nunito,
 			TextSize = 30, TextColor3 = C.text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 13}, activity)
 		local rangeLabel = make("TextLabel", {AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -18, 0, 18),
 			Size = UDim2.new(0.27, 0, 0, 28), BackgroundColor3 = Color3.fromRGB(163, 197, 130),
-			Text = "Last 7 days", Font = Enum.Font.Gotham, TextSize = 16, TextColor3 = C.background, ZIndex = 13}, activity)
+			Text = "Last 7 days", Font = Enum.Font.Nunito, TextSize = 16, TextColor3 = C.background, ZIndex = 13}, activity)
 		corner(rangeLabel, 14)
 		local filterRow = make("Frame", {Position = UDim2.fromOffset(18, 64), Size = UDim2.new(1, -36, 0, 36),
 			BackgroundTransparency = 1, ZIndex = 13}, activity)
@@ -1278,7 +1273,7 @@ do
 		for index, definition in ipairs(metricDefinitions) do
 			local key = definition[1]
 			local button = make("TextButton", {LayoutOrder = index, Size = UDim2.new(0.25, -6, 1, 0),
-				BackgroundColor3 = C.background, Text = definition[2], Font = Enum.Font.Gotham,
+				BackgroundColor3 = C.background, Text = definition[2], Font = Enum.Font.Nunito,
 				TextSize = 17, TextScaled = true, TextColor3 = C.text, AutoButtonColor = false, ZIndex = 14}, filterRow)
 			corner(button, 8); stroke(button, C.line)
 			make("UIPadding", {PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6)}, button)
@@ -1289,12 +1284,12 @@ do
 		local chart = make("Frame", {Position = UDim2.fromOffset(55, 126), Size = UDim2.new(1, -83, 0, 192),
 			BackgroundTransparency = 1, ZIndex = 13}, activity)
 		local summary = make("TextLabel", {Position = UDim2.new(0, 18, 1, -80), Size = UDim2.new(1, -36, 0, 42),
-			BackgroundColor3 = C.surface2, Text = "Waiting for analytics...", Font = Enum.Font.Gotham,
+			BackgroundColor3 = C.surface2, Text = "Waiting for analytics...", Font = Enum.Font.Nunito,
 			TextSize = 15, TextWrapped = true, TextColor3 = C.text, ZIndex = 14}, activity)
 		corner(summary, 12)
 		make("UIPadding", {PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8)}, summary)
 		local analyticsFooter = make("TextLabel", {Position = UDim2.new(0, 18, 1, -30), Size = UDim2.new(1, -36, 0, 22),
-			BackgroundTransparency = 1, Text = "Resets at 12 AM PHT", Font = Enum.Font.Gotham,
+			BackgroundTransparency = 1, Text = "Resets at 12 AM PHT", Font = Enum.Font.Nunito,
 			TextSize = 12, TextColor3 = C.muted, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 14}, activity)
 		local function chartMake(className, props)
 			props.ZIndex = props.ZIndex or 14
@@ -1333,7 +1328,7 @@ do
 					BackgroundColor3 = C.line, BackgroundTransparency = 0.3, BorderSizePixel = 0})
 				chartMake("TextLabel", {AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.fromOffset(-8, y),
 					Size = UDim2.fromOffset(43, 22), BackgroundTransparency = 1, Text = numberText(maximum * tick / 3),
-					Font = Enum.Font.Gotham, TextSize = 13, TextColor3 = C.muted})
+					Font = Enum.Font.Nunito, TextSize = 13, TextColor3 = C.muted})
 			end
 			local selected = days[selectedDay]
 			local prevX, prevY = nil, nil
@@ -1344,7 +1339,7 @@ do
 				local label = day and day.label or "--"
 				local button = chartMake("TextButton", {AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromOffset(x, height + 8),
 					Size = UDim2.fromOffset(math.max(28, (width-24)/7), 26), BackgroundTransparency = 1, Text = label,
-					Font = Enum.Font.Gotham, TextSize = 13, TextScaled = true,
+					Font = Enum.Font.Nunito, TextSize = 13, TextScaled = true,
 					TextColor3 = index == selectedDay and sage or C.text})
 				make("UITextSizeConstraint", {MinTextSize = 8, MaxTextSize = 13}, button)
 				button.Activated:Connect(function() selectedDay = index; repaintAnalytics() end)
@@ -1431,99 +1426,195 @@ do
 	end)()
 end
 
--- Announcements composer and history.
+-- Announcements composer.
 do
 	(function()
-		local audience="This Server"
-		local root=make("Frame",{Name="AnnouncementsWorkspace",LayoutOrder=1,Size=UDim2.new(1,0,0,578),BackgroundTransparency=1},announcementPage)
-		local compose=make("Frame",{Size=UDim2.new(0.52,-8,1,0),BackgroundColor3=C.panel,BorderSizePixel=0,ZIndex=13},root);corner(compose,12)
-		local historyPanel=make("Frame",{Position=UDim2.new(0.52,8,0,0),Size=UDim2.new(0.48,-8,1,0),BackgroundColor3=C.panel,BorderSizePixel=0,ZIndex=13},root);corner(historyPanel,12)
-		local function title(parent,text,y,size,height)
-			return make("TextLabel",{Position=UDim2.fromOffset(16,y),Size=UDim2.new(1,-32,0,height),BackgroundTransparency=1,Text=text,
-				Font=Enum.Font.Gotham,TextSize=size,TextColor3=C.text,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,ZIndex=14},parent)
+		local audience = "This Server"
+		local root = make("Frame", {
+			Name = "AnnouncementsWorkspace",
+			LayoutOrder = 1,
+			Size = UDim2.new(1, 0, 0, 580),
+			BackgroundTransparency = 1,
+		}, announcementPage)
+		local compose = make("Frame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundColor3 = C.panel,
+			BorderSizePixel = 0,
+			ZIndex = 13,
+		}, root)
+		corner(compose, 12)
+		stroke(compose, C.line, 0.35)
+		local function title(parent, text, y, size, height)
+			return make("TextLabel", {
+				Position = UDim2.fromOffset(20, y),
+				Size = UDim2.new(1, -40, 0, height),
+				BackgroundTransparency = 1,
+				Text = text,
+				Font = Enum.Font.Nunito,
+				TextSize = size,
+				TextColor3 = C.text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextWrapped = true,
+				ZIndex = 14,
+			}, parent)
 		end
-		title(compose,"New Announcement",14,28,38)
-		title(compose,"Message",62,22,28)
-		announcementBox=make("TextBox",{Position=UDim2.fromOffset(16,96),Size=UDim2.new(1,-32,0,170),BackgroundColor3=C.background,
-			BorderSizePixel=0,Text="",PlaceholderText="Write your announcement...",PlaceholderColor3=C.dim,TextColor3=C.text,
-			Font=Enum.Font.Gotham,TextSize=24,MultiLine=true,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,
-			TextYAlignment=Enum.TextYAlignment.Top,ClearTextOnFocus=false,ZIndex=14},compose);corner(announcementBox,9);stroke(announcementBox,C.line)
-		make("UIPadding",{PaddingTop=UDim.new(0,12),PaddingLeft=UDim.new(0,12),PaddingRight=UDim.new(0,12)},announcementBox)
-		local count=title(compose,"0 / 280",270,17,24);count.TextXAlignment=Enum.TextXAlignment.Right
-		local function updateCount()count.Text=#announcementBox.Text.." / 280";count.TextColor3=#announcementBox.Text>280 and Color3.fromRGB(240,140,130) or C.muted end
+		title(compose, "New announcement", 18, 22, 30)
+		title(compose, "Write a message for the selected audience.", 48, 12, 22).TextColor3 = C.muted
+		title(compose, "MESSAGE", 88, 11, 20).TextColor3 = C.muted
+		announcementBox = make("TextBox", {
+			Position = UDim2.fromOffset(20, 112),
+			Size = UDim2.new(1, -40, 0, 168),
+			BackgroundColor3 = C.background,
+			BorderSizePixel = 0,
+			Text = "",
+			PlaceholderText = "Write your announcement...",
+			PlaceholderColor3 = C.dim,
+			TextColor3 = C.text,
+			Font = Enum.Font.Nunito,
+			TextSize = 16,
+			MultiLine = true,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			ClearTextOnFocus = false,
+			ZIndex = 14,
+		}, compose)
+		corner(announcementBox, 9)
+		stroke(announcementBox, C.line)
+		make("UIPadding", {
+			PaddingTop = UDim.new(0, 12),
+			PaddingBottom = UDim.new(0, 10),
+			PaddingLeft = UDim.new(0, 13),
+			PaddingRight = UDim.new(0, 13),
+		}, announcementBox)
+		local count = title(compose, "0 / 280", 284, 11, 20)
+		count.TextXAlignment = Enum.TextXAlignment.Right
+		local function updateCount()
+			count.Text = #announcementBox.Text .. " / 280"
+			count.TextColor3 = #announcementBox.Text > 280 and Color3.fromRGB(240, 140, 130) or C.dim
+		end
 		announcementBox:GetPropertyChangedSignal("Text"):Connect(updateCount)
-		title(compose,"Audience",304,22,28)
-		local function button(parent,text,x,y,width,callback)
-			local b=actionButton(parent,text,callback,1);b.Position=UDim2.new(x,x==0 and 16 or 4,0,y);b.Size=UDim2.new(width,width==1 and -32 or -20,0,44);b.TextSize=21;b.ZIndex=14;return b
-		end
-		local serverButton,allButton
-		serverButton=button(compose,"This Server",0,342,0.5,function()audience="This Server";serverButton.BackgroundColor3=C.surface2;allButton.BackgroundColor3=C.surface end)
-		allButton=button(compose,"All Servers",0.5,342,0.5,function()audience="All Servers";allButton.BackgroundColor3=C.surface2;serverButton.BackgroundColor3=C.surface end)
-		serverButton.BackgroundColor3=C.surface2
-		local feedback=title(compose,"Only Owner, Dev, and Head Admin can send.",398,17,44);feedback.TextColor3=C.muted
-		local function validate()
-			if not hasArea("Announcements")then feedback.Text="Announcement permission required.";return end
-			local message=announcementBox.Text
-			if message:gsub("%s","")=="" then feedback.Text="Type a message first.";return end
-			if #message>280 or not utf8.len(message)then feedback.Text="Shorten your message to fit the limit.";return end
-			return message
-		end
-		button(compose,"Preview",0,454,1,function()
-			local message=validate();if not message then return end
-			announcementUI.show({role=role,by=player.DisplayName,text=message,duration=8},true)
-			feedback.Text="Preview is visible only to you."
-		end)
-		button(compose,"Send Announcement",0,510,1,function()
-			local message=validate();if not message then return end
-			local target=audience
-			askConfirm("Send Announcement",target.."\n"..message,function()
-				sendAction("Announce",{message=message,audience=target})
-				feedback.Text="Sending to "..target.."..."
-			end)
-		end)
-		title(historyPanel,"Recent Announcements",14,26,38)
-		local reload=button(historyPanel,"Refresh",0,62,1,function()remote:FireServer("RequestAnnouncementHistory")end)
-		local historyNote=title(historyPanel,"Latest 50 · PHT",112,17,36);historyNote.TextColor3=C.muted
-		local list=make("ScrollingFrame",{Position=UDim2.fromOffset(16,158),Size=UDim2.new(1,-32,1,-174),BackgroundTransparency=1,
-			BorderSizePixel=0,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),ScrollBarThickness=3,ScrollBarImageColor3=C.dim,ZIndex=14},historyPanel)
-		make("UIListLayout",{Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder},list)
-		function announcementUI.history(data)
-			for _,child in ipairs(list:GetChildren())do if child:IsA("Frame") or child:IsA("TextLabel")then child:Destroy()end end
-			historyNote.Text=data.warning or "Latest 50 · PHT"
-			for index,row in ipairs(data.rows or {})do
-				local box=make("Frame",{LayoutOrder=index,Size=UDim2.new(1,-5,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundColor3=C.surface,BorderSizePixel=0,ZIndex=15},list);corner(box,8)
-				make("UIPadding",{PaddingTop=UDim.new(0,10),PaddingBottom=UDim.new(0,10),PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10)},box)
-				make("UIListLayout",{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder},box)
-				for order,entry in ipairs({{("["..(row.role=="MASTER DEVELOPER" and "MASTER DEV" or tostring(row.role)).."] "..tostring(row.by)),18,C.text},
-					{tostring(row.text or ""),21,C.text},{tostring(row.audience).." · "..os.date("!%b %d, %I:%M %p",(tonumber(row.time) or 0)+28800).." PHT",16,C.muted}})do
-					make("TextLabel",{LayoutOrder=order,Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,Text=entry[1],Font=Enum.Font.Gotham,
-						TextSize=entry[2],TextColor3=entry[3],BackgroundTransparency=1,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16},box)
+		title(compose, "AUDIENCE", 324, 11, 20).TextColor3 = C.muted
+		local audienceRow = make("Frame", {
+			Position = UDim2.fromOffset(20, 350),
+			Size = UDim2.new(1, -40, 0, 48),
+			BackgroundTransparency = 1,
+			ZIndex = 14,
+		}, compose)
+		make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 10),
+		}, audienceRow)
+		local serverButton
+		local allButton
+		local function refreshAudienceButtons()
+			for _, item in ipairs({
+				{button = serverButton, value = "This Server"},
+				{button = allButton, value = "All Servers"},
+			}) do
+				if item.button then
+					local selected = audience == item.value
+					item.button.BackgroundColor3 = selected and C.surface2 or C.surface
+					item.button.BackgroundTransparency = selected and 0 or 0.1
+					item.button.TextColor3 = selected and C.white or C.muted
+					item.button.Text = (selected and "✓  " or "") .. string.upper(item.value)
+					local outline = item.button:FindFirstChildOfClass("UIStroke")
+					if outline then
+						outline.Color = selected and Color3.fromRGB(112, 184, 130) or C.line
+						outline.Thickness = selected and 2 or 1
+						outline.Transparency = selected and 0 or 0.2
+					end
 				end
 			end
-			if #(data.rows or {})==0 then
-				local empty=title(list,"No announcements yet.",0,20,50)
+		end
+		local function audienceButton(label, order, callback)
+			local button = make("TextButton", {
+				Name = label:gsub("%s", "") .. "Audience",
+				LayoutOrder = order,
+				Size = UDim2.new(0.5, -5, 1, 0),
+				BackgroundColor3 = C.surface,
+				BorderSizePixel = 0,
+				Text = string.upper(label),
+				TextColor3 = C.muted,
+				Font = Enum.Font.Nunito,
+				TextSize = 13,
+				AutoButtonColor = false,
+				ZIndex = 15,
+			}, audienceRow)
+			corner(button, 9)
+			stroke(button, C.line, 0.2)
+			button.Activated:Connect(callback)
+			button.MouseEnter:Connect(function()
+				if audience ~= label then button.BackgroundColor3 = C.surface2 end
+			end)
+			button.MouseLeave:Connect(refreshAudienceButtons)
+			return button
+		end
+		serverButton = audienceButton("This Server", 1, function()
+			audience = "This Server"
+			refreshAudienceButtons()
+		end)
+		allButton = audienceButton("All Servers", 2, function()
+			audience = "All Servers"
+			refreshAudienceButtons()
+		end)
+		refreshAudienceButtons()
+		local feedback = title(compose, "Only Owner, Dev, and Head Admin can send announcements.", 410, 12, 34)
+		feedback.TextColor3 = C.muted
+		local function validate()
+			if not hasArea("Announcements") then
+				feedback.Text = "Announcement permission required."
+				return nil
 			end
+			local message = announcementBox.Text
+			if message:gsub("%s", "") == "" then
+				feedback.Text = "Type a message first."
+				return nil
+			end
+			if #message > 280 or not utf8.len(message) then
+				feedback.Text = "Shorten your message to fit the 280-character limit."
+				return nil
+			end
+			return message
 		end
+		local previewButton = actionButton(compose, "PREVIEW", function()
+			local message = validate()
+			if not message then return end
+			announcementUI.show({role = role, by = player.DisplayName, text = message, duration = 8}, true)
+			feedback.Text = "Preview is visible only to you."
+		end, 1)
+		previewButton.Name = "PreviewAnnouncement"
+		previewButton.Position = UDim2.new(0, 20, 0, 466)
+		previewButton.Size = UDim2.fromOffset(150, 42)
+		previewButton.TextSize = 13
+		local sendButton = actionButton(compose, "SEND ANNOUNCEMENT", function()
+			local message = validate()
+			if not message then return end
+			local target = audience
+			askConfirm("Send announcement", target .. "\n\n" .. message, function()
+				sendAction("Announce", {message = message, audience = target})
+				feedback.Text = "Sending to " .. target .. "..."
+			end)
+		end, 2)
+		sendButton.Name = "SendAnnouncement"
+		sendButton.Position = UDim2.new(1, -210, 0, 466)
+		sendButton.Size = UDim2.fromOffset(190, 42)
+		sendButton.TextSize = 13
+		sendButton.BackgroundColor3 = C.surface2
 		function announcementUI.sent(data)
-			if announcementBox.Text==data.message then announcementBox.Text="" end
-			feedback.Text=data.delivered and "Announcement sent." or "Shown locally; all-server delivery failed."
-			task.delay(1,function()if authorized then remote:FireServer("RequestAnnouncementHistory")end end)
+			if announcementBox.Text == data.message then announcementBox.Text = "" end
+			feedback.Text = data.delivered and "Announcement sent." or "Shown in this server; all-server delivery failed."
 		end
-		function announcementUI.notice(text)if activeTab=="ANNOUNCEMENT"then feedback.Text=tostring(text)end end
-		local function fit()
-			local narrow=root.AbsoluteSize.X/math.max(panelScale.Scale,0.01)<620
-			root.Size=UDim2.new(1,0,0,narrow and 1120 or 578)
-			compose.Size=narrow and UDim2.new(1,0,0,578) or UDim2.new(0.52,-8,1,0)
-			historyPanel.Position=narrow and UDim2.fromOffset(0,592) or UDim2.new(0.52,8,0,0)
-			historyPanel.Size=narrow and UDim2.new(1,0,0,520) or UDim2.new(0.48,-8,1,0)
+		function announcementUI.notice(message)
+			if activeTab == "ANNOUNCEMENT" then feedback.Text = tostring(message) end
 		end
-		root:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit);task.defer(fit)
-		announcementUI.history({rows={}})
 	end)()
 end
 
 -- give item
-actionButton(giveItemPage, "BACK TO TOOLS", function() setToolsSubpage("ABILITIES") end, 0)
+
+-- give item
 actionButton(giveItemPage, "BACK TO TOOLS", function() setToolsSubpage("ABILITIES") end, 0)
 section(giveItemPage, "GIVE ITEM", 1)
 itemCodeBox = inputBox(giveItemPage, "Item code", 2)
@@ -1559,7 +1650,6 @@ end, 6)
 
 -- toggle
 actionButton(togglePage, "GIVE ITEM", function() setToolsSubpage("GIVE ITEM") end, 0)
-actionButton(togglePage, "GIVE ITEM", function() setToolsSubpage("GIVE ITEM") end, 0)
 section(togglePage, "ABILITIES", 1)
 local abilityGrid = make("Frame", {
 	Name = "AbilityToggles",
@@ -1590,28 +1680,80 @@ end)
 textLabel(togglePage, "Fly: WASD + Space/Ctrl. Touch controls appear while active.", 28, 5, {TextColor3 = C.dim, TextSize = 10})
 
 -- moderation
-section(moderationPage, "PLAYERS", 1)
-moderationSearch = inputBox(moderationPage, "Search players", 2)
+local function moderationCard(titleText, descriptionText, order)
+	local card = make("Frame", {
+		LayoutOrder = order,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = C.panel,
+		BorderSizePixel = 0,
+		ZIndex = 12,
+	}, moderationPage)
+	corner(card, 10)
+	stroke(card, C.line, 0.35)
+	make("UIPadding", {
+		PaddingTop = UDim.new(0, 12),
+		PaddingBottom = UDim.new(0, 12),
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 12),
+	}, card)
+	make("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 6),
+	}, card)
+	local heading = textLabel(card, titleText, 22, 1, {TextSize = 16, TextColor3 = C.text})
+	local description = textLabel(card, descriptionText, 28, 2, {TextSize = 11, TextColor3 = C.muted})
+	return card
+end
+
+local targetCard = moderationCard("TARGET PLAYER", "Select an online player, or enter a username for offline account actions.", 1)
+moderationSearch = inputBox(targetCard, "Search online players...", 3)
 moderationList = make("ScrollingFrame", {
-	LayoutOrder = 3,
-	Size = UDim2.new(1, 0, 0, 148),
+	LayoutOrder = 4,
+	Size = UDim2.new(1, 0, 0, 126),
 	BackgroundColor3 = C.background,
 	BorderSizePixel = 0,
 	CanvasSize = UDim2.new(0, 0, 0, 0),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
-	ScrollBarThickness = 2,
+	ScrollingDirection = Enum.ScrollingDirection.Y,
+	ScrollBarThickness = 3,
 	ScrollBarImageColor3 = C.dim,
 	ZIndex = 13,
-}, moderationPage)
-corner(moderationList, 5)
-stroke(moderationList, C.line)
-make("UIPadding", {PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 4)}, moderationList)
-make("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 3)}, moderationList)
-moderationSelectedInfo = textLabel(moderationPage, "Select a player.", 34, 4, {TextColor3 = C.muted, TextSize = 10})
-moderatorUsername = inputBox(moderationPage, "Player username", 5)
-reasonBox = inputBox(moderationPage, "Reason", 6)
-durationBox = inputBox(moderationPage, "Ban duration in days", 7)
-durationBox.Text = "1"
+}, targetCard)
+corner(moderationList, 7)
+stroke(moderationList, C.line, 0.25)
+make("UIPadding", {
+	PaddingTop = UDim.new(0, 5),
+	PaddingBottom = UDim.new(0, 5),
+	PaddingLeft = UDim.new(0, 5),
+	PaddingRight = UDim.new(0, 5),
+}, moderationList)
+make("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4)}, moderationList)
+moderationSelectedInfo = textLabel(targetCard, "No player selected.", 22, 5, {
+	TextColor3 = Color3.fromRGB(112, 184, 130),
+	TextSize = 11,
+})
+moderatorUsername = inputBox(targetCard, "Username for offline ban / unban / history...", 6)
+reasonBox = inputBox(targetCard, "Reason (required for warn, kick, and bans)...", 7)
+reasonBox.Size = UDim2.new(1, 0, 0, 38)
+
+local function requireOnlineModerationTarget()
+	if not selectedUserId then
+		setStatus("Select an online player from the target list first.")
+		return nil
+	end
+	return selectedTarget()
+end
+
+local function confirmOnlineAction(action, label, includeReason)
+	if not requireOnlineModerationTarget() then return end
+	if includeReason and reasonBox.Text:gsub("%s", "") == "" then
+		setStatus("Enter a reason before using " .. label .. ".")
+		return
+	end
+	confirmTargetAction(action, label, includeReason)
+end
+
 moderationSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 moderatorUsername:GetPropertyChangedSignal("Text"):Connect(function()
 	if selectedName and string.lower(moderatorUsername.Text) ~= string.lower(selectedName) then
@@ -1619,45 +1761,93 @@ moderatorUsername:GetPropertyChangedSignal("Text"):Connect(function()
 		renderPlayers()
 	end
 end)
-buttonRow(moderationPage, {"BRING", "FREEZE", "UNFREEZE"}, function(label)
+
+local movementCard = moderationCard("MOVEMENT & MONITORING", "Move or observe an online player. Select a target first.", 2)
+buttonRow(movementCard, {"BRING", "FREEZE", "UNFREEZE"}, function(label)
+	local target = requireOnlineModerationTarget()
+	if not target then return end
 	if label == "BRING" then
-		sendAction("Bring", selectedTarget())
-	elseif label == "FREEZE" or label == "UNFREEZE" then
-		if not selectedUserId then setStatus("Select an online player first."); return end
-		sendAction(label == "FREEZE" and "Freeze" or "Unfreeze", selectedTarget())
-	end
-end, 8)
-buttonRow(moderationPage, {"KICK", "TEMP BAN", "PERM BAN"}, function(label)
-	local action = label == "KICK" and "Kick" or label == "TEMP BAN" and "TempBan" or "PermanentBan"
-	confirmTargetAction(action, label, true)
-end, 9)
-buttonRow(moderationPage, {"SPECTATE", "WATCH SCREEN", "OFF SPECTATE"}, function(label)
-	if label == "OFF SPECTATE" then
-		sendAction("StopSpectate")
-	elseif not selectedUserId then
-		setStatus("Select an online player first.")
-	elseif label == "WATCH SCREEN" then
-		sendAction("WatchScreen", selectedTarget())
-	else
-		sendAction("Spectate", selectedTarget())
-	end
-end, 10)
-buttonRow(moderationPage, {"WARN", "MUTE CHAT", "UNBAN"}, function(label)
-	local target = selectedTarget()
-	if label == "WARN" then
-		confirmTargetAction("Warn", "WARN PLAYER", true)
-	elseif label == "MUTE CHAT" then
-		confirmTargetAction("MuteChat", "TOGGLE CHAT MUTE", false)
-	else
-		askConfirm("UNBAN ACCOUNT", "Unban " .. (target.username ~= "" and target.username or "the entered username") .. "?", function()
-			sendAction("Unban", {targetUserId = target.targetUserId, username = target.username, reason = reasonBox.Text})
+		askConfirm("BRING PLAYER", "Bring @" .. target.username .. " to your location?", function()
+			sendAction("Bring", target)
 		end)
+	elseif label == "FREEZE" then
+		sendAction("Freeze", target)
+	else
+		sendAction("Unfreeze", target)
 	end
-end, 11)
-actionButton(moderationPage, "MODERATION HISTORY", function()
-	sendAction("ModerationHistory", selectedTarget())
-end, 12)
-local historyLabel = textLabel(moderationPage, "Moderation history appears here.", 94, 13, {TextColor3 = C.muted, TextSize = 10, TextYAlignment = Enum.TextYAlignment.Top})
+end, 3)
+buttonRow(movementCard, {"SPECTATE", "WATCH SCREEN", "STOP SPECTATING"}, function(label)
+	if label == "STOP SPECTATING" then
+		sendAction("StopSpectate")
+		return
+	end
+	local target = requireOnlineModerationTarget()
+	if not target then return end
+	if label == "WATCH SCREEN" then
+		sendAction("WatchScreen", target)
+	else
+		sendAction("Spectate", target)
+	end
+end, 4)
+
+local disciplineCard = moderationCard("DISCIPLINE", "Warnings, chat restrictions, and removal from the current server.", 3)
+buttonRow(disciplineCard, {"WARN PLAYER", "TOGGLE CHAT MUTE", "KICK PLAYER"}, function(label)
+	if label == "WARN PLAYER" then
+		confirmOnlineAction("Warn", "WARN PLAYER", true)
+	elseif label == "TOGGLE CHAT MUTE" then
+		confirmOnlineAction("MuteChat", "TOGGLE CHAT MUTE", false)
+	else
+		confirmOnlineAction("Kick", "KICK PLAYER", true)
+	end
+end, 3)
+
+local banCard = moderationCard("BAN MANAGEMENT", "Temporary and permanent experience bans. Unban accepts an offline username.", 4)
+durationBox = inputBox(banCard, "Temporary ban duration in days (1–365)", 3)
+durationBox.Text = "1"
+buttonRow(banCard, {"TEMPORARY BAN", "PERMANENT BAN", "UNBAN"}, function(label)
+	if label == "UNBAN" then
+		local target = selectedTarget()
+		if target.username == "" and not target.targetUserId then
+			setStatus("Enter or select a username to unban.")
+			return
+		end
+		askConfirm("UNBAN ACCOUNT", "Unban " .. (target.username ~= "" and ("@" .. target.username) or "the selected account") .. "?", function()
+			sendAction("Unban", {
+				targetUserId = target.targetUserId,
+				username = target.username,
+				reason = reasonBox.Text,
+			})
+		end)
+		return
+	end
+	if not requireOnlineModerationTarget() then return end
+	if reasonBox.Text:gsub("%s", "") == "" then
+		setStatus("Enter a reason before issuing a ban.")
+		return
+	end
+	if label == "TEMPORARY BAN" then
+		confirmOnlineAction("TempBan", "TEMPORARY BAN", true)
+	else
+		confirmOnlineAction("PermanentBan", "PERMANENT BAN", true)
+	end
+end, 4)
+
+local historyCard = moderationCard("MODERATION HISTORY", "Review saved moderation actions for the selected or entered account.", 5)
+actionButton(historyCard, "LOAD MODERATION HISTORY", function()
+	local target = selectedTarget()
+	if target.username == "" and not target.targetUserId then
+		setStatus("Select a player or enter a username first.")
+		return
+	end
+	sendAction("ModerationHistory", target)
+end, 3)
+local historyLabel = textLabel(historyCard, "No history loaded.", 38, 4, {
+	TextColor3 = C.muted,
+	TextSize = 11,
+	TextYAlignment = Enum.TextYAlignment.Top,
+})
+
+-- staff management
 
 -- staff management
 actionButton(staffPage, "OVERVIEW", function() activateTab("OVERVIEW") end, 0)
@@ -1815,7 +2005,7 @@ local notice = make("TextLabel", {
 	TextColor3 = C.text,
 	TextStrokeColor3 = Color3.new(0, 0, 0),
 	TextStrokeTransparency = 0.14,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.Nunito,
 	TextSize = 15,
 	TextWrapped = true,
 	Visible = false,
@@ -1844,12 +2034,12 @@ do
 		local GuiService=game:GetService("GuiService")
 		local colors={OWNER=Color3.fromRGB(234,197,108),["MASTER DEVELOPER"]=Color3.fromRGB(234,197,108),["HEAD ADMIN"]=Color3.fromRGB(166,201,133)}
 		local root=make("CanvasGroup",{Name="AnnouncementBanner",AnchorPoint=Vector2.new(0.5,0),Position=UDim2.new(0.5,0,0,86),Size=UDim2.fromOffset(900,100),BackgroundTransparency=1,Visible=false,ZIndex=55},gui)
-		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=32,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=56},root)
+		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=56},root)
 		local badge=make("Frame",{Size=UDim2.fromOffset(26,26),BackgroundColor3=Color3.fromRGB(0,149,255),BorderSizePixel=0,ZIndex=56},root);corner(badge,13)
 		make("Frame",{Position=UDim2.fromOffset(6,13),Size=UDim2.fromOffset(7,3),Rotation=45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
 		make("Frame",{Position=UDim2.fromOffset(10,11),Size=UDim2.fromOffset(12,3),Rotation=-45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
-		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=32,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=56},root)
-		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-22),Size=UDim2.new(1,0,0,20),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.Gotham,TextSize=15,TextColor3=C.text,TextStrokeTransparency=0.3,Visible=false,ZIndex=56},root)
+		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=56},root)
+		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-20),Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.Nunito,TextSize=12,TextColor3=C.text,TextStrokeTransparency=0.3,Visible=false,ZIndex=56},root)
 		local announcementSound=make("Sound",{Name="AnnouncementSound",SoundId="rbxassetid://107498514393918",Volume=0.7},SoundService)
 		local serial=0
 		local running
@@ -1857,31 +2047,62 @@ do
 		local function escape(text)return tostring(text):gsub("&","&amp;"):gsub("<","&lt;"):gsub(">","&gt;"):gsub('"',"&quot;")end
 		local function fit()
 			if not current then return end
-			local viewport=gui.AbsoluteSize
-			local fontSize=viewport.X<650 and 23 or 32
-			local available=math.max(220,math.min(1180,viewport.X-40))
-			local tag=current.role=="MASTER DEVELOPER" and "MASTER DEV" or current.role
-			local name=tostring(current.by or "Staff"):gsub("[\r\n]"," ")
-			local plain="["..tag.."] "..name
-			local prefixWidth=TextMeasure:GetTextSize(plain,fontSize,Enum.Font.Gotham,Vector2.new(10000,10000)).X+4
-			-- Keep room for the message on narrow screens without shrinking all text.
-			if prefixWidth>available*0.65 then
-				name=utf8.len(name) and utf8.len(name)>12 and name:sub(1,(utf8.offset(name,13) or (#name+1))-1).."…" or name
-				plain="["..tag.."] "..name
-				prefixWidth=TextMeasure:GetTextSize(plain,fontSize,Enum.Font.Gotham,Vector2.new(10000,10000)).X+4
+			local viewport = gui.AbsoluteSize
+			local fontSize = viewport.X < 650 and 21 or 27
+			local available = math.max(220, math.min(1080, viewport.X - 40))
+			local tag = current.role == "MASTER DEVELOPER" and "DEV" or current.role
+			local name = tostring(current.by or "Staff"):gsub("[\\r\\n]", " ")
+			local measureFont = Enum.Font.Nunito
+
+			local function measure(text, width)
+				return TextMeasure:GetTextSize(text, fontSize, measureFont, Vector2.new(width or 10000, 10000))
 			end
-			local blueSize=26
-			local text=": "..tostring(current.text or ""):gsub("[\r\n]+"," ")
-			local natural=TextMeasure:GetTextSize(text,fontSize,Enum.Font.Gotham,Vector2.new(10000,10000)).X+6
-			local width=math.min(available,prefixWidth+blueSize+16+natural)
-			local textWidth=math.max(80,width-prefixWidth-blueSize-16)
-			local bounds=TextMeasure:GetTextSize(text,fontSize,Enum.Font.Gotham,Vector2.new(textWidth,10000))
-			root.Size=UDim2.fromOffset(width,math.max(fontSize+12,bounds.Y+12))
-			prefix.Size=UDim2.fromOffset(prefixWidth,fontSize+8);prefix.TextSize=fontSize
-			local color=colors[current.role]
-			prefix.Text=string.format('<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',math.round(color.R*255),math.round(color.G*255),math.round(color.B*255),escape(tag),escape(name))
-			badge.Position=UDim2.fromOffset(prefixWidth+3,math.floor((fontSize+8-26)/2))
-			message.Position=UDim2.fromOffset(prefixWidth+26+12,0);message.Size=UDim2.fromOffset(textWidth,math.max(fontSize+10,bounds.Y+12));message.TextSize=fontSize;message.Text=text
+			local function prefixText()
+				return "[" .. tag .. "] " .. name
+			end
+
+			local maxPrefixWidth = available * 0.48
+			local prefixWidth = measure(prefixText()).X + 14
+			if prefixWidth > maxPrefixWidth then
+				local parts = {}
+				for _, codepoint in utf8.codes(name) do
+					table.insert(parts, utf8.char(codepoint))
+				end
+				while #parts > 4 and measure(prefixText()).X + 14 > maxPrefixWidth do
+					table.remove(parts)
+					name = table.concat(parts) .. "…"
+				end
+				prefixWidth = math.min(maxPrefixWidth, measure(prefixText()).X + 14)
+			end
+
+			local badgeSize = fontSize < 24 and 20 or 22
+			local badgeGap = 10
+			local messageGap = 14
+			local messageText = ": " .. tostring(current.text or ""):gsub("[\\r\\n]+", " ")
+			local messageWidth = math.max(88, available - prefixWidth - badgeGap - badgeSize - messageGap)
+			local bounds = measure(messageText, messageWidth)
+			local messageHeight = math.max(fontSize + 12, bounds.Y + 10)
+			local width = math.min(available, prefixWidth + badgeGap + badgeSize + messageGap + messageWidth)
+			local totalHeight = math.max(fontSize + 14, messageHeight)
+
+			root.Size = UDim2.fromOffset(width, totalHeight)
+			prefix.Position = UDim2.fromOffset(0, 2)
+			prefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 12)
+			prefix.Font = measureFont
+			prefix.TextSize = fontSize
+			local color = colors[current.role]
+			prefix.Text = string.format('<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',
+				math.round(color.R * 255), math.round(color.G * 255), math.round(color.B * 255), escape(tag), escape(name))
+
+			badge.Size = UDim2.fromOffset(badgeSize, badgeSize)
+			badge.Position = UDim2.fromOffset(prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
+			message.Position = UDim2.fromOffset(prefixWidth + badgeGap + badgeSize + messageGap, 2)
+			message.Size = UDim2.fromOffset(messageWidth, messageHeight)
+			message.Font = measureFont
+			message.TextSize = fontSize
+			message.Text = messageText
+			previewTag.Font = measureFont
+			previewTag.TextSize = 12
 		end
 		function announcementUI.show(data,isPreview)
 			if type(data)~="table" or not colors[data.role]then return end
@@ -1926,7 +2147,7 @@ watchNameLabel = make("TextLabel", {
 	BackgroundTransparency = 1,
 	Text = "LIVE  ·  @player",
 	TextColor3 = C.text,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.Nunito,
 	TextSize = 13,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	TextTruncate = Enum.TextTruncate.AtEnd,
@@ -2191,8 +2412,8 @@ remote.OnClientEvent:Connect(function(event, data)
 		role = type(data) == "table" and tostring(data.role or "") or ""
 		permissions = type(data) == "table" and data.permissions or {}
 		launcher.Visible = true
-		roleLabel.Text = role
-		profile.role.Text = role
+		roleLabel.Text = role == "MASTER DEVELOPER" and "DEV" or role
+		profile.role.Text = role == "MASTER DEVELOPER" and "DEV" or role
 		profile.role.Size = UDim2.fromOffset(math.clamp(#role * 8 + 28, 100, 220), 28)
 		if currentAdminLabel then currentAdminLabel.Text = "@" .. player.Name .. "  ·  " .. role end
 		updateAbilityToggle("SetAdminTitle", player:GetAttribute("PalmVilleAdminTitleVisible") ~= false)
@@ -2251,7 +2472,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		end
 		historyLabel.Text = #lines > 0 and table.concat(lines, "\n") or "No saved moderation history."
 	elseif event == "AnnouncementHistory" then
-		if announcementUI.history then announcementUI.history(data)end
+		-- History remains stored server-side but is intentionally hidden in this menu.
 	elseif event == "AnnouncementSent" then
 		if announcementUI.sent then announcementUI.sent(data)end
 	elseif event == "Announcement" then
@@ -2370,7 +2591,7 @@ updatePanelSize = function()
 	brand.Size = UDim2.new(1, -210, 0, 39)
 	brand.TextSize = touch and 18 or 24
 	brand.TextScaled = false
-	brand.Font = Enum.Font.GothamBold
+	brand.Font = Enum.Font.Nunito
 	closeButton.Size = UDim2.fromOffset(58, 48)
 	closeButton.Position = UDim2.new(1, -14, 0.5, 0)
 	tabStrip.Position = UDim2.fromOffset(10, touch and 86 or 108)
