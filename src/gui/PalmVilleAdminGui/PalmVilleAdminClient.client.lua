@@ -663,8 +663,8 @@ local profileRole = make("TextLabel", {
 	BorderSizePixel = 0,
 	Text = "STAFF",
 	TextColor3 = Color3.fromRGB(17, 34, 18),
-	Font = Enum.Font.Gotham,
-	TextSize = 16,
+	Font = Enum.Font.GothamBold,
+	TextSize = 15,
 	TextXAlignment = Enum.TextXAlignment.Center,
 	ZIndex = 24,
 }, sidebar)
@@ -702,9 +702,9 @@ local logoInset = make("Frame", {
 	ZIndex = 25,
 }, logoMark)
 addCorner(logoInset, 14)
-local logoLetters = text(logoInset, "PV", 22, C.amber, 62, true)
-logoLetters.TextXAlignment = Enum.TextXAlignment.Center
-logoLetters.ZIndex = 26
+local logoIcon = drawIcon(logoInset, "shield", 36, C.amber)
+logoIcon.Position = UDim2.fromOffset(10, 13)
+logoIcon.ZIndex = 26
 local pageTitle = text(header, "PalmVille Admin", 37, C.text, 48, true)
 pageTitle.Position = UDim2.fromOffset(116, 16)
 pageTitle.Size = UDim2.new(1, -220, 0, 48)
@@ -1562,7 +1562,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		launcher.Visible = true
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
-		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
+		profileRole.Text = role == "MASTER DEVELOPER" and "MASTER DEVELOPER" or displayRole(role)
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
 		if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
