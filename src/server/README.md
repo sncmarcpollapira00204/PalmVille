@@ -1,13 +1,12 @@
 # PalmVille server scripts
 
-Server-side scripts and ModuleScripts in this folder map directly into Roblox `ServerScriptService` through `default.project.json`.
+The Admin backend is consolidated into one server Script:
 
-Active server systems:
-- `PalmVilleAdminServerV2.server.lua` — admin backend and role resolver.
-- `PalmVilleRoleTitlesV2.server.lua` — role-title billboards driven by the V2 role resolver.
-- `PalmVilleAnalyticsServer.server.lua` — admin overview analytics.
-- `PalmVillePlayersServer.server.lua` — admin player directory and player actions.
-- `FarmVilleGraphicsSettingsPersistence.server.lua` — persistent graphics preferences.
-- `PalmVilleItemRegistry.lua` — ModuleScript required by the admin backend.
+- `PalmVilleAdminServerV2.server.lua` — authoritative Admin roles and permissions, remote access/actions, moderation, announcements, logs, tools, cross-server Players directory, and overview analytics.
+- `PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
+- `PalmVilleRoleTitlesV2.server.lua` — role title billboards driven by the Admin role resolver.
+- `FarmVilleGraphicsSettingsPersistence.server.lua` — separate non-Admin graphics preferences service.
 
-Retired duplicate/placeholder scripts are intentionally removed from this source tree. Preserve unrelated Studio-only services and scripts unless separately audited.
+The former `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in the Admin server and archived under `archive/merged-server-backups/`. Their existing DataStore names and RemoteFunction endpoints are retained. Their old standalone Scripts must not be restored.
+
+The old duplicate `AdminClient` placeholder is removed. The active Admin interface is `PalmVilleAdminClient.client.lua` under `src/gui/PalmVilleAdminGui`.
