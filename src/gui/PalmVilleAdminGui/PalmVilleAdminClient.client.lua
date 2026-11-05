@@ -1712,7 +1712,7 @@ local function moderationCard(titleText, descriptionText, order)
 	return card
 end
 
-local targetCard = moderationCard("TARGET PLAYER", "Select an online player, or enter a username for offline account actions.", 1)
+local targetCard = moderationCard("TARGET PLAYER", "Select an online player for moderation. Enter a username only for offline unban or history.", 1)
 moderationSearch = inputBox(targetCard, "Search online players...", 3)
 moderationList = make("ScrollingFrame", {
 	LayoutOrder = 4,
@@ -1739,7 +1739,7 @@ moderationSelectedInfo = textLabel(targetCard, "No player selected.", 22, 5, {
 	TextColor3 = Color3.fromRGB(112, 184, 130),
 	TextSize = 11,
 })
-moderatorUsername = inputBox(targetCard, "Username for offline ban / unban / history...", 6)
+moderatorUsername = inputBox(targetCard, "Username for offline unban / history...", 6)
 reasonBox = inputBox(targetCard, "Reason (required for warn, kick, and bans)...", 7)
 reasonBox.Size = UDim2.new(1, 0, 0, 38)
 
