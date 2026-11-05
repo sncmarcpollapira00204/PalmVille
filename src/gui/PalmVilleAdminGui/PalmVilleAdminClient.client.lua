@@ -296,13 +296,26 @@ local function showAnnouncement(data, preview)
 	if message:gsub("%s", "") == "" then return end
 
 	local viewport = gui.AbsoluteSize
-	local fontSize = math.clamp(math.floor(math.min(viewport.X, viewport.Y) / 28), 19, 27)
 	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
 	local roleText = "[" .. roleLabel .. "] "
 	local authorText = author
 	local badgeText = "  ✓  "
 	local prefixText = roleText .. authorText .. badgeText
+	local fontSize = 27
 	local prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	if prefixWidth > availableWidth * 0.68 then
+		local authorLength = utf8.len(authorText) or #authorText
+		if authorLength > 14 then
+			local cut = utf8.offset(authorText, 14) or (#authorText + 1)
+			authorText = authorText:sub(1, cut - 1) .. "…"
+		end
+		prefixText = roleText .. authorText .. badgeText
+		prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	end
+	if prefixWidth > availableWidth * 0.68 then
+		fontSize = 23
+		prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	end
 	local remainingWidth = math.max(96, availableWidth - prefixWidth - 6)
 	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(remainingWidth, 10000))
 	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
