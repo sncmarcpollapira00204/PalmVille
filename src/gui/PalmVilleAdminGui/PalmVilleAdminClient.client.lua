@@ -703,111 +703,335 @@ local function showPageStatus(parent, message)
 	return item
 end
 
-local function metric(parent, caption, initial)
+local function metric(parent, caption, initial, glyph, compact)
+	local compactMode = compact == true
 	local box = make("Frame", {
-		Size = UDim2.new(0.24, -8, 0, 82),
+		Size = UDim2.new(0.5, -7, 1, 0),
 		BackgroundColor3 = C.surface,
 		BorderSizePixel = 0,
 	}, parent)
-	addCorner(box, 9)
-	addStroke(box, C.line, 0.25)
-	local small = text(box, caption, 10, C.muted, 16)
-	small.Position = UDim2.fromOffset(12, 11)
-	small.Size = UDim2.new(1, -24, 0, 16)
-	local value = text(box, initial or "—", 23, C.text, 31, true)
-	value.Position = UDim2.fromOffset(12, 34)
-	value.Size = UDim2.new(1, -24, 0, 31)
+	addCorner(box, 17)
+	addStroke(box, C.line, 0.08, 1.35)
+	local iconSize = compactMode and 52 or 82
+	local iconBox = make("Frame", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, compactMode and 16 or 22, 0.5, 0),
+		Size = UDim2.fromOffset(iconSize, iconSize),
+		BackgroundColor3 = C.green,
+		BorderSizePixel = 0,
+	}, box)
+	addCorner(iconBox, compactMode and 13 or 18)
+	local icon = text(iconBox, glyph or "◇", compactMode and 27 or 42, C.amber, iconSize, true)
+	icon.TextXAlignment = Enum.TextXAlignment.Center
+	local dividerX = compactMode and 82 or 124
+	make("Frame", {
+		Position = UDim2.new(0, dividerX, 0.18, 0),
+		Size = UDim2.new(0, 1, 0.64, 0),
+		BackgroundColor3 = C.line,
+		BorderSizePixel = 0,
+	}, box)
+	local small = text(box, caption, compactMode and 14 or 19, C.muted, compactMode and 20 or 27, true)
+	small.Position = UDim2.fromOffset(dividerX + 22, compactMode and 14 or 25)
+	small.Size = UDim2.new(1, -dividerX - 38, 0, compactMode and 20 or 27)
+	local value = text(box, initial or "—", compactMode and 22 or 34, C.text, compactMode and 34 or 46, true)
+	value.Position = UDim2.fromOffset(dividerX + 22, compactMode and 38 or 60)
+	value.Size = UDim2.new(1, -dividerX - 38, 0, compactMode and 34 or 46)
+	value.TextTruncate = Enum.TextTruncate.AtEnd
 	return value
 end
 
-local overviewCard = card(pages.OVERVIEW, "SERVER OVERVIEW", "Live session metrics from the authoritative server.")
-local metricRow = addRow(overviewCard, 82)
-local metricPlayers = metric(metricRow, "PLAYERS ONLINE", "0 / 6")
-local metricFps = metric(metricRow, "SERVER FPS", "—")
-local metricUptime = metric(metricRow, "UPTIME", "—")
-local metricMemory = metric(metricRow, "MEMORY", "—")
-local overviewActions = card(pages.OVERVIEW, "QUICK ACTIONS", "Refresh server status and open the main management pages.")
-local quickRow = addRow(overviewActions, 38)
-button(quickRow, "REFRESH OVERVIEW", function() remote:FireServer("RequestSnapshot") end, {size = UDim2.new(0.5, -4, 0, 36), primary = true})
-button(quickRow, "VIEW PLAYERS", function() activeTab = "PLAYERS"; refreshNavigation(); remote:FireServer("RequestSnapshot") end, {size = UDim2.new(0.5, -4, 0, 36)})
-local identityCard = card(pages.OVERVIEW, "SESSION IDENTITY", "Authorization is resolved by PalmVilleAdminServerV2.")
-local identityLabel = text(identityCard, "Waiting for server authorization...", 12, C.muted, 42)
-local overviewHint = text(pages.OVERVIEW, "The game is limited to six players per server. Changes made in Studio DataStore fallback mode are temporary for that session.", 10, C.dim, 32)
+local overviewCard = card(pages.OVERVIEW, "SERVER OVERVIEW", "Live session status from the PalmVille server.")
+local metricRow = addRow(overviewCard, 136)
+local metricPlayers = metric(metricRow, "ONLINE PLAYERS", "0 / 6", "♧")
+local metricUptime = metric(metricRow, "SERVER UPTIME", "0m 0s", "▣")
+local metricExtraRow = addRow(overviewCard, 92)
+local metricFps = metric(metricExtraRow, "SERVER FPS", "—", "◷", true)
+local metricMemory = metric(metricExtraRow, "MEMORY", "—", "▤", true)
+local overviewActions = card(pages.OVERVIEW, "QUICK ACTIONS", "Refresh live server data or jump to the player directory.")
+local quickRow = addRow(overviewActions, 48)
+button(quickRow, "REFRESH OVERVIEW", function()
+	if canAccess("Monitoring") or canAccess("Server") then
+		remote:FireServer("RequestSnapshot")
+	else
+		setStatus("Monitoring permission required.", true)
+	end
+end, {size = UDim2.new(0.5, -6, 0, 46)})
+button(quickRow, "VIEW PLAYERS", function()
+	if not canAccess("Players") then setStatus("Players permission required.", true); return end
+	activeTab = "PLAYERS"
+	refreshNavigation()
+	remote:FireServer("RequestSnapshot")
+end, {size = UDim2.new(0.5, -6, 0, 46), primary = true})
+local identityCard = card(pages.OVERVIEW, "SESSION IDENTITY", "Your access is verified by PalmVilleAdminServerV2.")
+local identityLabel = text(identityCard, "Waiting for server authorization...", 15, C.muted, 48)
+identityLabel.TextYAlignment = Enum.TextYAlignment.Center
+local overviewHint = text(pages.OVERVIEW, "PalmVille supports up to six players per server. Studio DataStore fallback data is temporary for that test session.", 13, C.dim, 42)
 
-local playersCard = card(pages.PLAYERS, "PLAYER DIRECTORY", "Players currently in this server. Select a player before using an action.")
-local playersRefresh = button(playersCard, "REFRESH PLAYER LIST", function() remote:FireServer("RequestSnapshot") end, {primary = true})
-local selectedLabel = text(playersCard, "No player selected.", 12, C.muted, 24)
-local playerRows = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, playersCard)
-vertical(playerRows, 5)
-local playerActions = card(pages.PLAYERS, "PLAYER ACTIONS", "Server-side permission and target protection are enforced for every action.")
-local playerActionRow1 = addRow(playerActions, 36)
-button(playerActionRow1, "TELEPORT TO", function()
+local playersWorkspace = make("Frame", {
+	Name = "PlayersWorkspace",
+	Size = UDim2.new(1, 0, 0, 650),
+	BackgroundTransparency = 1,
+}, pages.PLAYERS)
+
+local playersListPanel = make("Frame", {
+	Name = "OnlinePlayersPanel",
+	Size = UDim2.new(0.39, -10, 1, 0),
+	BackgroundColor3 = C.panel,
+	BorderSizePixel = 0,
+}, playersWorkspace)
+addCorner(playersListPanel, 18)
+addStroke(playersListPanel, C.line, 0.06, 1.4)
+local playersDetailsPanel = make("Frame", {
+	Name = "PlayerDetailsPanel",
+	Position = UDim2.new(0.39, 10, 0, 0),
+	Size = UDim2.new(0.61, -10, 1, 0),
+	BackgroundColor3 = C.panel,
+	BorderSizePixel = 0,
+}, playersWorkspace)
+addCorner(playersDetailsPanel, 18)
+addStroke(playersDetailsPanel, C.line, 0.06, 1.4)
+
+local playersHeadingIcon = text(playersListPanel, "♧", 37, C.amber, 48)
+playersHeadingIcon.Position = UDim2.fromOffset(18, 16)
+playersHeadingIcon.Size = UDim2.fromOffset(48, 48)
+local playersHeading = text(playersListPanel, "Online Players", 25, C.text, 34, true)
+playersHeading.Position = UDim2.fromOffset(72, 17)
+playersHeading.Size = UDim2.new(1, -90, 0, 34)
+local playersScope = text(playersListPanel, "This server · 0 online", 15, C.muted, 24)
+playersScope.Position = UDim2.fromOffset(72, 51)
+playersScope.Size = UDim2.new(1, -90, 0, 24)
+local playerSearch = input(playersListPanel, "Search name or username...", "")
+playerSearch.Position = UDim2.fromOffset(18, 92)
+playerSearch.Size = UDim2.new(1, -36, 0, 48)
+local selectedLabel = text(playersListPanel, "Select a player to view details.", 13, C.muted, 26)
+selectedLabel.Position = UDim2.fromOffset(20, 145)
+selectedLabel.Size = UDim2.new(1, -40, 0, 26)
+local playerRows = make("ScrollingFrame", {
+	Name = "PlayerRows",
+	Position = UDim2.fromOffset(18, 181),
+	Size = UDim2.new(1, -36, 1, -199),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	ScrollBarThickness = 4,
+	ScrollBarImageColor3 = C.line,
+}, playersListPanel)
+vertical(playerRows, 9)
+
+local detailsIcon = text(playersDetailsPanel, "▣", 34, C.amber, 44)
+detailsIcon.Position = UDim2.fromOffset(24, 15)
+detailsIcon.Size = UDim2.fromOffset(48, 44)
+local detailTitle = text(playersDetailsPanel, "Player Details", 25, C.text, 36, true)
+detailTitle.Position = UDim2.fromOffset(78, 18)
+detailTitle.Size = UDim2.new(1, -104, 0, 36)
+make("Frame", {
+	Position = UDim2.fromOffset(24, 68),
+	Size = UDim2.new(1, -48, 0, 1),
+	BackgroundColor3 = C.line,
+	BorderSizePixel = 0,
+}, playersDetailsPanel)
+
+local detailAvatar = make("ImageLabel", {
+	Position = UDim2.fromOffset(30, 91),
+	Size = UDim2.fromOffset(112, 112),
+	BackgroundColor3 = C.surface,
+	BorderSizePixel = 0,
+	ScaleType = Enum.ScaleType.Crop,
+}, playersDetailsPanel)
+addCorner(detailAvatar, 56)
+addStroke(detailAvatar, C.amber, 0.02, 1.4)
+local detailName = text(playersDetailsPanel, "Select a player", 30, C.text, 38, true)
+detailName.Position = UDim2.fromOffset(166, 92)
+detailName.Size = UDim2.new(1, -194, 0, 38)
+local detailUsername = text(playersDetailsPanel, "@username", 18, C.muted, 28)
+detailUsername.Position = UDim2.fromOffset(168, 132)
+detailUsername.Size = UDim2.new(1, -196, 0, 28)
+local detailOnline = text(playersDetailsPanel, "●  Waiting for selection", 15, C.muted, 26)
+detailOnline.Position = UDim2.fromOffset(168, 166)
+detailOnline.Size = UDim2.new(1, -196, 0, 26)
+make("Frame", {
+	Position = UDim2.fromOffset(24, 222),
+	Size = UDim2.new(1, -48, 0, 1),
+	BackgroundColor3 = C.line,
+	BorderSizePixel = 0,
+}, playersDetailsPanel)
+local progressTitle = text(playersDetailsPanel, "Progress", 22, C.text, 30, true)
+progressTitle.Position = UDim2.fromOffset(28, 236)
+progressTitle.Size = UDim2.new(1, -56, 0, 30)
+
+local function detailStat(x, y, width, labelText, initial)
+	local tile = make("Frame", {
+		Position = UDim2.new(x, x == 0 and 28 or 8, 0, y),
+		Size = UDim2.new(width, width == 0.5 and -42 or -56, 0, 66),
+		BackgroundColor3 = C.surface,
+		BorderSizePixel = 0,
+	}, playersDetailsPanel)
+	addCorner(tile, 12)
+	addStroke(tile, C.line, 0.18, 1.1)
+	local label = text(tile, labelText, 14, C.muted, 20, true)
+	label.Position = UDim2.fromOffset(14, 8)
+	label.Size = UDim2.new(1, -28, 0, 20)
+	local value = text(tile, initial, 16, C.text, 24, true)
+	value.Position = UDim2.fromOffset(14, 34)
+	value.Size = UDim2.new(1, -28, 0, 24)
+	return value
+end
+local detailMoney = detailStat(0, 276, 0.5, "Money", "Not available")
+local detailEarned = detailStat(0.5, 276, 0.5, "Earned Today", "Not available")
+local detailLevel = detailStat(0, 351, 0.5, "Level", "Not available")
+local detailPlaytime = detailStat(0.5, 351, 0.5, "Total Playtime", "Not available")
+local detailXp = detailStat(0, 426, 1, "XP", "Not available")
+local detailMetadata = text(playersDetailsPanel, "User ID: —   ·   Role: —   ·   Health: —", 14, C.muted, 24)
+detailMetadata.Position = UDim2.fromOffset(30, 505)
+detailMetadata.Size = UDim2.new(1, -60, 0, 24)
+local detailPosition = text(playersDetailsPanel, "Position: —", 13, C.dim, 22)
+detailPosition.Position = UDim2.fromOffset(30, 531)
+detailPosition.Size = UDim2.new(1, -60, 0, 22)
+local playerActionHeading = text(playersDetailsPanel, "Player Actions", 19, C.text, 26, true)
+playerActionHeading.Position = UDim2.fromOffset(30, 563)
+playerActionHeading.Size = UDim2.new(1, -60, 0, 26)
+
+local playerActionRow1 = make("Frame", {
+	Position = UDim2.fromOffset(28, 594),
+	Size = UDim2.new(1, -56, 0, 44),
+	BackgroundTransparency = 1,
+}, playersDetailsPanel)
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	Padding = UDim.new(0, 9),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+}, playerActionRow1)
+button(playerActionRow1, "Go to Player", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Teleport", targetData())
-end, {size = UDim2.new(0.5, -4, 0, 34)})
-button(playerActionRow1, "BRING", function()
+end, {size = UDim2.new(0.34, -6, 0, 42), primary = true, textSize = 14})
+button(playerActionRow1, "Bring Player", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Bring", targetData())
-end, {size = UDim2.new(0.5, -4, 0, 34), primary = true})
-local playerActionRow2 = addRow(playerActions, 36)
-button(playerActionRow2, "RESET PLAYER", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("ResetTarget", targetData())
-end, {size = UDim2.new(0.5, -4, 0, 34), danger = true})
-button(playerActionRow2, "RETURN TO PREVIOUS POSITION", function()
-	sendAction("Return")
-end, {size = UDim2.new(0.5, -4, 0, 34)})
-
-local playerActionRow3 = addRow(playerActions, 36)
-button(playerActionRow3, "FREEZE", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Freeze", targetData())
-end, {size = UDim2.new(0.25, -6, 0, 34)})
-button(playerActionRow3, "UNFREEZE", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Unfreeze", targetData())
-end, {size = UDim2.new(0.25, -6, 0, 34)})
-button(playerActionRow3, "SPECTATE", function()
+end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
+button(playerActionRow1, "Spectate", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Spectate", targetData())
-end, {size = UDim2.new(0.25, -6, 0, 34)})
-button(playerActionRow3, "STOP SPECTATING", function()
-	sendAction("StopSpectate")
-end, {size = UDim2.new(0.25, -6, 0, 34)})
+end, {size = UDim2.new(0.33, -6, 0, 42), textSize = 14})
+local playerActionRow2 = make("Frame", {
+	Position = UDim2.fromOffset(28, 643),
+	Size = UDim2.new(1, -56, 0, 1),
+	BackgroundTransparency = 1,
+}, playersDetailsPanel)
+playerActionRow2.Visible = false
 
-local function renderPlayers()
-	for _, child in ipairs(playerRows:GetChildren()) do
-		if child:IsA("TextButton") or child:IsA("Frame") then child:Destroy() end
-	end
-	local roster = snapshot.players or {}
-	if #roster == 0 then
-		showPageStatus(playerRows, "No players are currently listed. Use Refresh Player List.")
+local function updatePlayerDetails(row)
+	if not row then
+		detailName.Text = "Select a player"
+		detailUsername.Text = "@username"
+		detailOnline.Text = "●  Waiting for selection"
+		detailMetadata.Text = "User ID: —   ·   Role: —   ·   Health: —"
+		detailPosition.Text = "Position: —"
+		detailMoney.Text = "Not available"
+		detailEarned.Text = "Not available"
+		detailLevel.Text = "Not available"
+		detailPlaytime.Text = "Not available"
+		detailXp.Text = "Not available"
+		detailAvatar.Image = ""
 		return
 	end
-	for _, row in ipairs(roster) do
-		local item = button(playerRows, string.format("%s   ·   %s   ·   %d/%d HP", row.username or "Player", displayRole(row.role), row.health or 0, row.maxHealth or 0), function()
-			selectedUserId = row.userId
-			selectedUsername = row.username
-			selectedLabel.Text = string.format("SELECTED  ·  %s (@%s)  ·  %s", row.displayName or row.username, row.username, displayRole(row.role))
-			for _, child in ipairs(playerRows:GetChildren()) do
-				if child:IsA("TextButton") then
-					child.BackgroundColor3 = child:GetAttribute("UserId") == selectedUserId and C.green or C.surface
-				end
-			end
-		end, {size = UDim2.new(1, 0, 0, 38)})
-		item:SetAttribute("UserId", row.userId)
-		item.BackgroundColor3 = row.userId == selectedUserId and C.green or C.surface
+	detailName.Text = tostring(row.displayName or row.username or "Player")
+	detailUsername.Text = "@" .. tostring(row.username or "unknown")
+	detailOnline.Text = "●  Online"
+	detailOnline.TextColor3 = C.greenBright
+	detailMetadata.Text = string.format("User ID: %s   ·   Role: %s   ·   Health: %s/%s",
+		tostring(row.userId or "—"), displayRole(row.role), tostring(row.health or 0), tostring(row.maxHealth or 0))
+	detailPosition.Text = "Position: " .. tostring(row.position or "—")
+	detailPlaytime.Text = string.format("%dm %02ds",
+		math.floor((tonumber(row.playtime) or 0) / 60),
+		math.floor((tonumber(row.playtime) or 0) % 60))
+	local userId = tonumber(row.userId)
+	if userId then
+		task.spawn(function()
+			local ok, thumbnail = pcall(function()
+				return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+			end)
+			if ok and selectedUserId == userId and detailAvatar.Parent then detailAvatar.Image = thumbnail end
+		end)
 	end
 end
 
-local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Send to this server or every active PalmVille server.")
+local function renderPlayers()
+	for _, child in ipairs(playerRows:GetChildren()) do
+		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+	end
+	local query = string.lower(playerSearch.Text or "")
+	local roster = snapshot.players or {}
+	local visibleCount = 0
+	playersScope.Text = string.format("This server · %d online", #roster)
+	for _, row in ipairs(roster) do
+		local username = tostring(row.username or "")
+		local displayName = tostring(row.displayName or username)
+		if query == "" or string.find(string.lower(username), query, 1, true) or string.find(string.lower(displayName), query, 1, true) then
+			visibleCount += 1
+			local item = button(playerRows, "", function()
+				selectedUserId = row.userId
+				selectedUsername = username
+				selectedLabel.Text = "SELECTED  ·  " .. displayName .. "  @" .. username
+				updatePlayerDetails(row)
+				for _, other in ipairs(playerRows:GetChildren()) do
+					if other:IsA("TextButton") then
+						other.BackgroundColor3 = other:GetAttribute("UserId") == selectedUserId and C.green or C.surface
+					end
+				end
+			end, {size = UDim2.new(1, -4, 0, 86), radius = 13})
+			item:SetAttribute("UserId", row.userId)
+			item.BackgroundColor3 = row.userId == selectedUserId and C.green or C.surface
+			local avatar = make("ImageLabel", {
+				Position = UDim2.fromOffset(12, 12),
+				Size = UDim2.fromOffset(60, 60),
+				BackgroundColor3 = C.panel,
+				BorderSizePixel = 0,
+				ScaleType = Enum.ScaleType.Crop,
+			}, item)
+			addCorner(avatar, 30)
+			local nameLabel = text(item, displayName, 19, C.text, 27, true)
+			nameLabel.Position = UDim2.fromOffset(86, 14)
+			nameLabel.Size = UDim2.new(1, -102, 0, 27)
+			local usernameLabel = text(item, "@" .. username, 14, C.muted, 22)
+			usernameLabel.Position = UDim2.fromOffset(86, 42)
+			usernameLabel.Size = UDim2.new(1, -102, 0, 22)
+			local onlineDot = make("Frame", {
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -15, 0.5, 0),
+				Size = UDim2.fromOffset(12, 12),
+				BackgroundColor3 = C.greenBright,
+				BorderSizePixel = 0,
+			}, item)
+			addCorner(onlineDot, 6)
+			local userId = tonumber(row.userId)
+			if userId then
+				task.spawn(function()
+					local ok, thumbnail = pcall(function()
+						return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+					end)
+					if ok and avatar.Parent then avatar.Image = thumbnail end
+				end)
+			end
+		end
+	end
+	if visibleCount == 0 then
+		showPageStatus(playerRows, query == "" and "No players are currently online." or "No players match that search.")
+	end
+end
+
+playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
+
+local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "⚑")
+text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
-	Size = UDim2.new(1, 0, 0, 118),
+	Size = UDim2.new(1, 0, 0, 176),
 	BackgroundColor3 = C.bg,
 	BorderSizePixel = 0,
 	ClearTextOnFocus = false,
 	Font = Enum.Font.Nunito,
-	TextSize = 14,
+	TextSize = 17,
 	TextColor3 = C.text,
 	PlaceholderColor3 = C.dim,
 	PlaceholderText = "Write your announcement...",
@@ -817,48 +1041,52 @@ local announceBox = make("TextBox", {
 	TextXAlignment = Enum.TextXAlignment.Left,
 	TextYAlignment = Enum.TextYAlignment.Top,
 }, announceCard)
-addCorner(announceBox, 8)
-addStroke(announceBox, C.line, 0.12)
-make("UIPadding", {PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 11), PaddingRight = UDim.new(0, 11)}, announceBox)
-local announceCount = text(announceCard, "0 / 280", 10, C.dim, 16)
+addCorner(announceBox, 14)
+addStroke(announceBox, C.line, 0.02, 1.4)
+make("UIPadding", {PaddingTop = UDim.new(0, 18), PaddingBottom = UDim.new(0, 12), PaddingLeft = UDim.new(0, 20), PaddingRight = UDim.new(0, 18)}, announceBox)
+local announceCount = text(announceCard, "0 / 280", 14, C.muted, 22)
+announceCount.TextXAlignment = Enum.TextXAlignment.Right
 announceBox:GetPropertyChangedSignal("Text"):Connect(function()
 	announceCount.Text = tostring(#announceBox.Text) .. " / 280"
-	announceCount.TextColor3 = #announceBox.Text > 280 and C.red or C.dim
+	announceCount.TextColor3 = #announceBox.Text > 280 and C.red or C.muted
 end)
-local audienceRow = addRow(announceCard, 38)
+text(announceCard, "Audience", 18, C.text, 26, true)
+local audienceRow = addRow(announceCard, 54)
 local serverAudience
 local allAudience
-serverAudience = button(audienceRow, "THIS SERVER  ✓", function()
+serverAudience = button(audienceRow, "♧   This Server", function()
 	audience = "This Server"
-	serverAudience.Text = "THIS SERVER  ✓"
-	allAudience.Text = "ALL SERVERS"
+	serverAudience.Text = "♧   This Server  ✓"
+	allAudience.Text = "▱   All Servers"
 	serverAudience.BackgroundColor3 = C.green
 	allAudience.BackgroundColor3 = C.surface
-end, {size = UDim2.new(0.5, -4, 0, 36), primary = true})
-allAudience = button(audienceRow, "ALL SERVERS", function()
+end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 17})
+allAudience = button(audienceRow, "▱   All Servers", function()
 	audience = "All Servers"
-	serverAudience.Text = "THIS SERVER"
-	allAudience.Text = "ALL SERVERS  ✓"
+	serverAudience.Text = "♧   This Server"
+	allAudience.Text = "▱   All Servers  ✓"
 	serverAudience.BackgroundColor3 = C.surface
 	allAudience.BackgroundColor3 = C.green
-end, {size = UDim2.new(0.5, -4, 0, 36)})
-local announceButtons = addRow(announceCard, 38)
-button(announceButtons, "PREVIEW", function()
+end, {size = UDim2.new(0.5, -6, 0, 52)})
+serverAudience.BackgroundColor3 = C.green
+local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
+local previewRow = addRow(announceCard, 52)
+button(previewRow, "◎   Preview", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	showAnnouncement({role = role, by = managerRole() and "Lupin" or player.DisplayName, text = value, duration = 8}, true)
 	setStatus("Preview shown. Only you can see it.")
-end, {size = UDim2.new(0.5, -4, 0, 36)})
-button(announceButtons, "SEND ANNOUNCEMENT", function()
+end, {size = UDim2.new(1, 0, 0, 50), textSize = 17})
+local sendRow = addRow(announceCard, 56)
+button(sendRow, "➤   Send Announcement", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	sendAction("Announce", {message = value, audience = audience})
 	setStatus("Sending announcement...")
-end, {size = UDim2.new(0.5, -4, 0, 36), primary = true})
+end, {size = UDim2.new(1, 0, 0, 54), primary = true, textSize = 18})
 showPageStatus(announceCard, "Only Owner, Developer, and Head Admin can send announcements. All Servers is disabled in Studio.")
-
 local moderationCard = card(pages.MODERATION, "TARGET PLAYER", "Online targets are required for warning, mute, kick, and bans. Unban/history can use a username.")
 local moderationUsername = addField(moderationCard, "USERNAME", "Select from Players or enter username")
 local reasonBox = addField(moderationCard, "REASON", "Reason required for warn, kick, and ban")
