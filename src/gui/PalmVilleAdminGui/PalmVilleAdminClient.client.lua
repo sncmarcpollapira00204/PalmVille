@@ -2041,12 +2041,12 @@ do
 		local GuiService=game:GetService("GuiService")
 		local colors={OWNER=Color3.fromRGB(234,197,108),["MASTER DEVELOPER"]=Color3.fromRGB(234,197,108),["HEAD ADMIN"]=Color3.fromRGB(166,201,133)}
 		local root=make("CanvasGroup",{Name="AnnouncementBanner",AnchorPoint=Vector2.new(0.5,0),Position=UDim2.new(0.5,0,0,86),Size=UDim2.fromOffset(900,100),BackgroundTransparency=1,Visible=false,ZIndex=55},gui)
-		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,ZIndex=56},root)
+		local prefix=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=27,TextColor3=C.text,RichText=true,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.25,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Center,ZIndex=56},root)
 		local badge=make("Frame",{Size=UDim2.fromOffset(26,26),BackgroundColor3=Color3.fromRGB(0,149,255),BorderSizePixel=0,ZIndex=56},root);corner(badge,13)
 		make("Frame",{Position=UDim2.fromOffset(6,13),Size=UDim2.fromOffset(7,3),Rotation=45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
 		make("Frame",{Position=UDim2.fromOffset(10,11),Size=UDim2.fromOffset(12,3),Rotation=-45,BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=57},badge)
-		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.Nunito,TextSize=27,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.35,TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=true,ZIndex=56},root)
-		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-20),Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.Nunito,TextSize=12,TextColor3=C.text,TextStrokeTransparency=0.3,TextXAlignment=Enum.TextXAlignment.Center,Visible=false,ZIndex=56},root)
+		local message=make("TextLabel",{BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=27,TextColor3=C.text,TextStrokeColor3=Color3.new(),TextStrokeTransparency=0.25,TextXAlignment=Enum.TextXAlignment.Center,TextYAlignment=Enum.TextYAlignment.Center,TextWrapped=true,ZIndex=56},root)
+		local previewTag=make("TextLabel",{Position=UDim2.fromOffset(0,-20),Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,Text="PREVIEW · Only you can see this",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.text,TextStrokeTransparency=0.3,TextXAlignment=Enum.TextXAlignment.Center,Visible=false,ZIndex=56},root)
 		local announcementSound=make("Sound",{Name="AnnouncementSound",SoundId="rbxassetid://107498514393918",Volume=0.7},SoundService)
 		local serial=0
 		local running
@@ -2059,7 +2059,7 @@ do
 			local available = math.max(220, math.min(1080, viewport.X - 40))
 			local tag = displayRole(current.role)
 			local name = tostring(current.by or "Staff"):gsub("[\\r\\n]", " ")
-			local measureFont = Enum.Font.Nunito
+			local measureFont = Enum.Font.GothamBold
 
 			local function measure(text, width)
 				return TextMeasure:GetTextSize(text, fontSize, measureFont, Vector2.new(width or 10000, 10000))
@@ -2069,14 +2069,14 @@ do
 			end
 
 			local maxPrefixWidth = available * 0.48
-			local prefixPadding = 24
+			local prefixPadding = 34
 			local prefixWidth = measure(prefixText()).X + prefixPadding
 			if prefixWidth > maxPrefixWidth then
 				local parts = {}
 				for _, codepoint in utf8.codes(name) do
 					table.insert(parts, utf8.char(codepoint))
 				end
-				while #parts > 4 and measure(prefixText()).X + prefixPadding > maxPrefixWidth do
+				while #parts > 6 and measure(prefixText()).X + prefixPadding > maxPrefixWidth do
 					table.remove(parts)
 					name = table.concat(parts) .. "…"
 				end
@@ -2097,27 +2097,29 @@ do
 			local contentLeft = math.max(0, math.floor((available - contentWidth) / 2))
 			local totalHeight = math.max(fontSize + 14, messageHeight)
 
-			root.Size = UDim2.fromOffset(available, totalHeight)
-			prefix.Position = UDim2.fromOffset(contentLeft, 2)
+			root.Size = UDim2.fromOffset(contentWidth, totalHeight)
+			root.AnchorPoint = Vector2.new(0.5, 0)
+			root.Position = UDim2.new(0.5, 0, root.Position.Y.Scale, root.Position.Y.Offset)
+			prefix.Position = UDim2.fromOffset(0, 2)
 			prefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 12)
 			prefix.Font = measureFont
 			prefix.TextSize = fontSize
-			prefix.TextXAlignment = Enum.TextXAlignment.Center
+			prefix.TextXAlignment = Enum.TextXAlignment.Left
 			prefix.TextYAlignment = Enum.TextYAlignment.Center
 			local color = colors[current.role]
 			prefix.Text = string.format('<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',
 				math.round(color.R * 255), math.round(color.G * 255), math.round(color.B * 255), escape(tag), escape(name))
 
 			badge.Size = UDim2.fromOffset(badgeSize, badgeSize)
-			badge.Position = UDim2.fromOffset(contentLeft + prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
-			message.Position = UDim2.fromOffset(contentLeft + prefixWidth + badgeGap + badgeSize + messageGap, 2)
+			badge.Position = UDim2.fromOffset(prefixWidth + badgeGap, math.floor((fontSize + 12 - badgeSize) / 2))
+			message.Position = UDim2.fromOffset(prefixWidth + badgeGap + badgeSize + messageGap, 2)
 			message.Size = UDim2.fromOffset(messageWidth, messageHeight)
 			message.Font = measureFont
 			message.TextSize = fontSize
 			message.TextXAlignment = Enum.TextXAlignment.Center
 			message.TextYAlignment = Enum.TextYAlignment.Center
 			message.Text = messageText
-			previewTag.Font = measureFont
+			previewTag.Font = Enum.Font.GothamBold
 			previewTag.TextSize = 12
 		end
 		function announcementUI.show(data,isPreview)
