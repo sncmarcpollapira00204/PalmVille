@@ -308,27 +308,38 @@ local function savePermission(role, area, enabled)
 	return true
 end
 
-local syncOk, syncConnection = pcall(function()
-	return MessagingService:SubscribeAsync("PalmVilleAdminSync_v2", function(message)
-		local payload = message.Data
-		if type(payload) ~= "table" or payload.jobId == game.JobId then return end
-		if payload.kind == "Staff" then
-			local userId = tonumber(payload.userId)
-			local id = userId and tostring(userId)
-			if not userId or userId < 1 or BOOTSTRAP[id] then return end
-			if ASSIGNABLE[payload.role] then
-				staff[id] = {role = payload.role, name = tostring(payload.name or id):sub(1, 20)}
-			else
-				staff[id] = nil
-			end
-			applyOnlineRole(userId)
-		elseif payload.kind == "Permission" and ASSIGNABLE[payload.role] and table.find(AREAS, payload.area) then
-			rolePermissions[payload.role] = rolePermissions[payload.role] or copyTable(DEFAULT_PERMISSIONS[payload.role])
-			rolePermissions[payload.role][payload.area] = payload.enabled == true
+local syncConnection
+if RunService:IsStudio() then
+	print("[PalmVille Admin] Studio detected; cross-server MessagingService sync skipped.")
+else
+	task.spawn(function()
+		local ok, result = pcall(function()
+			return MessagingService:SubscribeAsync("PalmVilleAdminSync_v2", function(message)
+				local payload = message.Data
+				if type(payload) ~= "table" or payload.jobId == game.JobId then return end
+				if payload.kind == "Staff" then
+					local userId = tonumber(payload.userId)
+					local id = userId and tostring(userId)
+					if not userId or userId < 1 or BOOTSTRAP[id] then return end
+					if ASSIGNABLE[payload.role] then
+						staff[id] = {role = payload.role, name = tostring(payload.name or id):sub(1, 20)}
+					else
+						staff[id] = nil
+					end
+					applyOnlineRole(userId)
+				elseif payload.kind == "Permission" and ASSIGNABLE[payload.role] and table.find(AREAS, payload.area) then
+					rolePermissions[payload.role] = rolePermissions[payload.role] or copyTable(DEFAULT_PERMISSIONS[payload.role])
+					rolePermissions[payload.role][payload.area] = payload.enabled == true
+				end
+			end)
+		end)
+		if ok then
+			syncConnection = result
+		else
+			warn("[PalmVille Admin] Cross-server role sync unavailable: " .. tostring(result))
 		end
 	end)
-end)
-if not syncOk then syncConnection = nil end
+end
 
 roleResolver.OnInvoke = function(playerOrId)
 	local userId = typeof(playerOrId) == "Instance" and playerOrId:IsA("Player") and playerOrId.UserId or tonumber(playerOrId)
@@ -1259,11 +1270,16 @@ local function handleAction(player, data)
 	notify(player, "That action is unavailable.")
 end
 
+print("[PalmVille Admin] Registering remote access/action listener.")
 remote.OnServerEvent:Connect(function(player, action, data)
 	if type(action) ~= "string" then return end
 	data = type(data) == "table" and data or {}
 	if action == "RequestAccess" then
 		local role = getRoleById(player.UserId)
+		if not accessRequestLogged[player.UserId] then
+			accessRequestLogged[player.UserId] = true
+			print(string.format("[PalmVille Admin] Access request received: %s (UserId %d), resolved role: %s.", player.Name, player.UserId, tostring(role or "NONE")))
+		end
 		if role then
 			player:SetAttribute("PalmVilleAdminRole", role)
 			remote:FireClient(player, "AccessGranted", {role = role, permissions = rolePermissions[role] or {}})
@@ -1336,6 +1352,7 @@ remote.OnServerEvent:Connect(function(player, action, data)
 		handleAction(player, data)
 	end
 end)
+print("[PalmVille Admin] Remote access/action listener registered.")
 
 local function onPlayerAdded(player)
 	joinTimes[player.UserId] = os.time()
@@ -1392,6 +1409,7 @@ Players.PlayerRemoving:Connect(function(player)
 	freeCameras[player.UserId] = nil
 	joinTimes[player.UserId] = nil
 	requestTimes[player.UserId] = nil
+	accessRequestLogged[player.UserId] = nil
 	cameraTimes[player.UserId] = nil
 end)
 
