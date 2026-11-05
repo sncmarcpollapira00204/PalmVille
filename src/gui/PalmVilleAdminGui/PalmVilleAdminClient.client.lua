@@ -232,6 +232,13 @@ local function targetData()
 	}
 end
 
+local announcementSound = make("Sound", {
+	Name = "PalmVilleAnnouncementSound",
+	SoundId = "rbxassetid://107498514393918",
+	Volume = 0.7,
+	Looped = false,
+}, game:GetService("SoundService"))
+
 local banner = make("Frame", {
 	Name = "AnnouncementBannerV2",
 	AnchorPoint = Vector2.new(0.5, 0),
@@ -242,108 +249,119 @@ local banner = make("Frame", {
 	ZIndex = 80,
 }, gui)
 
-local bannerRole = make("TextLabel", {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.Nunito,
-	TextSize = 27,
-	TextColor3 = C.amber,
-	TextStrokeColor3 = Color3.new(0, 0, 0),
-	TextStrokeTransparency = 0.25,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Center,
-	TextWrapped = false,
-	Size = UDim2.fromOffset(100, 40),
-	ZIndex = 81,
-}, banner)
-local bannerName = make("TextLabel", {
+local bannerLine = make("TextLabel", {
+	Name = "AnnouncementLine",
 	BackgroundTransparency = 1,
 	Font = Enum.Font.Nunito,
 	TextSize = 27,
 	TextColor3 = C.text,
 	TextStrokeColor3 = Color3.new(0, 0, 0),
 	TextStrokeTransparency = 0.25,
-	TextXAlignment = Enum.TextXAlignment.Left,
+	TextXAlignment = Enum.TextXAlignment.Center,
 	TextYAlignment = Enum.TextYAlignment.Center,
-	TextWrapped = false,
-	Size = UDim2.fromOffset(180, 40),
-	ZIndex = 81,
-}, banner)
-local bannerBadge = make("Frame", {
-	BackgroundColor3 = C.blue,
-	BorderSizePixel = 0,
-	Size = UDim2.fromOffset(22, 22),
-	ZIndex = 81,
-}, banner)
-addCorner(bannerBadge, 11)
-make("TextLabel", {
-	BackgroundTransparency = 1,
-	Size = UDim2.fromScale(1, 1),
-	Text = "✓",
-	TextColor3 = Color3.new(1, 1, 1),
-	Font = Enum.Font.GothamBold,
-	TextSize = 15,
-	ZIndex = 82,
-}, bannerBadge)
-local bannerMessage = make("TextLabel", {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.Nunito,
-	TextSize = 27,
-	TextColor3 = C.text,
-	TextStrokeColor3 = Color3.new(0, 0, 0),
-	TextStrokeTransparency = 0.25,
 	TextWrapped = true,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Center,
+	RichText = true,
+	Size = UDim2.fromScale(1, 1),
 	ZIndex = 81,
 }, banner)
 
+local bannerPreview = make("TextLabel", {
+	Name = "PreviewLabel",
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 0, -3),
+	Size = UDim2.new(1, 0, 0, 18),
+	BackgroundTransparency = 1,
+	Text = "PREVIEW · ONLY YOU CAN SEE THIS",
+	TextColor3 = C.muted,
+	Font = Enum.Font.Nunito,
+	TextSize = 11,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	Visible = false,
+	ZIndex = 82,
+}, banner)
+
 local bannerToken = 0
+local bannerTween
+local function escapeRichText(value)
+	return tostring(value):gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
+end
+
 local function showAnnouncement(data, preview)
 	if type(data) ~= "table" then return end
+
 	local incomingRole = tostring(data.role or "")
-	local roleText = "[" .. displayRole(incomingRole) .. "]"
+	local roleLabel = displayRole(incomingRole)
 	local author = incomingRole == "MASTER DEVELOPER" and "Lupin" or tostring(data.by or "Staff")
-	local message = tostring(data.text or "")
-	local fontSize = 27
-	local roleWidth = math.ceil(TextService:GetTextSize(roleText, fontSize, Enum.Font.Nunito, Vector2.new(1000, 100)).X + 12)
-	local authorWidth = incomingRole == "MASTER DEVELOPER" and 180 or math.ceil(TextService:GetTextSize(author, fontSize, Enum.Font.Nunito, Vector2.new(1000, 100)).X + 24)
-	local available = math.max(240, math.min(900, gui.AbsoluteSize.X - 40))
-	local messageWidth = math.max(100, math.min(available - roleWidth - authorWidth - 54, TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(900, 1000)).X + 12))
-	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(messageWidth, 1000))
-	local messageHeight = math.max(40, messageBounds.Y + 8)
-	local totalWidth = roleWidth + authorWidth + 8 + 22 + 12 + messageWidth
-	banner.Size = UDim2.fromOffset(totalWidth, math.max(48, messageHeight))
-	banner.AnchorPoint = Vector2.new(0.5, 0)
-	banner.Position = UDim2.new(0.5, 0, 0, 76)
-	bannerRole.Position = UDim2.fromOffset(0, 2)
-	bannerRole.Size = UDim2.fromOffset(roleWidth, 40)
-	bannerRole.Text = roleText
-	bannerName.Position = UDim2.fromOffset(roleWidth, 2)
-	bannerName.Size = UDim2.fromOffset(authorWidth, 40)
-	bannerName.Text = author
-	bannerBadge.Position = UDim2.fromOffset(roleWidth + authorWidth + 8, 9)
-	bannerMessage.Position = UDim2.fromOffset(roleWidth + authorWidth + 42, 2)
-	bannerMessage.Size = UDim2.fromOffset(messageWidth, messageHeight)
-	bannerMessage.Text = ": " .. message
+	local message = tostring(data.text or ""):gsub("[\\r\\n]+", " ")
+	if message:gsub("%s", "") == "" then return end
+
+	local viewport = gui.AbsoluteSize
+	local fontSize = math.clamp(math.floor(math.min(viewport.X, viewport.Y) / 28), 19, 27)
+	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
+	local prefixPlain = "[" .. roleLabel .. "] " .. author
+	local prefixWidth = TextService:GetTextSize(prefixPlain, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	local messageText = " : " .. message
+	local remainingWidth = math.max(100, availableWidth - prefixWidth - 38)
+	local messageBounds = TextService:GetTextSize(messageText, fontSize, Enum.Font.Nunito, Vector2.new(remainingWidth, 10000))
+	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
+	local bannerHeight = math.max(fontSize + 18, messageHeight)
+	local totalWidth = math.min(availableWidth, prefixWidth + 34 + math.min(remainingWidth, messageBounds.X + 8))
+
+	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
+	bannerLine.TextSize = fontSize
+	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
+		and "rgb(234,197,108)" or "rgb(166,201,133)"
+	local badge = '<font color="rgb(54,151,238)"> ● </font>'
+	bannerLine.Text = string.format(
+		'<font color="%s"><b>[%s]</b></font> <b>%s</b>%s%s',
+		roleColor,
+		escapeRichText(roleLabel),
+		escapeRichText(author),
+		badge,
+		escapeRichText(messageText)
+	)
+
 	bannerToken += 1
 	local token = bannerToken
+	if bannerTween then bannerTween:Cancel(); bannerTween = nil end
+	bannerPreview.Visible = preview == true
 	banner.Visible = true
-	banner.BackgroundTransparency = 1
-	bannerRole.TextTransparency = 0
-	bannerName.TextTransparency = 0
-	bannerMessage.TextTransparency = 0
-	if preview then
-		bannerRole.TextColor3 = C.amber
-	else
-		bannerRole.TextColor3 = C.amber
+	bannerLine.TextTransparency = 1
+	local y = 76
+	banner.Position = UDim2.new(0.5, 0, 0, y - 10)
+	bannerTween = TweenService:Create(bannerLine, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+	})
+	bannerTween:Play()
+	TweenService:Create(banner, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0, y),
+	}):Play()
+
+	if not preview then
+		announcementSound:Stop()
+		announcementSound.TimePosition = 0
+		announcementSound:Play()
 	end
-	task.delay(tonumber(data.duration) or 8, function()
-		if bannerToken == token then
-			banner.Visible = false
-		end
+
+	task.delay(math.clamp(tonumber(data.duration) or 8, 3, 12), function()
+		if bannerToken ~= token then return end
+		local fade = TweenService:Create(bannerLine, TweenInfo.new(0.2), {TextTransparency = 1})
+		fade:Play()
+		fade.Completed:Once(function()
+			if bannerToken == token then
+				banner.Visible = false
+				bannerPreview.Visible = false
+			end
+		end)
 	end)
-	print(string.format("[PalmVille Admin V2] Announcement role=%s author=%s", incomingRole, author))
 end
+
+gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	if banner.Visible then
+		local fontSize = math.clamp(math.floor(math.min(gui.AbsoluteSize.X, gui.AbsoluteSize.Y) / 28), 19, 27)
+		bannerLine.TextSize = fontSize
+	end
+end)
 
 local launcher = button(gui, "ADMIN", function() end, {size = UDim2.fromOffset(116, 40), primary = true, textSize = 12})
 launcher.Name = "PalmVilleAdminLauncherV2"
