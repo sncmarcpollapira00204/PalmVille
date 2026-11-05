@@ -1478,3 +1478,652 @@ task.spawn(function()
 		remote:FireClient(developer, "AccessGranted", {role = "MASTER DEVELOPER", permissions = rolePermissions["MASTER DEVELOPER"] or {}})
 	end
 end)
+
+do
+-- Consolidated cross-server Players directory; uses the Admin V2 role and permission resolver.
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local SSS = game:GetService("ServerScriptService")
+local MS = game:GetService("MemoryStoreService")
+local TS = game:GetService("TeleportService")
+local Messaging = game:GetService("MessagingService")
+local Http = game:GetService("HttpService")
+local Run = game:GetService("RunService")
+-- Studio has no cross-server travel: keep temporary coordination in this test server.
+-- Persisted test counters still use the existing _Test_v1 DataStore; live data is unchanged.
+local testMaps = {}
+local function coordinationMap(name)
+	if not Run:IsStudio() then return MS:GetHashMap(name) end
+	if testMaps[name] then return testMaps[name] end
+	local values = {}
+	local map = {}
+	function map:GetAsync(key)
+		local item = values[key]
+		if item and item.expires > os.clock() then return item.value end
+		values[key] = nil
+		return nil
+	end
+	function map:SetAsync(key, value, expiration)
+		values[key] = {value=value, expires=os.clock() + expiration}
+	end
+	function map:RemoveAsync(key) values[key] = nil end
+	function map:UpdateAsync(key, transform, expiration)
+		local result = transform(self:GetAsync(key))
+		if result ~= nil then self:SetAsync(key, result, expiration) end
+		return result
+	end
+	function map:ListItemsAsync(_pageSize)
+		local items = {}
+		for key in pairs(values) do
+			local value = self:GetAsync(key)
+			if value ~= nil then table.insert(items, {key=key, value=value}) end
+		end
+		return {IsFinished=true, GetCurrentPage=function()return items end}
+	end
+	testMaps[name] = map
+	return map
+end
+local prefix = Run:IsStudio() and "PalmVillePlayers_Test_v1" or "PalmVillePlayers_v1"
+local map = coordinationMap(prefix .. "_servers")
+local tickets = coordinationMap(prefix .. "_moves")
+local job = game.JobId ~= "" and game.JobId or Http:GenerateGUID(false)
+local topic = prefix .. "_commands"
+local remote = RS:FindFirstChild("PalmVillePlayersDirectory")
+if remote and not remote:IsA("RemoteFunction") then
+	error("PalmVillePlayersDirectory exists but is not a RemoteFunction.")
+end
+if not remote then
+	remote = Instance.new("RemoteFunction")
+	remote.Name = "PalmVillePlayersDirectory"
+	remote.Parent = RS
+end
+local began, cache, arrivals, rates, pendingMoves = {}, {}, {}, {}, {}
+local subscription, stopping = nil, false
+local directoryRanks = {OWNER=100,["MASTER DEVELOPER"]=90,["HEAD ADMIN"]=80,ADMIN=60,MODERATOR=40,HELPER=20}
+local function roleOf(uid)
+	return getRoleById(uid)
+end
+local function allowed(uid)
+	local resolvedRole = roleOf(uid)
+	if resolvedRole == "OWNER" or resolvedRole == "MASTER DEVELOPER" then return true end
+	local current = resolvedRole and rolePermissions[resolvedRole]
+	return current ~= nil and current.Players == true
+end
+local function directoryCanAffect(actorId, targetId)
+	if actorId == targetId then return false end
+	local actorRole = roleOf(actorId)
+	local targetRole = roleOf(targetId)
+	return actorRole ~= nil and (directoryRanks[actorRole] or 0) > (directoryRanks[targetRole] or 0)
+end
+local function notice(targetPlayer, message)
+	notify(targetPlayer, message)
+end
+local function route()
+	if game.PrivateServerId ~= "" then
+		return {kind = game.PrivateServerOwnerId > 0 and "vip" or "reserved", id = game.PrivateServerId}
+	end
+	return {kind = "public", id = game.JobId}
+end
+local function numeric(v)
+	return type(v) == "number" and v == v and v >= 0 and v < math.huge and v or nil
+end
+-- Optional PalmVilleAdminPlayerData adapter: money=current balance; earnedToday=gross earnings
+-- since midnight PHT, including money already spent. Missing values stay unavailable.
+local function localRows()
+	local rows = {}
+	local adapter = SSS:FindFirstChild("PalmVilleAdminPlayerData")
+	for _, p in ipairs(Players:GetPlayers()) do
+		began[p.UserId] = began[p.UserId] or os.time()
+		local progress = {}
+		if adapter and adapter:IsA("BindableFunction") then
+			local ok, data = pcall(function() return adapter:Invoke(p) end)
+			if ok and type(data) == "table" then
+				for _, key in ipairs({"money","earnedToday","level","xp","xpNeeded","totalPlaytime"}) do progress[key] = numeric(data[key]) end
+			end
+		end
+		table.insert(rows,{userId=p.UserId,username=p.Name,displayName=p.DisplayName,role=roleOf(p.UserId),
+			joinedAt=began[p.UserId],jobId=job,placeId=game.PlaceId,serverLabel="Server "..job:sub(1,6),progress=progress})
+	end
+	return rows
+end
+local function localEntry()
+	return {time=os.time(),rows=localRows(),placeId=game.PlaceId,jobId=job,route=route(),capacity=Players.MaxPlayers}
+end
+local function refresh()
+	local own = localEntry()
+	map:SetAsync(job, own, 60)
+	local entries = {[job]=own}
+	local pages = map:ListItemsAsync(100)
+	while true do
+		for _, item in ipairs(pages:GetCurrentPage()) do
+			if item.key ~= job and item.value and os.time()-item.value.time <= 45 then entries[item.key]=item.value end
+		end
+		if pages.IsFinished then break end
+		pages:AdvanceToNextPageAsync()
+	end
+	cache=entries
+end
+local function findTarget(uid)
+	local p=Players:GetPlayerByUserId(uid)
+	if p then
+		local own=localEntry()
+		for _, row in ipairs(own.rows) do if row.userId==uid then return row,own end end
+	end
+	for _, entry in pairs(cache) do
+		if os.time()-entry.time<=45 then
+			for _, row in ipairs(entry.rows) do if row.userId==uid then return row,entry end end
+		end
+	end
+	return nil
+end
+local function packed(cf) return {cf:GetComponents()} end
+local function destination(p)
+	return {jobId=job,placeId=game.PlaceId,route=route(),cf=p.Character and packed(p.Character:GetPivot())}
+end
+local function optionsFor(dest)
+	local opts=Instance.new("TeleportOptions")
+	if dest.route.kind=="vip" then opts.VipServerId=dest.route.id
+	elseif dest.route.kind=="reserved" then opts.ReservedServerId=dest.route.id
+	else opts.ServerInstanceId=dest.jobId end
+	return opts
+end
+local function move(p, dest, mode, targetId, actorId)
+	if Run:IsStudio() then return false,"Cross-server travel must be tested in the published Roblox game." end
+	tickets:SetAsync("arrival_"..p.UserId,{destination=dest,mode=mode,targetId=targetId,created=os.time()},120)
+	pendingMoves[p.UserId]={actorId=actorId or p.UserId}
+	local ok,err=pcall(function() TS:TeleportAsync(dest.placeId,{p},optionsFor(dest)) end)
+	if not ok then
+		pendingMoves[p.UserId]=nil
+		tickets:RemoveAsync("arrival_"..p.UserId)
+		return false,"Teleport failed: "..tostring(err)
+	end
+	return true,"Joining destination server..."
+end
+local function execute(actorId,targetId,action,dest)
+	if not allowed(actorId) or not directoryCanAffect(actorId,targetId) then return false,"Player is protected or access was revoked." end
+	local target=Players:GetPlayerByUserId(targetId)
+	if not target then return false,"Player moved or left. Refresh the list." end
+	if action=="Reset" then target:LoadCharacterAsync(); return true,"Character reset." end
+	if action=="Bring" then
+		if not target.Character then return false,"Character is not ready." end
+		if dest.jobId==job then
+			local actor=Players:GetPlayerByUserId(actorId)
+			if not actor or not actor.Character then return false,"Admin character is not ready." end
+			tickets:SetAsync("return_"..targetId,destination(target),3600)
+			target.Character:PivotTo(actor.Character:GetPivot()*CFrame.new(4,0,0))
+			return true,"Player brought to you."
+		end
+		tickets:SetAsync("return_"..targetId,destination(target),3600)
+		return move(target,dest,"Bring",actorId,actorId)
+	elseif action=="Return" then
+		local saved=tickets:GetAsync("return_"..targetId)
+		if not saved then return false,"No Bring return position saved (expires after 1 hour)." end
+		if saved.jobId==job then
+			if not target.Character or not saved.cf then return false,"Return position unavailable." end
+			target.Character:PivotTo(CFrame.new(table.unpack(saved.cf)))
+			tickets:RemoveAsync("return_"..targetId)
+			return true,"Player returned."
+		end
+		return move(target,saved,"Return",nil,actorId)
+	end
+	return false,"Unknown action."
+end
+local function notifyResult(actorId,text)
+	local actor=Players:GetPlayerByUserId(actorId)
+	if actor then notice(actor,text) end
+end
+local function processMessage(message)
+	local data=message.Data
+	if type(data)~="table" then return end
+	if data.kind=="Result" then notifyResult(data.actorId,tostring(data.text)); return end
+	if data.kind~="Command" or data.jobId~=job or type(data.token)~="string" then return end
+	local request=tickets:GetAsync("command_"..data.token)
+	if not request or request.jobId~=job or request.claimed then return end
+	local claim=Http:GenerateGUID(false)
+	local locked=tickets:UpdateAsync("command_"..data.token,function(old)
+		if old and not old.claimed then old.claimed=claim end
+		return old
+	end,60)
+	if not locked or locked.claimed~=claim then return end
+	local ok,success,text=pcall(execute,request.actorId,request.targetId,request.action,request.destination)
+	if not ok then text="Player action failed: "..tostring(success) end
+	Messaging:PublishAsync(topic,{kind="Result",actorId=request.actorId,text=text})
+end
+local function subscribe()
+	if Run:IsStudio() or subscription then return end
+	local ok,conn=pcall(function()
+		return Messaging:SubscribeAsync(topic,function(message)
+			task.spawn(function()
+				local good,err=pcall(processMessage,message)
+				if not good then warn("PalmVille Players command: "..tostring(err)) end
+			end)
+		end)
+	end)
+	if ok then subscription=conn end
+end
+local function actionRequest(actor, uid, action)
+	if not directoryCanAffect(actor.UserId,uid) then return {ok=false,message="Select another player with a lower staff rank."} end
+	local row,entry=findTarget(uid)
+	if not row then return {ok=false,message="Player unavailable. Refresh the list."} end
+	if action=="Go" or action=="Spectate" then
+		local target=Players:GetPlayerByUserId(uid)
+		if target then
+			if action=="Spectate" then return {ok=true,localSpectate=uid,username=row.username} end
+			if not actor.Character or not target.Character then return {ok=false,message="Character is not ready."} end
+			actor.Character:PivotTo(target.Character:GetPivot()*CFrame.new(0,0,4))
+			return {ok=true,message="Teleported to player."}
+		end
+		if #entry.rows>=entry.capacity then return {ok=false,message="Target server is full."} end
+		local ok,text=move(actor,{jobId=entry.jobId,placeId=entry.placeId,route=entry.route},action,uid)
+		return {ok=ok,message=text}
+	end
+	if action=="Bring" and not Players:GetPlayerByUserId(uid) and #Players:GetPlayers()>=Players.MaxPlayers then
+		return {ok=false,message="Your server is full."}
+	end
+	if Players:GetPlayerByUserId(uid) then
+		local ok,text=execute(actor.UserId,uid,action,destination(actor))
+		return {ok=ok,message=text}
+	end
+	if not subscription then return {ok=false,message="Cross-server commands unavailable. Check Output."} end
+	local token=Http:GenerateGUID(false)
+	tickets:SetAsync("command_"..token,{actorId=actor.UserId,targetId=uid,action=action,
+		destination=destination(actor),jobId=entry.jobId},60)
+	Messaging:PublishAsync(topic,{kind="Command",jobId=entry.jobId,token=token})
+	return {ok=true,message="Request sent to player's server. A result will follow."}
+end
+remote.OnServerInvoke=function(actor,kind,data)
+	if type(kind)~="string" then return {ok=false} end
+	local rateKey=actor.UserId..":"..kind
+	local interval=kind=="List" and 3 or 1
+	if os.clock()<(rates[rateKey] or 0) then return {ok=false,message="Please wait a moment."} end
+	rates[rateKey]=os.clock()+interval
+	if not allowed(actor.UserId) then return {ok=false,message="Players permission required."} end
+	local ok,result=pcall(function()
+		if kind=="Resume" then
+			local uid=arrivals[actor.UserId]
+			arrivals[actor.UserId]=nil
+			if uid and directoryCanAffect(actor.UserId,uid) then
+				local p=Players:GetPlayerByUserId(uid)
+				return {ok=true,localSpectate=p and uid,username=p and p.Name}
+			end
+			return {ok=true}
+		elseif kind=="List" then
+			local unique={}
+			for _,entry in pairs(cache) do
+				if os.time()-entry.time<=45 then for _,row in ipairs(entry.rows) do unique[row.userId]=row end end
+			end
+			for _,row in ipairs(localRows()) do unique[row.userId]=row end
+			local rows={}
+			for _,row in pairs(unique) do table.insert(rows,row) end
+			table.sort(rows,function(a,b)return a.username:lower()<b.username:lower() end)
+			return {ok=true,players=rows,jobId=job,updatedAt=os.time()}
+		elseif kind=="Action" then
+			if type(data)~="table" or type(data.userId)~="number" or data.userId%1~=0 then return {ok=false,message="Select a player."} end
+			if not table.find({"Go","Bring","Spectate","Reset","Return"},data.action) then return {ok=false,message="Unknown action."} end
+			return actionRequest(actor,data.userId,data.action)
+		end
+		return {ok=false,message="Unknown request."}
+	end)
+	if not ok then warn("PalmVille Players: "..tostring(result));return {ok=false,message="Service unavailable. Check Output."} end
+	return result
+end
+-- Apply arrival tickets after characters are ready; teleport hints from clients are never trusted.
+local function applyArrival(p)
+	local ok,ticket=pcall(function()return tickets:GetAsync("arrival_"..p.UserId)end)
+	if not ok or not ticket then return end
+	if ticket.destination.jobId~=job then notice(p,"Destination server changed; action cancelled.");return end
+	local character=p.Character or p.CharacterAdded:Wait()
+	local root=character:WaitForChild("HumanoidRootPart",15)
+	if not root then return end
+	tickets:RemoveAsync("arrival_"..p.UserId)
+	if ticket.mode=="Go" or ticket.mode=="Spectate" or ticket.mode=="Bring" then
+		if ticket.mode=="Bring" then
+			if not allowed(ticket.targetId) or not directoryCanAffect(ticket.targetId,p.UserId) then notice(p,"Bring permission revoked; arrival action cancelled.");return end
+		elseif not allowed(p.UserId) or not directoryCanAffect(p.UserId,ticket.targetId) then
+			notice(p,"Admin access changed; arrival action cancelled.");return
+		end
+		local target=Players:GetPlayerByUserId(ticket.targetId or 0)
+		if not target or not target.Character then notice(p,"Target player left before arrival.");return end
+		character:PivotTo(target.Character:GetPivot()*CFrame.new(4,0,0))
+		if ticket.mode=="Spectate" then arrivals[p.UserId]=target.UserId end
+	elseif ticket.mode=="Return" and ticket.destination.cf then
+		character:PivotTo(CFrame.new(table.unpack(ticket.destination.cf)))
+		tickets:RemoveAsync("return_"..p.UserId)
+	end
+end
+Players.PlayerAdded:Connect(function(p)began[p.UserId]=os.time();task.spawn(applyArrival,p)end)
+Players.PlayerRemoving:Connect(function(p)began[p.UserId]=nil;arrivals[p.UserId]=nil;pendingMoves[p.UserId]=nil
+	for _,kind in ipairs({"List","Resume","Action"}) do rates[p.UserId..":"..kind]=nil end
+end)
+for _,p in ipairs(Players:GetPlayers()) do began[p.UserId]=os.time();task.spawn(applyArrival,p)end
+TS.TeleportInitFailed:Connect(function(p,_,message)
+	if pendingMoves[p.UserId] then
+		local actorId=pendingMoves[p.UserId].actorId
+		pendingMoves[p.UserId]=nil
+		pcall(function()tickets:RemoveAsync("arrival_"..p.UserId)end)
+		notice(p,"Teleport failed: "..tostring(message))
+		if actorId~=p.UserId then
+			pcall(function()Messaging:PublishAsync(topic,{kind="Result",actorId=actorId,text="Player teleport failed: "..tostring(message)})end)
+		end
+	end
+end)
+task.spawn(function()
+	local retryDelay = 15
+	while not stopping do
+		subscribe()
+		local ok,err=pcall(refresh)
+		if not ok then
+			retryDelay=math.min(retryDelay*2,120)
+			warn("PalmVille Players directory: "..tostring(err))
+		else retryDelay=15 end
+		task.wait(retryDelay)
+	end
+end)
+game:BindToClose(function()stopping=true;pcall(function()map:RemoveAsync(job)end)end)
+end
+
+do
+-- Consolidated overview analytics collector; preserves existing DataStore and MemoryStore keys.
+local Players = game:GetService("Players")
+local DS = game:GetService("DataStoreService")
+local MS = game:GetService("MemoryStoreService")
+local Http = game:GetService("HttpService")
+local Run = game:GetService("RunService")
+-- Studio has no cross-server travel: keep temporary coordination in this test server.
+-- Persisted test counters still use the existing _Test_v1 DataStore; live data is unchanged.
+local testMaps = {}
+local function coordinationMap(name)
+	if not Run:IsStudio() then return MS:GetHashMap(name) end
+	if testMaps[name] then return testMaps[name] end
+	local values = {}
+	local map = {}
+	function map:GetAsync(key)
+		local item = values[key]
+		if item and item.expires > os.clock() then return item.value end
+		values[key] = nil
+		return nil
+	end
+	function map:SetAsync(key, value, expiration)
+		values[key] = {value=value, expires=os.clock() + expiration}
+	end
+	function map:RemoveAsync(key) values[key] = nil end
+	function map:UpdateAsync(key, transform, expiration)
+		local result = transform(self:GetAsync(key))
+		if result ~= nil then self:SetAsync(key, result, expiration) end
+		return result
+	end
+	function map:ListItemsAsync(_pageSize)
+		local items = {}
+		for key in pairs(values) do
+			local value = self:GetAsync(key)
+			if value ~= nil then table.insert(items, {key=key, value=value}) end
+		end
+		return {IsFinished=true, GetCurrentPage=function()return items end}
+	end
+	testMaps[name] = map
+	return map
+end
+local PREFIX = Run:IsStudio() and "PalmVilleOverview_Test_v1" or "PalmVilleOverview_v1"
+local SHARDS = 64
+local store = tryGetDataStore(PREFIX)
+if not store then
+	local memoryValues = {}
+	store = {}
+	function store:GetAsync(key) return memoryValues[key] end
+	function store:SetAsync(key, value) memoryValues[key] = value; return value end
+	function store:UpdateAsync(key, transform)
+		local value = transform(memoryValues[key])
+		if value ~= nil then memoryValues[key] = value end
+		return value
+	end
+end
+local servers = coordinationMap(PREFIX .. "_servers")
+local shared = coordinationMap(PREFIX .. "_shared")
+local job = game.JobId ~= "" and game.JobId or Http:GenerateGUID(false)
+local remote = RS:FindFirstChild("PalmVilleOverviewAnalytics")
+if remote and not remote:IsA("RemoteFunction") then
+	error("PalmVilleOverviewAnalytics exists but is not a RemoteFunction.")
+end
+if not remote then
+	remote = Instance.new("RemoteFunction")
+	remote.Name = "PalmVilleOverviewAnalytics"
+	remote.Parent = RS
+end
+local stopping = false
+local pending = {}
+local active = {}
+local snapshot = {ready = false, message = "Collecting analytics..."}
+local nextRequest = {}
+local function dayKey(t)
+	return os.date("!%Y-%m-%d", (t or os.time()) + 8 * 3600)
+end
+local function recentDays()
+	local result = {}
+	for offset = 6, 0, -1 do
+		local t = os.time() - offset * 86400
+		table.insert(result, {key = dayKey(t), label = os.date("!%b %d", t + 28800)})
+	end
+	return result
+end
+-- Atomic, idempotent per-user projection. Each shard keeps user totals plus eight daily records.
+-- Monitor shard size if the game grows to millions of accounts; migrate/shard further before 4MB/key.
+local function enqueue(userId, isJoin)
+	local key = dayKey()
+	table.insert(pending, {uid = tostring(userId), shard = userId % SHARDS,
+		day = key, token = Http:GenerateGUID(false), visit = isJoin and 1 or 0,
+		cutoff = dayKey(os.time() - 8 * 86400)})
+end
+local function flushOne(event)
+	store:UpdateAsync("users_" .. event.shard, function(data)
+		data = data or {users = {}}
+		local user = data.users[event.uid] or {visits = 0, firstDay = event.day, days = {}, tokens = {}}
+		if table.find(user.tokens, event.token) then return data end
+		user.visits += event.visit
+		user.days[event.day] = (user.days[event.day] or 0) + event.visit
+		for date in pairs(user.days) do if date < event.cutoff then user.days[date] = nil end end
+		table.insert(user.tokens, event.token)
+		while #user.tokens > 16 do table.remove(user.tokens, 1) end
+		data.users[event.uid] = user
+		return data
+	end)
+end
+local workerBusy = false
+local function flushQueue(deadline)
+	if workerBusy then return end
+	workerBusy = true
+	while #pending > 0 and (not deadline or os.clock() < deadline) do
+		local event = pending[1]
+		local ok, err = pcall(flushOne, event)
+		if not ok then
+			warn("PalmVille analytics: tracking write delayed: " .. tostring(err))
+			break -- Retain the same token for retry; do not double-count ambiguous successful writes.
+		end
+		table.remove(pending, 1)
+	end
+	workerBusy = false
+end
+local function joined(player)
+	if active[player] then return end
+	active[player] = dayKey()
+	enqueue(player.UserId, true)
+end
+Players.PlayerAdded:Connect(joined)
+Players.PlayerRemoving:Connect(function(player) active[player] = nil; nextRequest[player] = nil end)
+for _, player in ipairs(Players:GetPlayers()) do joined(player) end
+-- Request endpoint uses the existing server-side admin authorization, never client-supplied roles.
+remote.OnServerInvoke = function(player)
+	local role = getRoleById(player.UserId)
+	if not role or (not hasPermission(player, "Monitoring") and not hasPermission(player, "Server")) then return nil end
+	if os.clock() < (nextRequest[player] or 0) then return snapshot end
+	nextRequest[player] = os.clock() + 10
+	local result = table.clone(snapshot)
+	local localCount = #Players:GetPlayers()
+	if result.ready then
+		result.online = math.max(result.online or 0, localCount)
+		result.servers = math.max(result.servers or 0, localCount > 0 and 1 or 0)
+	end
+	return result
+end
+local function heartbeat()
+	local ids = {}
+	for _, player in ipairs(Players:GetPlayers()) do
+		table.insert(ids, player.UserId)
+		if active[player] ~= dayKey() then
+			active[player] = dayKey()
+			enqueue(player.UserId, false) -- Count overnight players as daily unique, without another visit.
+		end
+	end
+	servers:SetAsync(job, {ids = ids, time = os.time()}, 60)
+end
+local function population()
+	-- The map listing can lag its latest write. Count our live server directly,
+	-- then merge other recent servers without counting this job twice.
+	local users, count = {}, 0
+	local localPlayers = Players:GetPlayers()
+	if #localPlayers > 0 then count = 1 end
+	for _, player in ipairs(localPlayers) do users[tostring(player.UserId)] = true end
+	local pages = servers:ListItemsAsync(100)
+	while true do
+		for _, entry in ipairs(pages:GetCurrentPage()) do
+			local value = entry.value
+			if entry.key ~= job and value and os.time() - value.time <= 45 and #value.ids > 0 then
+				count += 1
+				for _, uid in ipairs(value.ids) do users[tostring(uid)] = true end
+			end
+		end
+		if pages.IsFinished then break end
+		pages:AdvanceToNextPageAsync()
+	end
+	local online = 0
+	for _ in pairs(users) do online += 1 end
+	return online, count
+end
+local function becomeLeader()
+	local owner = shared:UpdateAsync("leader", function(old)
+		if not old or old.job == job or old.untilTime <= os.time() then
+			return {job = job, untilTime = os.time() + 45}
+		end
+		return old
+	end, 60)
+	return owner and owner.job == job
+end
+local totals, history, loadedAt = nil, nil, 0
+local peakPending = {}
+local function loadCounts()
+	local dates = recentDays()
+	local days = {}
+	for _, d in ipairs(dates) do
+		days[d.key] = {key = d.key, label = d.label, visits = 0, unique = 0, newPlayers = 0, peak = 0, hasData = false}
+	end
+	local result = {visits = 0, unique = 0}
+	for shard = 0, SHARDS - 1 do
+		local data = store:GetAsync("users_" .. shard)
+		for _, user in pairs(data and data.users or {}) do
+			result.visits += user.visits
+			result.unique += 1
+			for date, visits in pairs(user.days) do
+				if days[date] then
+					local d = days[date]
+					d.hasData = true
+					d.visits += visits
+					d.unique += 1
+					if user.firstDay == date then d.newPlayers += 1 end
+				end
+			end
+		end
+	end
+	local rows = {}
+	for _, d in ipairs(dates) do table.insert(rows, days[d.key]) end
+	totals, history, loadedAt = result, rows, os.time()
+end
+local lastPeakSave = 0
+local function publish()
+	local online, serverCount = population()
+	local today = dayKey()
+	peakPending[today] = math.max(peakPending[today] or 0, online)
+	if not totals or os.time() - loadedAt >= 60 or history[#history].key ~= today then loadCounts() end
+	if os.time() - lastPeakSave >= 60 then
+		-- Preserve sampled peaks across midnight and retry failed writes on the next cycle.
+		local saved = store:UpdateAsync("peaks", function(data)
+			data = data or {allTime = 0, days = {}}
+			for date, peak in pairs(peakPending) do
+				data.allTime = math.max(data.allTime, peak)
+				data.days[date] = math.max(data.days[date] or 0, peak)
+			end
+			local cutoff = dayKey(os.time() - 8 * 86400)
+			for date in pairs(data.days) do if date < cutoff then data.days[date] = nil end end
+			return data
+		end)
+		lastPeakSave = os.time()
+		shared:SetAsync("peaks", saved, 180)
+	end
+	local peaks = shared:GetAsync("peaks") or store:GetAsync("peaks") or {allTime = 0, days = {}}
+	local rows = {}
+	for _, d in ipairs(history) do
+		local row = table.clone(d)
+		row.peak = math.max(peaks.days[d.key] or 0, peakPending[d.key] or 0)
+		row.hasData = row.hasData or row.peak > 0
+		table.insert(rows, row)
+	end
+	local allPeak = math.max(peaks.allTime or 0, online)
+	for _, peak in pairs(peakPending) do allPeak = math.max(allPeak, peak) end
+	local data = {ready = true, online = online, servers = serverCount, visits = totals.visits,
+		unique = totals.unique, peak = allPeak, days = rows, today = today,
+		updatedAt = os.time(), countsUpdatedAt = loadedAt, studio = Run:IsStudio()}
+	shared:SetAsync("snapshot", data, 180)
+	snapshot = data
+end
+-- A single leased leader aggregates shards. Other servers reuse the shared snapshot.
+task.spawn(function()
+	while not stopping do
+		flushQueue()
+		task.wait(3)
+	end
+end)
+task.spawn(function()
+	local retryDelay = 15
+	while not stopping do
+		local ok, err = pcall(function()
+			heartbeat()
+			if becomeLeader() then publish() end
+			local cached = shared:GetAsync("snapshot")
+			if cached then snapshot = cached end
+		end)
+		if not ok then
+			retryDelay = math.min(retryDelay * 2, 120)
+			warn("PalmVille analytics: " .. tostring(err))
+			if snapshot.ready then snapshot.message = "Update delayed" else snapshot.message = "Analytics temporarily unavailable. Retrying..." end
+		else
+			retryDelay = 15
+			if snapshot.ready then snapshot.message = nil end
+		end
+		task.wait(retryDelay)
+	end
+end)
+game:BindToClose(function()
+	stopping = true
+	local deadline = os.clock() + 24
+	while workerBusy and os.clock() < deadline do task.wait(0.1) end
+	flushQueue(deadline)
+	pcall(function()
+		if next(peakPending) then
+			store:UpdateAsync("peaks", function(data)
+				data = data or {allTime = 0, days = {}}
+				for date, peak in pairs(peakPending) do
+					data.allTime = math.max(data.allTime, peak)
+					data.days[date] = math.max(data.days[date] or 0, peak)
+				end
+				return data
+			end)
+		end
+	end)
+	pcall(function() servers:RemoveAsync(job) end)
+	-- A successor may take over immediately after a graceful shutdown.
+	pcall(function()
+		shared:UpdateAsync("leader", function(old)
+			if old and old.job == job then return {job = job, untilTime = 0} end
+			return old
+		end, 60)
+	end)
+end)
+end
