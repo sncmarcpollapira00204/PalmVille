@@ -559,10 +559,15 @@ for key, nav in pairs(navButtons) do
 	nav.Activated:Connect(function()
 		activeTab = key
 		refreshNavigation()
-		if key == "OVERVIEW" then remote:FireServer("RequestSnapshot") end
-		if key == "PLAYERS" then remote:FireServer("RequestSnapshot") end
-		if key == "STAFF" then remote:FireServer("RequestStaff") end
-		if key == "LOGS" then remote:FireServer("RequestLogs") end
+		if key == "OVERVIEW" then
+			if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
+		elseif key == "PLAYERS" then
+			remote:FireServer("RequestSnapshot")
+		elseif key == "STAFF" then
+			remote:FireServer("RequestStaff")
+		elseif key == "LOGS" then
+			remote:FireServer("RequestLogs")
+		end
 	end)
 end
 
