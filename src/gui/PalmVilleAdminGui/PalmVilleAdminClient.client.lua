@@ -99,11 +99,20 @@ local function text(parent, value, size, color, height, bold)
 	}, parent)
 end
 
+local function setButtonBackground(target, color)
+	if not target then return end
+	target:SetAttribute("BaseBackgroundColor", color)
+	if target:GetAttribute("PointerHover") ~= true then
+		target.BackgroundColor3 = color
+	end
+end
+
 local function button(parent, caption, callback, options)
 	options = options or {}
+	local baseColor = options.primary and C.green or C.surface
 	local b = make("TextButton", {
 		Size = options.size or UDim2.new(1, 0, 0, 46),
-		BackgroundColor3 = options.primary and C.green or C.surface,
+		BackgroundColor3 = baseColor,
 		BackgroundTransparency = 0,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
@@ -113,15 +122,19 @@ local function button(parent, caption, callback, options)
 		TextSize = options.textSize or 15,
 		TextWrapped = true,
 	}, parent)
+	b:SetAttribute("BaseBackgroundColor", baseColor)
 	addCorner(b, options.radius or 11)
 	addStroke(b, options.danger and C.red or (options.primary and C.amber or C.line), 0.08, 1.3)
 	b.MouseEnter:Connect(function()
 		if not options.disabled then
+			b:SetAttribute("PointerHover", true)
 			b.BackgroundColor3 = options.danger and Color3.fromRGB(111, 45, 45) or C.surfaceHover
 		end
 	end)
 	b.MouseLeave:Connect(function()
-		b.BackgroundColor3 = options.primary and C.green or C.surface
+		b:SetAttribute("PointerHover", false)
+		local restore = b:GetAttribute("BaseBackgroundColor")
+		b.BackgroundColor3 = typeof(restore) == "Color3" and restore or baseColor
 	end)
 	b.Activated:Connect(function()
 		if callback then callback(b) end
@@ -601,7 +614,7 @@ for navIndex, entry in ipairs(navOrder) do
 	nav.Name = "Nav_" .. key
 	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 64))
 	nav.TextXAlignment = Enum.TextXAlignment.Left
-	nav.BackgroundColor3 = C.panel
+	setButtonBackground(nav, C.panel)
 	nav.BackgroundTransparency = 0.08
 	local padding = make("UIPadding", {PaddingLeft = UDim.new(0, 66), PaddingRight = UDim.new(0, 12)}, nav)
 	local glyph = make("TextLabel", {
@@ -660,7 +673,7 @@ local function refreshNavigation()
 		local nav = navButtons[key]
 		nav.Visible = allowed
 		local active = activeTab == key
-		nav.BackgroundColor3 = active and C.green or C.panel
+		setButtonBackground(nav, active and C.green or C.panel)
 		nav.BackgroundTransparency = active and 0 or 0.08
 		nav.TextColor3 = active and C.text or C.muted
 		local glyph = nav:FindFirstChild("NavIcon")
@@ -1025,12 +1038,12 @@ local function renderPlayers()
 				updatePlayerDetails(row)
 				for _, other in ipairs(playerRows:GetChildren()) do
 					if other:IsA("TextButton") then
-						other.BackgroundColor3 = other:GetAttribute("UserId") == selectedUserId and C.green or C.surface
+						setButtonBackground(other, other:GetAttribute("UserId") == selectedUserId and C.green or C.surface)
 					end
 				end
 			end, {size = UDim2.new(1, -4, 0, 86), radius = 13})
 			item:SetAttribute("UserId", row.userId)
-			item.BackgroundColor3 = row.userId == selectedUserId and C.green or C.surface
+			setButtonBackground(item, row.userId == selectedUserId and C.green or C.surface)
 			local avatar = make("ImageLabel", {
 				Position = UDim2.fromOffset(12, 12),
 				Size = UDim2.fromOffset(60, 60),
@@ -1106,15 +1119,15 @@ serverAudience = button(audienceRow, "♧   This Server", function()
 	audience = "This Server"
 	serverAudience.Text = "♧   This Server  ✓"
 	allAudience.Text = "▱   All Servers"
-	serverAudience.BackgroundColor3 = C.green
-	allAudience.BackgroundColor3 = C.surface
+	setButtonBackground(serverAudience, C.green)
+	setButtonBackground(allAudience, C.surface)
 end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 17})
 allAudience = button(audienceRow, "▱   All Servers", function()
 	audience = "All Servers"
 	serverAudience.Text = "♧   This Server"
 	allAudience.Text = "▱   All Servers  ✓"
-	serverAudience.BackgroundColor3 = C.surface
-	allAudience.BackgroundColor3 = C.green
+	setButtonBackground(serverAudience, C.surface)
+	setButtonBackground(allAudience, C.green)
 end, {size = UDim2.new(0.5, -6, 0, 52)})
 serverAudience.BackgroundColor3 = C.green
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
@@ -1209,7 +1222,7 @@ for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) d
 	button(staffRoleRow, staffRoleName, function(b)
 		staffRole = staffRoleName
 		for _, other in ipairs(staffRoleRow:GetChildren()) do
-			if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
+			if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 		end
 	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
 end
@@ -1298,7 +1311,7 @@ local function renderStaff()
 					if other:IsA("TextButton") then other.BackgroundColor3 = other == b and C.green or C.surface end
 				end
 			end, {size = UDim2.new(1, 0, 0, 44), textSize = 14})
-			item.BackgroundColor3 = selectedStaffId == tonumber(row.userId) and C.green or C.surface
+			setButtonBackground(item, selectedStaffId == tonumber(row.userId) and C.green or C.surface)
 		end
 	end
 
