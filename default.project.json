@@ -22,11 +22,6 @@
         "$className": "ScreenGui",
         "$path": "src/gui/PalmVilleAdminGui",
         "$ignoreUnknownInstances": true
-      },
-      "PalmVilleAdminGuiV2": {
-        "$className": "ScreenGui",
-        "$path": "src/gui/PalmVilleAdminGuiV2",
-        "$ignoreUnknownInstances": true
       }
     }
   }
