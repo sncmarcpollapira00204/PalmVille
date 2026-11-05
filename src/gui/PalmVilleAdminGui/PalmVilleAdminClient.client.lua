@@ -299,40 +299,45 @@ local function showAnnouncement(data, preview)
 	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
 	local roleText = "[" .. roleLabel .. "] "
 	local authorText = author
-	local badgeText = "  ✓  "
-	local prefixText = roleText .. authorText .. badgeText
+	local badgeText = " ✓ "
 	local fontSize = 27
-	local prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	local function measurePrefix()
+		local combined = roleText .. authorText .. badgeText
+		return combined, TextService:GetTextSize(combined, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+	end
+	local prefixText, prefixWidth = measurePrefix()
 	if prefixWidth > availableWidth * 0.68 then
-		local authorLength = utf8.len(authorText) or #authorText
-		if authorLength > 14 then
+		local count = utf8.len(authorText) or #authorText
+		if count > 14 then
 			local cut = utf8.offset(authorText, 14) or (#authorText + 1)
 			authorText = authorText:sub(1, cut - 1) .. "…"
 		end
-		prefixText = roleText .. authorText .. badgeText
-		prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+		prefixText, prefixWidth = measurePrefix()
 	end
 	if prefixWidth > availableWidth * 0.68 then
-		fontSize = 23
-		prefixWidth = TextService:GetTextSize(prefixText, fontSize, Enum.Font.Nunito, Vector2.new(4000, 100)).X
+		fontSize = 22
+		prefixText, prefixWidth = measurePrefix()
 	end
-	local remainingWidth = math.max(96, availableWidth - prefixWidth - 6)
-	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(remainingWidth, 10000))
+
+	local messageWidth = math.max(96, availableWidth - math.min(prefixWidth, availableWidth * 0.68) - 8)
+	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.Nunito, Vector2.new(messageWidth, 10000))
 	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
 	local bannerHeight = math.max(fontSize + 18, messageHeight)
-	local totalWidth = math.min(availableWidth, prefixWidth + math.min(remainingWidth, messageBounds.X + 8))
+	local contentWidth = math.min(availableWidth, prefixWidth) + math.min(messageWidth, messageBounds.X + 8)
+	local totalWidth = math.max(220, math.min(availableWidth, contentWidth))
 
 	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
 	bannerLine.TextSize = fontSize
+	bannerLine.TextXAlignment = Enum.TextXAlignment.Left
 	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
 		and "rgb(234,197,108)" or "rgb(166,201,133)"
 	bannerLine.Text = string.format(
-		'<font color="%s"><b>%s</b></font><b>%s</b> <font color="rgb(54,151,238)">%s</font><font color="rgb(241,245,239)">%s</font>',
+		'<font color="%s"><b>%s</b></font><b>%s</b><font color="rgb(54,151,238)">%s</font><font color="rgb(241,245,239)"> : %s</font>',
 		roleColor,
 		escapeRichText(roleText),
 		escapeRichText(authorText),
-		"✓",
-		escapeRichText(" : " .. message)
+		escapeRichText(" ✓ "),
+		escapeRichText(message)
 	)
 
 	bannerToken += 1
