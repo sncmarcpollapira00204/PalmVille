@@ -1,1 +1,0 @@
--- Legacy admin server retired. PalmVilleAdminServerV2 is the single authoritative server handler.
