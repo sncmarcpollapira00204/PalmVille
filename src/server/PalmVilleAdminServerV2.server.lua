@@ -1825,6 +1825,7 @@ end
 do
 -- Consolidated overview analytics collector; preserves existing DataStore and MemoryStore keys.
 local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
 local DS = game:GetService("DataStoreService")
 local MS = game:GetService("MemoryStoreService")
 local Http = game:GetService("HttpService")
