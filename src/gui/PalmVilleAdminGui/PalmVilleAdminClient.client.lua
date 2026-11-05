@@ -163,6 +163,10 @@ local function isManager()
 	return role == "OWNER" or role == "MASTER DEVELOPER"
 end
 
+local function displayRole(value)
+	return value == "MASTER DEVELOPER" and "DEV" or tostring(value or "")
+end
+
 local function hasArea(area)
 	if area=="Announcements" and role~="OWNER" and role~="MASTER DEVELOPER" and role~="HEAD ADMIN" then return false end
 	if isManager() then return true end
@@ -1917,7 +1921,7 @@ permissionList = make("ScrollingFrame", {
 	ZIndex = 13,
 }, staffPage)
 make("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 3)}, permissionList)
-textLabel(staffPage, "Original Owner, Master Developer, and Head Admin assignments are protected.", 30, 11, {TextColor3 = C.muted, TextSize = 10})
+textLabel(staffPage, "Original Owner, Dev, and Head Admin assignments are protected.", 30, 11, {TextColor3 = C.muted, TextSize = 10})
 
 local function renderStaff()
 	if not staffList then return end
@@ -1927,12 +1931,12 @@ local function renderStaff()
 	table.sort(staffRows, function(a, b) return (a.role or "") < (b.role or "") end)
 	for index, row in ipairs(staffRows) do
 		local state = row.online and "ONLINE" or "OFFLINE"
-		local item = actionButton(staffList, row.username .. "  ·  " .. row.role .. "  ·  " .. state, function()
+		local item = actionButton(staffList, row.username .. "  ·  " .. displayRole(row.role) .. "  ·  " .. state, function()
 			selectedStaffId = row.userId
 			selectedUserId = row.userId
 			selectedName = row.username
 			if moderatorUsername then moderatorUsername.Text = row.username end
-			if selectedInfo then selectedInfo.Text = row.username .. "  ·  " .. row.role .. "  ·  " .. state end
+			if selectedInfo then selectedInfo.Text = row.username .. "  ·  " .. displayRole(row.role) .. "  ·  " .. state end
 			renderStaff()
 		end, index)
 		item.Size = UDim2.new(1, 0, 0, 30)
@@ -1973,7 +1977,7 @@ local function renderLogs()
 	for _, entry in ipairs(logRows) do
 		local text = string.format("%s  ·  %s (%s)  ·  %s  ·  %s  ·  %s",
 			os.date("%m/%d %H:%M", tonumber(entry.time) or 0),
-			tostring(entry.actor or "?"), tostring(entry.role or ""),
+			tostring(entry.actor or "?"), displayRole(entry.role),
 			tostring(entry.action or ""), tostring(entry.target or ""),
 			tostring(entry.result or ""))
 		if query == "" or string.find(string.lower(text), query, 1, true) then
@@ -2050,7 +2054,7 @@ do
 			local viewport = gui.AbsoluteSize
 			local fontSize = viewport.X < 650 and 21 or 27
 			local available = math.max(220, math.min(1080, viewport.X - 40))
-			local tag = current.role == "MASTER DEVELOPER" and "DEV" or current.role
+			local tag = displayRole(current.role)
 			local name = tostring(current.by or "Staff"):gsub("[\\r\\n]", " ")
 			local measureFont = Enum.Font.Nunito
 
@@ -2412,10 +2416,11 @@ remote.OnClientEvent:Connect(function(event, data)
 		role = type(data) == "table" and tostring(data.role or "") or ""
 		permissions = type(data) == "table" and data.permissions or {}
 		launcher.Visible = true
-		roleLabel.Text = role == "MASTER DEVELOPER" and "DEV" or role
-		profile.role.Text = role == "MASTER DEVELOPER" and "DEV" or role
-		profile.role.Size = UDim2.fromOffset(math.clamp(#role * 8 + 28, 100, 220), 28)
-		if currentAdminLabel then currentAdminLabel.Text = "@" .. player.Name .. "  ·  " .. role end
+		local visibleRole = displayRole(role)
+		roleLabel.Text = visibleRole
+		profile.role.Text = visibleRole
+		profile.role.Size = UDim2.fromOffset(math.clamp(#visibleRole * 8 + 28, 100, 180), 28)
+		if currentAdminLabel then currentAdminLabel.Text = "@" .. player.Name .. "  ·  " .. visibleRole end
 		updateAbilityToggle("SetAdminTitle", player:GetAttribute("PalmVilleAdminTitleVisible") ~= false)
 		setStatus("AUTHORIZED")
 		refreshTabs()
