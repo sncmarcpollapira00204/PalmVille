@@ -101,9 +101,9 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromScale(2.4, 0.56)
-	billboard.StudsOffset = Vector3.new(0, 2.65, 0)
-	billboard.MaxDistance = 80
+	billboard.Size = UDim2.fromScale(4.2, 0.95)
+	billboard.StudsOffset = Vector3.new(0, 2.85, 0)
+	billboard.MaxDistance = 110
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
 	billboard.Enabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
@@ -122,8 +122,8 @@ local function createTitle(player, character)
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 14
-	sizeLimit.MaxTextSize = 24
+	sizeLimit.MinTextSize = 24
+	sizeLimit.MaxTextSize = 38
 	sizeLimit.Parent = label
 
 	local glow = Instance.new("UIStroke")
