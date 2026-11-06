@@ -37,7 +37,7 @@ local gui = make("ScreenGui", {
 }, playerGui)
 
 -- Upload the supplied transparent PNG to Roblox and paste its image asset ID here.
-local COIN_IMAGE_ID = "rbxassetid://0"
+local COIN_IMAGE_ID = "rbxassetid://70966983038421"
 
 local holder = make("Frame", {
 	Name = "CashDisplay",
