@@ -1,6 +1,11 @@
 local ServerStorage = game:GetService("ServerStorage")
 
-local adminTemplates = ServerStorage:WaitForChild("PalmVilleAdminItems")
+local adminTemplates = ServerStorage:FindFirstChild("PalmVilleAdminItems")
+if not adminTemplates then
+	adminTemplates = Instance.new("Folder")
+	adminTemplates.Name = "PalmVilleAdminItems"
+	adminTemplates.Parent = ServerStorage
+end
 local seedTemplates = ServerStorage:FindFirstChild("PalmVilleSeedPackTemplates")
 if not seedTemplates then
 	seedTemplates = Instance.new("Folder")
@@ -92,10 +97,40 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	return tool
 end
 
+local riceTemplate = adminTemplates:FindFirstChild("RICE_SEED")
+if not riceTemplate or not riceTemplate:IsA("Tool") then
+	if riceTemplate then riceTemplate:Destroy() end
+	riceTemplate = Instance.new("Tool")
+	riceTemplate.Name = "RICE_SEED"
+	riceTemplate.RequiresHandle = true
+	riceTemplate.CanBeDropped = false
+	riceTemplate.ToolTip = "Rice Seed"
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.9, 1.08, 0.22)
+	handle.Color = Color3.fromRGB(190, 133, 76)
+	handle.Material = Enum.Material.Fabric
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = riceTemplate
+	local label = Instance.new("SurfaceGui")
+	label.Face = Enum.NormalId.Front
+	label.Parent = handle
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundColor3 = Color3.fromRGB(247, 222, 169)
+	text.Text = "PalmVille\nRICE SEEDS"
+	text.TextColor3 = Color3.fromRGB(77, 43, 31)
+	text.TextScaled = true
+	text.Font = Enum.Font.GothamBold
+	text.Parent = label
+	riceTemplate.Parent = adminTemplates
+end
+
 local registry = {
 	RICE_SEED = {
 		displayName = "Rice Seed",
-		template = adminTemplates:WaitForChild("RICE_SEED"),
+		template = riceTemplate,
 		maxAmount = 99,
 	},
 }
