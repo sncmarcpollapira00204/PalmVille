@@ -12,6 +12,7 @@ local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
 local ServerStorage = game:GetService("ServerStorage")
 local ItemRegistry = require(ServerScriptService:WaitForChild("PalmVilleItemRegistry"))
+local InventoryService = require(ServerScriptService:WaitForChild("PalmVilleInventoryService"))
 
 local remote = ReplicatedStorage:FindFirstChild("PalmVilleAdminRemote")
 if not remote then
@@ -668,6 +669,9 @@ end
 
 local function giveRegisteredItem(target, code, amount)
 	local item = ItemRegistry[code]
+	if item and item.inventoryCategory == "seedPacks" then
+		return InventoryService.GiveSeedPacks(target, code, amount)
+	end
 	if not item or not item.template or not item.template:IsA("Tool") then
 		return false
 	end
