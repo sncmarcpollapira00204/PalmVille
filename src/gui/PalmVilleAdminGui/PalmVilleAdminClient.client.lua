@@ -542,7 +542,7 @@ local function fitAnnouncement()
 	local fontSize = viewport.X < 650 and 23 or 32
 	local available = math.max(220, math.min(1180, viewport.X - 40))
 	local incomingRole = tostring(currentAnnouncement.role or "")
-	local roleTag = incomingRole == "MASTER DEVELOPER" and "MASTER DEV" or displayRole(incomingRole)
+	local roleTag = incomingRole == "MASTER DEVELOPER" and "DEV" or displayRole(incomingRole)
 	local authorName = tostring(currentAnnouncement.by or (incomingRole == "MASTER DEVELOPER" and "Lupin" or "Staff")):gsub("[\r\n]", " ")
 	local plainPrefix = "[" .. roleTag .. "] " .. authorName
 	local prefixWidth = TextService:GetTextSize(
