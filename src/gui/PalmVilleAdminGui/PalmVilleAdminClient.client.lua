@@ -889,7 +889,7 @@ local profileRole = make("TextLabel", {
 	BackgroundColor3 = C.amber,
 	BorderSizePixel = 0,
 	Text = "STAFF",
-	TextColor3 = Color3.fromRGB(17, 34, 18),
+	TextColor3 = C.bg,
 	Font = Enum.Font.GothamBold,
 	TextSize = 15,
 	TextXAlignment = Enum.TextXAlignment.Center,
@@ -1181,6 +1181,16 @@ for navIndex, entry in ipairs(navOrder) do
 	navLabel.Size = UDim2.new(1, -60, 1, 0)
 	navLabel.TextWrapped = false
 	navLabel.ZIndex = nav.ZIndex + 2
+	local navIndicator = make("Frame", {
+		Name = "ActiveIndicator",
+		Position = UDim2.fromOffset(5, 12),
+		Size = UDim2.fromOffset(3, 24),
+		BackgroundColor3 = C.text,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = nav.ZIndex + 2,
+	}, nav)
+	addCorner(navIndicator, 2)
 	local navStroke = nav:FindFirstChildOfClass("UIStroke")
 	if navStroke then navStroke.Transparency = 0.72 end
 	navButtons[key] = nav
@@ -1190,7 +1200,7 @@ for navIndex, entry in ipairs(navOrder) do
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 4,
+		ScrollBarThickness = 3,
 		ScrollBarImageColor3 = C.line,
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -1231,6 +1241,8 @@ local function refreshNavigation()
 			navLabel.Text = nav:GetAttribute("NavCaption") or key
 			navLabel.TextColor3 = active and C.text or C.muted
 		end
+		local navIndicator = nav:FindFirstChild("ActiveIndicator")
+		if navIndicator then navIndicator.Visible = active end
 		local navStroke = nav:FindFirstChildOfClass("UIStroke")
 		if navStroke then navStroke.Transparency = active and 0.02 or 0.78 end
 		pages[key].Visible = panelOpen and active and allowed
@@ -1355,15 +1367,15 @@ local playersWorkspace = make("Frame", {
 
 local playersListPanel = make("Frame", {
 	Name = "OnlinePlayersPanel",
-	Size = UDim2.new(0.39, -10, 1, 0),
+	Size = UDim2.new(0.35, -10, 1, 0),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 }, playersWorkspace)
 addCorner(playersListPanel, 18)
 local playersDetailsPanel = make("Frame", {
 	Name = "PlayerDetailsPanel",
-	Position = UDim2.new(0.39, 10, 0, 0),
-	Size = UDim2.new(0.61, -10, 1, 0),
+	Position = UDim2.new(0.35, 10, 0, 0),
+	Size = UDim2.new(0.65, -10, 1, 0),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 }, playersWorkspace)
