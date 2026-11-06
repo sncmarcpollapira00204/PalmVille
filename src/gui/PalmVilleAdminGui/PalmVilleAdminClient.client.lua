@@ -449,19 +449,51 @@ local banner = make("Frame", {
 	ZIndex = 80,
 }, gui)
 
-local bannerLine = make("TextLabel", {
-	Name = "AnnouncementLine",
+local bannerPrefix = make("TextLabel", {
+	Name = "AnnouncementPrefix",
 	BackgroundTransparency = 1,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.GothamBold,
 	TextSize = 27,
 	TextColor3 = C.text,
 	TextStrokeColor3 = Color3.new(0, 0, 0),
 	TextStrokeTransparency = 0.25,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	TextYAlignment = Enum.TextYAlignment.Center,
-	TextWrapped = true,
+	TextWrapped = false,
 	RichText = true,
-	Size = UDim2.fromScale(1, 1),
+	Size = UDim2.fromOffset(0, 38),
+	ZIndex = 81,
+}, banner)
+
+local bannerVerified = make("TextLabel", {
+	Name = "AnnouncementVerified",
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	Text = "✓",
+	TextSize = 23,
+	TextColor3 = Color3.fromRGB(0, 149, 255),
+	TextStrokeColor3 = Color3.new(0, 0, 0),
+	TextStrokeTransparency = 0.25,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	TextYAlignment = Enum.TextYAlignment.Center,
+	TextWrapped = false,
+	Size = UDim2.fromOffset(24, 38),
+	ZIndex = 81,
+}, banner)
+
+local bannerMessage = make("TextLabel", {
+	Name = "AnnouncementMessage",
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	TextSize = 27,
+	TextColor3 = Color3.fromRGB(241, 245, 239),
+	TextStrokeColor3 = Color3.new(0, 0, 0),
+	TextStrokeTransparency = 0.25,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Center,
+	TextWrapped = true,
+	RichText = false,
+	Size = UDim2.fromOffset(0, 38),
 	ZIndex = 81,
 }, banner)
 
@@ -481,9 +513,24 @@ local bannerPreview = make("TextLabel", {
 }, banner)
 
 local bannerToken = 0
-local bannerTween
+local bannerTweens = {}
 local function escapeRichText(value)
 	return tostring(value):gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
+end
+
+local function setBannerTextTransparency(value, duration)
+	for _, tween in ipairs(bannerTweens) do
+		tween:Cancel()
+	end
+	table.clear(bannerTweens)
+
+	for _, label in ipairs({bannerPrefix, bannerVerified, bannerMessage}) do
+		local tween = TweenService:Create(label, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TextTransparency = value,
+		})
+		table.insert(bannerTweens, tween)
+		tween:Play()
+	end
 end
 
 local function showAnnouncement(data, preview)
@@ -491,67 +538,81 @@ local function showAnnouncement(data, preview)
 
 	local incomingRole = tostring(data.role or "")
 	local roleLabel = displayRole(incomingRole)
-	local author = incomingRole == "MASTER DEVELOPER" and "Lupin" or tostring(data.by or "Staff")
+	local authorText = incomingRole == "MASTER DEVELOPER" and "Lupin" or tostring(data.by or "Staff")
 	local message = tostring(data.text or "")
 	if message:gsub("%s", "") == "" then return end
 
-	local viewport = gui.AbsoluteSize
-	local availableWidth = math.max(220, math.min(1180, viewport.X - 40))
-	local roleText = "[" .. roleLabel .. "] "
-	local authorText = author
-	local badgeText = " ☑️ "
+	local availableWidth = math.max(220, math.min(1180, gui.AbsoluteSize.X - 40))
 	local fontSize = 27
+	local roleText = "[" .. roleLabel .. "] "
 	local function measurePrefix()
-		local combined = roleText .. authorText .. badgeText
-		return combined, TextService:GetTextSize(combined, fontSize, Enum.Font.GothamBold, Vector2.new(4000, 100)).X
+		local plainPrefix = roleText .. authorText
+		local width = TextService:GetTextSize(plainPrefix, fontSize, Enum.Font.GothamBold, Vector2.new(4000, 100)).X
+		return plainPrefix, width
 	end
-	local prefixText, prefixWidth = measurePrefix()
-	if prefixWidth > availableWidth * 0.68 then
+
+	local plainPrefix, prefixWidth = measurePrefix()
+	local maxPrefixWidth = availableWidth * 0.62
+	if prefixWidth > maxPrefixWidth then
 		local count = utf8.len(authorText) or #authorText
-		if count > 14 then
-			local cut = utf8.offset(authorText, 14) or (#authorText + 1)
+		if count > 10 then
+			local cut = utf8.offset(authorText, 10) or (#authorText + 1)
 			authorText = authorText:sub(1, cut - 1) .. "…"
 		end
-		prefixText, prefixWidth = measurePrefix()
+		plainPrefix, prefixWidth = measurePrefix()
 	end
-	if prefixWidth > availableWidth * 0.68 then
-		fontSize = 22
-		prefixText, prefixWidth = measurePrefix()
+	if prefixWidth > maxPrefixWidth then
+		fontSize = 23
+		plainPrefix, prefixWidth = measurePrefix()
 	end
 
-	local messageWidth = math.max(96, availableWidth - math.min(prefixWidth, availableWidth * 0.68) - 8)
-	local messageBounds = TextService:GetTextSize(message, fontSize, Enum.Font.GothamBold, Vector2.new(messageWidth, 10000))
-	local messageHeight = math.max(fontSize + 12, messageBounds.Y + 10)
-	local bannerHeight = math.max(fontSize + 18, messageHeight)
-	local contentWidth = math.min(availableWidth, prefixWidth) + math.min(messageWidth, messageBounds.X + 8)
-	local totalWidth = math.max(220, math.min(availableWidth, contentWidth))
+	local badgeWidth = 24
+	local gap = 8
+	local messageX = math.ceil(prefixWidth) + badgeWidth + gap
+	local messageAvailable = math.max(80, availableWidth - messageX)
+	local messageText = ": " .. message
+	local messageBounds = TextService:GetTextSize(
+		messageText,
+		fontSize,
+		Enum.Font.GothamBold,
+		Vector2.new(messageAvailable, 10000)
+	)
+	local messageWidth = math.min(messageAvailable, math.max(64, math.ceil(messageBounds.X + 8)))
+	local totalWidth = math.min(availableWidth, messageX + messageWidth)
+	local bannerHeight = math.max(fontSize + 12, math.ceil(messageBounds.Y + 10))
 
 	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
-	bannerLine.Font = Enum.Font.GothamBold
-	bannerLine.TextSize = fontSize
-	bannerLine.TextXAlignment = Enum.TextXAlignment.Left
+	bannerPrefix.Position = UDim2.fromOffset(0, 0)
+	bannerPrefix.Size = UDim2.fromOffset(math.ceil(prefixWidth) + 2, fontSize + 12)
+	bannerPrefix.TextSize = fontSize
+	bannerVerified.Position = UDim2.fromOffset(math.ceil(prefixWidth) + 2, 0)
+	bannerVerified.Size = UDim2.fromOffset(badgeWidth, fontSize + 12)
+	bannerVerified.TextSize = fontSize - 2
+	bannerMessage.Position = UDim2.fromOffset(messageX, 0)
+	bannerMessage.Size = UDim2.fromOffset(messageWidth, bannerHeight)
+	bannerMessage.TextSize = fontSize
+	bannerMessage.TextYAlignment = messageBounds.Y > fontSize + 4 and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
+
 	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
 		and "rgb(234,197,108)" or "rgb(166,201,133)"
-	bannerLine.Text = string.format(
-		'<font color="%s"><b>%s</b></font><b>%s</b> <font color="rgb(0,149,255)">☑️</font><font color="rgb(241,245,239)"> : %s</font>',
+	bannerPrefix.Text = string.format(
+		'<font color="%s"><b>%s</b></font><b>%s</b>',
 		roleColor,
 		escapeRichText(roleText),
-		escapeRichText(authorText),
-		escapeRichText(message)
+		escapeRichText(authorText)
 	)
+	bannerMessage.Text = messageText
 
 	bannerToken += 1
 	local token = bannerToken
-	if bannerTween then bannerTween:Cancel(); bannerTween = nil end
 	bannerPreview.Visible = preview == true
 	banner.Visible = true
-	bannerLine.TextTransparency = 1
+	bannerPrefix.TextTransparency = 1
+	bannerVerified.TextTransparency = 1
+	bannerMessage.TextTransparency = 1
 	local y = 76
 	banner.Position = UDim2.new(0.5, 0, 0, y - 10)
-	bannerTween = TweenService:Create(bannerLine, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		TextTransparency = 0,
-	})
-	bannerTween:Play()
+	setBannerTextTransparency(0, 0.18)
 	TweenService:Create(banner, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		Position = UDim2.new(0.5, 0, 0, y),
 	}):Play()
@@ -564,9 +625,8 @@ local function showAnnouncement(data, preview)
 
 	task.delay(math.clamp(tonumber(data.duration) or 8, 3, 12), function()
 		if bannerToken ~= token then return end
-		local fade = TweenService:Create(bannerLine, TweenInfo.new(0.2), {TextTransparency = 1})
-		fade:Play()
-		fade.Completed:Once(function()
+		setBannerTextTransparency(1, 0.2)
+		task.delay(0.22, function()
 			if bannerToken == token then
 				banner.Visible = false
 				bannerPreview.Visible = false
@@ -578,7 +638,9 @@ end
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 	if banner.Visible then
 		local fontSize = math.clamp(math.floor(math.min(gui.AbsoluteSize.X, gui.AbsoluteSize.Y) / 28), 19, 27)
-		bannerLine.TextSize = fontSize
+		bannerPrefix.TextSize = fontSize
+		bannerVerified.TextSize = fontSize - 2
+		bannerMessage.TextSize = fontSize
 	end
 end)
 
