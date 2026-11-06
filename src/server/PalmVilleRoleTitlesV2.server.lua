@@ -59,8 +59,8 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromScale(3.8, 0.9)
-	billboard.StudsOffset = Vector3.new(0, 3.05, 0)
+	billboard.Size = UDim2.fromOffset(156, 48)
+	billboard.StudsOffset = Vector3.new(0, 3.25, 0)
 	billboard.MaxDistance = 100
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
@@ -69,28 +69,28 @@ local function createTitle(player, character)
 	local label = Instance.new("TextLabel")
 	label.Name = "Title"
 	label.BackgroundColor3 = Color3.fromRGB(18, 43, 30)
-	label.BackgroundTransparency = 0.12
+	label.BackgroundTransparency = 0.1
 	label.Size = UDim2.fromScale(1, 1)
 	label.Font = Enum.Font.FredokaOne
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextStrokeColor3 = style.outline
-	label.TextStrokeTransparency = 0.25
+	label.TextStrokeTransparency = 0.12
 	label.TextScaled = true
 	label.TextWrapped = false
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 16
-	sizeLimit.MaxTextSize = 30
+	sizeLimit.MinTextSize = 22
+	sizeLimit.MaxTextSize = 34
 	sizeLimit.Parent = label
 
 	local glow = Instance.new("UIStroke")
 	glow.Name = "SoftGlow"
 	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 	glow.Color = style.glow
-	glow.Thickness = 1.8
-	glow.Transparency = 0.24
+	glow.Thickness = 2.2
+	glow.Transparency = 0.16
 	glow.Parent = label
 
 	local pillCorner = Instance.new("UICorner")
