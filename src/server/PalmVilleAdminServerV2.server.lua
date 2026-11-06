@@ -262,29 +262,48 @@ local function saveStaffChange(userId, role, name)
 	if role and not ASSIGNABLE[role] then
 		return false, "Choose an available role."
 	end
-	local ok, result = pcall(function()
-		return staffStore:UpdateAsync("staff", function(current)
-			local nextStaff = type(current) == "table" and current or {}
-			if role then
-				nextStaff[id] = {role = role, name = tostring(name or id):sub(1, 20)}
-			else
-				nextStaff[id] = nil
-			end
-			for protectedId, protectedEntry in pairs(BOOTSTRAP) do
-				nextStaff[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
-			end
-			return nextStaff
+
+	local result
+	if not staffStore and RunService:IsStudio() then
+		-- Explicit session-only fallback for Studio when API Services are unavailable.
+		result = copyTable(staff)
+		if role then
+			result[id] = {role = role, name = tostring(name or id):sub(1, 20)}
+		else
+			result[id] = nil
+		end
+		for protectedId, protectedEntry in pairs(BOOTSTRAP) do
+			result[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
+		end
+	else
+		local ok, saved = pcall(function()
+			return staffStore:UpdateAsync("staff", function(current)
+				local nextStaff = type(current) == "table" and current or {}
+				if role then
+					nextStaff[id] = {role = role, name = tostring(name or id):sub(1, 20)}
+				else
+					nextStaff[id] = nil
+				end
+				for protectedId, protectedEntry in pairs(BOOTSTRAP) do
+					nextStaff[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
+				end
+				return nextStaff
+			end)
 		end)
-	end)
-	if not ok or type(result) ~= "table" then
-		return false, "Role storage is unavailable. No role change was saved."
+		if not ok or type(saved) ~= "table" then
+			return false, "Role storage is unavailable. No role change was saved."
+		end
+		result = saved
 	end
+
 	staff = result
 	for protectedId, protectedEntry in pairs(BOOTSTRAP) do
 		staff[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
 	end
 	applyOnlineRole(userId)
-	publishStaffChange(userId, role, name)
+	if not RunService:IsStudio() then
+		publishStaffChange(userId, role, name)
+	end
 	return true
 end
 
@@ -292,20 +311,29 @@ local function savePermission(role, area, enabled)
 	if not ASSIGNABLE[role] or table.find(AREAS, area) == nil or type(enabled) ~= "boolean" then
 		return false
 	end
-	local ok, result = pcall(function()
-		return permissionStore:UpdateAsync("areas", function(current)
-			local nextPermissions = type(current) == "table" and current or {}
-			nextPermissions[role] = type(nextPermissions[role]) == "table" and nextPermissions[role] or {}
-			nextPermissions[role][area] = enabled
-			return nextPermissions
+
+	if permissionStore then
+		local ok, result = pcall(function()
+			return permissionStore:UpdateAsync("areas", function(current)
+				local nextPermissions = type(current) == "table" and current or {}
+				nextPermissions[role] = type(nextPermissions[role]) == "table" and nextPermissions[role] or {}
+				nextPermissions[role][area] = enabled
+				return nextPermissions
+			end)
 		end)
-	end)
-	if not ok or type(result) ~= "table" then
+		if not ok or type(result) ~= "table" then
+			return false
+		end
+	elseif not RunService:IsStudio() then
 		return false
 	end
+
+	-- Studio fallback is intentionally session-only; published servers require a successful save.
 	rolePermissions[role] = rolePermissions[role] or copyTable(DEFAULT_PERMISSIONS[role])
 	rolePermissions[role][area] = enabled
-	publishPermissionChange(role, area, enabled)
+	if not RunService:IsStudio() then
+		publishPermissionChange(role, area, enabled)
+	end
 	return true
 end
 
@@ -743,7 +771,9 @@ local function stopSpectate(adminUserId, announce)
 	local target = onlinePlayer(session.targetUserId)
 	local admin = onlinePlayer(adminUserId)
 	if target then
-		remote:FireClient(target, "StopCameraFeed", {token = session.token})
+		if session.watchScreen then
+			remote:FireClient(target, "StopCameraFeed", {token = session.token})
+		end
 		if announce and admin then
 			remote:FireClient(target, "SpectateNotice", {admin = admin.Name, active = false})
 		end
@@ -753,15 +783,22 @@ local function stopSpectate(adminUserId, announce)
 	end
 end
 
-local function beginSpectate(admin, target)
+local function beginSpectate(admin, target, watchScreen)
 	stopSpectate(admin.UserId, true)
 	local token = HttpService:GenerateGUID(false)
-	spectators[admin.UserId] = {targetUserId = target.UserId, token = token}
-	watchers[target.UserId] = watchers[target.UserId] or {}
-	watchers[target.UserId][admin.UserId] = token
-	remote:FireClient(target, "BeginCameraFeed", {token = token, adminUserId = admin.UserId})
+	spectators[admin.UserId] = {targetUserId = target.UserId, token = token, watchScreen = watchScreen == true}
+	if watchScreen then
+		watchers[target.UserId] = watchers[target.UserId] or {}
+		watchers[target.UserId][admin.UserId] = token
+		remote:FireClient(target, "BeginCameraFeed", {token = token, adminUserId = admin.UserId})
+	end
 	remote:FireClient(target, "SpectateNotice", {admin = admin.Name, active = true})
-	remote:FireClient(admin, "SpectateStarted", {targetUserId = target.UserId, username = target.Name})
+	remote:FireClient(admin, "SpectateStarted", {
+		targetUserId = target.UserId,
+		username = target.Name,
+		token = token,
+		watchScreen = watchScreen == true,
+	})
 end
 
 local function setModerationState(userId, action, actor, reason, duration)
@@ -900,10 +937,25 @@ TextChatService.ChildAdded:Connect(bindTextChannels)
 
 local function playerSnapshot()
 	local roster = {}
+	local playerDataAdapter = SSS:FindFirstChild("PalmVilleAdminPlayerData")
 	for _, target in ipairs(Players:GetPlayers()) do
 		local humanoid = target.Character and target.Character:FindFirstChildOfClass("Humanoid")
 		local root = findCharacterPart(target, "HumanoidRootPart")
 		local position = root and root.Position
+		local progress = {}
+		if playerDataAdapter and playerDataAdapter:IsA("BindableFunction") then
+			local ok, saved = pcall(function()
+				return playerDataAdapter:Invoke(target)
+			end)
+			if ok and type(saved) == "table" then
+				for _, key in ipairs({"money", "earnedToday", "level", "xp", "xpNeeded", "totalPlaytime"}) do
+					local value = tonumber(saved[key])
+					if value and value == value and value >= 0 and value < math.huge then
+						progress[key] = value
+					end
+				end
+			end
+		end
 		table.insert(roster, {
 			userId = target.UserId,
 			username = target.Name,
@@ -912,7 +964,9 @@ local function playerSnapshot()
 			health = humanoid and math.floor(humanoid.Health + 0.5) or 0,
 			maxHealth = humanoid and math.floor(humanoid.MaxHealth + 0.5) or 0,
 			position = position and string.format("%.1f, %.1f, %.1f", position.X, position.Y, position.Z) or "—",
-			playtime = math.max(0, os.time() - (joinTimes[target.UserId] or os.time())),
+			playtime = progress.totalPlaytime,
+			progress = progress,
+			frozen = frozenStates[target.UserId] ~= nil,
 		})
 	end
 	table.sort(roster, function(a, b)
@@ -1032,6 +1086,7 @@ local function handleAction(player, data)
 		local result = enabled and "Frozen" or "Unfrozen"
 		setModerationState(target.UserId, action, player, tostring(data.reason or ""), 0)
 		logActivity(player, action, target, "Success", {reason = tostring(data.reason or "")})
+		remote:FireClient(player, "FreezeState", {userId = target.UserId, enabled = enabled})
 		notify(player, target.Name .. " " .. string.lower(result) .. ".")
 		return
 	end
@@ -1039,9 +1094,15 @@ local function handleAction(player, data)
 	if action == "Spectate" or action == "WatchScreen" then
 		if not requireArea("Monitoring") then return end
 		if not target or not requireTarget() then return end
-		beginSpectate(player, target)
-		if action == "WatchScreen" then
-			remote:FireClient(player, "WatchScreenStarted", {targetUserId = target.UserId, username = target.Name})
+		local watchScreen = action == "WatchScreen"
+		beginSpectate(player, target, watchScreen)
+		if watchScreen then
+			local session = spectators[player.UserId]
+			remote:FireClient(player, "WatchScreenStarted", {
+				targetUserId = target.UserId,
+				username = target.Name,
+				token = session and session.token,
+			})
 		end
 		logActivity(player, action, target, "Started")
 		return
@@ -1349,7 +1410,8 @@ remote.OnServerEvent:Connect(function(player, action, data)
 		if typeof(facing) == "Vector3" and state.orientation and facing.Magnitude > 0.01 and facing.Magnitude < 1.05 then
 			local horizontal = Vector3.new(facing.X, 0, facing.Z)
 			if horizontal.Magnitude > 0.01 then
-				state.orientation.CFrame = CFrame.lookAt(Vector3.zero, horizontal.Unit)
+				local bank = math.clamp(tonumber(data.bank) or 0, -0.22, 0.22)
+				state.orientation.CFrame = CFrame.lookAt(Vector3.zero, horizontal.Unit) * CFrame.Angles(0, 0, bank)
 			end
 		end
 		return
