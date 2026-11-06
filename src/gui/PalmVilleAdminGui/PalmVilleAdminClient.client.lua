@@ -1007,6 +1007,7 @@ make("UIListLayout", {
 
 local modalCallback
 local modalPickerCallback
+local closeAdminModal
 
 local function renderModalPlayerPicker()
 	for _, child in ipairs(modalPicker:GetChildren()) do
@@ -1029,7 +1030,7 @@ local function renderModalPlayerPicker()
 	end
 end
 
-local function closeAdminModal()
+closeAdminModal = function()
 	modalShade.Visible = false
 	modalCallback = nil
 	modalPickerCallback = nil
