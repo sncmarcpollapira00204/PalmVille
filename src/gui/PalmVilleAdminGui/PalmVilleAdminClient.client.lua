@@ -254,16 +254,26 @@ local function drawIcon(parent, name, size, color)
 	return root
 end
 
-local function attachIcon(target, name, size, left)
-	local iconRoot = drawIcon(target, name, size or 20, C.amber)
-	iconRoot.AnchorPoint = Vector2.new(0, 0.5)
-	iconRoot.Position = UDim2.new(0, left or 16, 0.5, 0)
+local function iconButton(parent, caption, iconName, callback, options)
+	options = options or {}
+	local buttonOptions = table.clone(options)
+	local target = button(parent, "", callback, buttonOptions)
+	target.Text = ""
 	target.TextXAlignment = Enum.TextXAlignment.Left
-	make("UIPadding", {
-		PaddingLeft = UDim.new(0, (left or 16) + (size or 20) + 12),
-		PaddingRight = UDim.new(0, 12),
-	}, target)
-	return iconRoot
+
+	local iconSize = options.iconSize or 20
+	local iconRoot = drawIcon(target, iconName, iconSize, C.amber)
+	iconRoot.Name = "ButtonIcon"
+	iconRoot.Position = UDim2.new(0, 17, 0.5, -iconSize * 0.5)
+
+	local label = text(target, caption, options.textSize or 16, options.danger and Color3.fromRGB(255, 226, 218) or C.text, 24, options.bold == true)
+	label.Name = "ButtonLabel"
+	label.Position = UDim2.new(0, 48, 0, 0)
+	label.Size = UDim2.new(1, -62, 1, 0)
+	label.TextWrapped = false
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = target.ZIndex + 2
+	return target
 end
 
 local function setButtonBackground(target, color)
@@ -1251,38 +1261,34 @@ text(announceCard, "Audience", 18, C.text, 26, true)
 local audienceRow = addRow(announceCard, 54)
 local serverAudience
 local allAudience
-serverAudience = button(audienceRow, "This Server", function()
+serverAudience = iconButton(audienceRow, "This Server", "users", function()
 	audience = "This Server"
 	setButtonBackground(serverAudience, C.green)
 	setButtonBackground(allAudience, C.surface)
 end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
-allAudience = button(audienceRow, "All Servers", function()
+allAudience = iconButton(audienceRow, "All Servers", "globe", function()
 	audience = "All Servers"
 	setButtonBackground(serverAudience, C.surface)
 	setButtonBackground(allAudience, C.green)
 end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
-attachIcon(serverAudience, "users", 20, 16)
-attachIcon(allAudience, "globe", 20, 16)
 setButtonBackground(serverAudience, C.green)
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
 local previewRow = addRow(announceCard, 52)
-local previewButton = button(previewRow, "Preview", function()
+local previewButton = iconButton(previewRow, "Preview", "eye", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	showAnnouncement({role = role, by = managerRole() and "Lupin" or player.DisplayName, text = value, duration = 8}, true)
 	setStatus("Preview shown. Only you can see it.")
 end, {size = UDim2.new(1, 0, 0, 50), textSize = 17})
-attachIcon(previewButton, "eye", 20, 18)
 local sendRow = addRow(announceCard, 56)
-local sendAnnouncementButton = button(sendRow, "Send Announcement", function()
+local sendAnnouncementButton = iconButton(sendRow, "Send Announcement", "send", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
 	sendAction("Announce", {message = value, audience = audience})
 	setStatus("Sending announcement...")
 end, {size = UDim2.new(1, 0, 0, 54), primary = true, textSize = 18, bold = true})
-attachIcon(sendAnnouncementButton, "send", 21, 18)
 showPageStatus(announceCard, "Only Owner, Developer, and Head Admin can send announcements. All Servers is disabled in Studio.")
 local moderationCard = card(pages.MODERATION, "TARGET PLAYER", "Online targets are required for warning, mute, kick, and bans. Unban/history can use a username.")
 local moderationUsername = addField(moderationCard, "USERNAME", "Select from Players or enter username")
@@ -1528,10 +1534,7 @@ closeButton.Activated:Connect(function()
 	panelOpen = false
 	applyPanel()
 end)
-shade.Activated:Connect(function()
-	panelOpen = false
-	applyPanel()
-end)
+-- Outside clicks no longer close the admin panel; use the close button or Escape.
 
 UserInputService.InputBegan:Connect(function(inputObject, processed)
 	if processed then return end
