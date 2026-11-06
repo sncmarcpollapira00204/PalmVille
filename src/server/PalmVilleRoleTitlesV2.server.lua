@@ -10,7 +10,7 @@ local handled = setmetatable({}, {__mode = "k"})
 
 local styles = {
 	OWNER = {text = "OWNER", color = Color3.fromRGB(245, 72, 82), glow = Color3.fromRGB(255, 62, 76), outline = Color3.fromRGB(78, 22, 30)},
-	["MASTER DEVELOPER"] = {text = "DEV", color = Color3.fromRGB(255, 255, 255), glow = Color3.fromRGB(225, 225, 225), outline = Color3.fromRGB(55, 55, 55)},
+	["MASTER DEVELOPER"] = {text = "DEV", color = Color3.fromRGB(255, 225, 145), glow = Color3.fromRGB(255, 205, 100), outline = Color3.fromRGB(67, 43, 19)},
 	["HEAD ADMIN"] = {text = "HEAD ADMIN", color = Color3.fromRGB(255, 150, 195), glow = Color3.fromRGB(255, 138, 190), outline = Color3.fromRGB(88, 43, 65)},
 	ADMIN = {text = "ADMIN", color = Color3.fromRGB(225, 225, 225), glow = Color3.fromRGB(200, 200, 200), outline = Color3.fromRGB(55, 55, 55)},
 	MODERATOR = {text = "MODERATOR", color = Color3.fromRGB(230, 230, 230), glow = Color3.fromRGB(205, 205, 205), outline = Color3.fromRGB(55, 55, 55)},
@@ -59,18 +59,19 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromScale(2.4, 0.56)
-	billboard.StudsOffset = Vector3.new(0, 2.65, 0)
-	billboard.MaxDistance = 80
+	billboard.Size = UDim2.fromScale(3.8, 0.9)
+	billboard.StudsOffset = Vector3.new(0, 3.05, 0)
+	billboard.MaxDistance = 100
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
 	billboard.Enabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
 
 	local label = Instance.new("TextLabel")
 	label.Name = "Title"
-	label.BackgroundTransparency = 1
+	label.BackgroundColor3 = Color3.fromRGB(18, 43, 30)
+	label.BackgroundTransparency = 0.12
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.Nunito
+	label.Font = Enum.Font.FredokaOne
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextStrokeColor3 = style.outline
@@ -80,17 +81,22 @@ local function createTitle(player, character)
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 11
-	sizeLimit.MaxTextSize = 18
+	sizeLimit.MinTextSize = 16
+	sizeLimit.MaxTextSize = 30
 	sizeLimit.Parent = label
 
 	local glow = Instance.new("UIStroke")
 	glow.Name = "SoftGlow"
 	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 	glow.Color = style.glow
-	glow.Thickness = 1.2
-	glow.Transparency = 0.62
+	glow.Thickness = 1.8
+	glow.Transparency = 0.24
 	glow.Parent = label
+
+	local pillCorner = Instance.new("UICorner")
+	pillCorner.CornerRadius = UDim.new(1, 0)
+	pillCorner.Parent = label
+
 	billboard.Parent = head
 end
 
