@@ -102,8 +102,8 @@ local function createTitle(player, character)
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
 	-- Scale dimensions are studs, so the title grows naturally as the camera gets closer.
-	billboard.Size = UDim2.fromScale(2.8, 0.7)
-	billboard.StudsOffset = Vector3.new(0, 2.82, 0)
+	billboard.Size = UDim2.fromScale(4.4, 1.05)
+	billboard.StudsOffset = Vector3.new(0, 3.05, 0)
 	billboard.MaxDistance = 100
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
@@ -138,13 +138,13 @@ local function createTitle(player, character)
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 14
-	sizeLimit.MaxTextSize = 32
+	sizeLimit.MinTextSize = 18
+	sizeLimit.MaxTextSize = 48
 	sizeLimit.Parent = label
 
 	local shadowSizeLimit = Instance.new("UITextSizeConstraint")
-	shadowSizeLimit.MinTextSize = 14
-	shadowSizeLimit.MaxTextSize = 32
+	shadowSizeLimit.MinTextSize = 18
+	shadowSizeLimit.MaxTextSize = 48
 	shadowSizeLimit.Parent = shadow
 
 	local glow = Instance.new("UIStroke")
