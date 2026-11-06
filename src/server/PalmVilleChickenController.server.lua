@@ -83,9 +83,19 @@ mesh.Anchored = true
 
 local homePivot = model:GetPivot()
 local homePosition = homePivot.Position
+local homeRotation = homePivot.Rotation
 local fixedY = homePosition.Y
 local currentPosition = Vector3.new(homePosition.X, fixedY, homePosition.Z)
-local currentDirection = Vector3.new(0, 0, -1)
+
+-- Preserve the imported FBX pitch/roll. Only yaw around world-up is allowed.
+local homeLook = homePivot.LookVector
+local homeForward = Vector3.new(homeLook.X, 0, homeLook.Z)
+if homeForward.Magnitude < 0.001 then
+	homeForward = Vector3.new(0, 0, -1)
+else
+	homeForward = homeForward.Unit
+end
+local currentDirection = homeForward
 local targetPosition = currentPosition
 local walking = false
 local nextDecision = os.clock() + 1.5
@@ -149,10 +159,18 @@ heartbeat = RunService.Heartbeat:Connect(function(dt)
 	-- Fixed Y prevents artificial hopping or bobbing.
 	currentPosition = Vector3.new(currentPosition.X, fixedY, currentPosition.Z)
 
-	local targetPivot = CFrame.lookAt(
-		currentPosition,
-		currentPosition + currentDirection
-	) * CFrame.Angles(0, math.rad(CONFIG.FaceYawOffset), 0)
+	local desiredDirection = Vector3.new(currentDirection.X, 0, currentDirection.Z)
+	if desiredDirection.Magnitude < 0.001 then
+		desiredDirection = homeForward
+	else
+		desiredDirection = desiredDirection.Unit
+	end
+
+	local crossY = homeForward:Cross(desiredDirection).Y
+	local dot = math.clamp(homeForward:Dot(desiredDirection), -1, 1)
+	local yawDelta = math.atan2(crossY, dot) + math.rad(CONFIG.FaceYawOffset)
+	local yawRotation = CFrame.fromAxisAngle(Vector3.yAxis, yawDelta)
+	local targetPivot = CFrame.new(currentPosition) * yawRotation * homeRotation
 
 	local alpha = math.clamp(dt * CONFIG.TurnSpeed, 0, 1)
 	model:PivotTo(model:GetPivot():Lerp(targetPivot, alpha))
