@@ -15,7 +15,7 @@ local CONFIG = {
 	MinPause = 2,
 	MaxPause = 4.5,
 	TurnSpeed = 4.5,
-	FaceYawOffset = 0,
+	FaceYawOffset = 180,
 }
 
 local rng = Random.new()
