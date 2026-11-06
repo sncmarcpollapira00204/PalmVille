@@ -13,6 +13,24 @@ if not seedTemplates then
 	seedTemplates.Parent = ServerStorage
 end
 
+local seedImageIds = {
+	GUAVA_SEED = "70816857330256",
+	JACKFRUIT_SEED = "71443769507864",
+	LANZONES_SEED = "91322190769726",
+	APPLE_SEED = "115506822841450",
+	AVOCADO_SEED = "94689677516114",
+	BANANA_SEED = "105532706817104",
+	CACAO_SEED = "135297163632194",
+	CALAMANSI_SEED = "139490728979617",
+	COCONUT_SEED = "119931315882044",
+	DURIAN_SEED = "135395803762791",
+	LEMON_SEED = "86723798587896",
+	MANGO_SEED = "80116271049635",
+	ORANGE_SEED = "131336919043305",
+	PAPAYA_SEED = "89599684306545",
+	RAMBUTAN_SEED = "139427647144792",
+}
+
 local function makeSeedPackTemplate(code, displayName, fruitName)
 	local existing = seedTemplates:FindFirstChild(code)
 	if existing and existing:IsA("Tool") then
@@ -41,57 +59,21 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	handle.Parent = tool
 
 	local face = Instance.new("SurfaceGui")
-	face.Name = "SeedPackLabel"
+	face.Name = "SeedPackArtwork"
 	face.Face = Enum.NormalId.Front
 	face.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	face.PixelsPerStud = 72
+	face.PixelsPerStud = 100
 	face.LightInfluence = 0
 	face.Parent = handle
 
-	local panel = Instance.new("Frame")
-	panel.Size = UDim2.fromScale(0.88, 0.88)
-	panel.Position = UDim2.fromScale(0.06, 0.06)
-	panel.BackgroundColor3 = Color3.fromRGB(247, 222, 169)
-	panel.BorderSizePixel = 0
-	panel.Parent = face
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.08, 0)
-	corner.Parent = panel
-
-	local brand = Instance.new("TextLabel")
-	brand.Name = "Brand"
-	brand.BackgroundTransparency = 1
-	brand.Position = UDim2.fromScale(0.04, 0.12)
-	brand.Size = UDim2.fromScale(0.92, 0.25)
-	brand.Font = Enum.Font.GothamBold
-	brand.Text = "PalmVille"
-	brand.TextColor3 = Color3.fromRGB(36, 83, 35)
-	brand.TextScaled = true
-	brand.Parent = panel
-
-	local title = Instance.new("TextLabel")
-	title.Name = "SeedName"
-	title.BackgroundTransparency = 1
-	title.Position = UDim2.fromScale(0.04, 0.4)
-	title.Size = UDim2.fromScale(0.92, 0.38)
-	title.Font = Enum.Font.GothamBold
-	title.Text = string.upper(fruitName) .. "\nSEEDS"
-	title.TextColor3 = Color3.fromRGB(77, 43, 31)
-	title.TextScaled = true
-	title.TextWrapped = true
-	title.Parent = panel
-
-	local quality = Instance.new("TextLabel")
-	quality.Name = "Quality"
-	quality.BackgroundTransparency = 1
-	quality.Position = UDim2.fromScale(0.04, 0.8)
-	quality.Size = UDim2.fromScale(0.92, 0.12)
-	quality.Font = Enum.Font.GothamBold
-	quality.Text = "PREMIUM QUALITY"
-	quality.TextColor3 = Color3.fromRGB(52, 52, 38)
-	quality.TextScaled = true
-	quality.Parent = panel
+	local artwork = Instance.new("ImageLabel")
+	artwork.Name = "Artwork"
+	artwork.Size = UDim2.fromScale(1, 1)
+	artwork.BackgroundTransparency = 1
+	artwork.BorderSizePixel = 0
+	artwork.ScaleType = Enum.ScaleType.Fit
+	artwork.Image = "rbxassetid://" .. seedImageIds[code]
+	artwork.Parent = face
 
 	tool.Parent = seedTemplates
 	return tool
