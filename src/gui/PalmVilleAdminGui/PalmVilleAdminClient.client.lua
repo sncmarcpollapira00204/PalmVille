@@ -21,17 +21,17 @@ gui.DisplayOrder = 96
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local C = {
-	bg = Color3.fromRGB(24, 24, 27),
-	panel = Color3.fromRGB(15, 15, 17),
-	surface = Color3.fromRGB(34, 34, 38),
-	surfaceHover = Color3.fromRGB(48, 48, 52),
-	green = Color3.fromRGB(76, 76, 83),
+	bg = Color3.fromRGB(20, 21, 24),
+	panel = Color3.fromRGB(25, 26, 30),
+	surface = Color3.fromRGB(36, 37, 42),
+	surfaceHover = Color3.fromRGB(49, 50, 56),
+	green = Color3.fromRGB(76, 77, 84),
 	greenBright = Color3.fromRGB(255, 255, 255),
-	line = Color3.fromRGB(82, 82, 88),
+	line = Color3.fromRGB(58, 59, 65),
 	text = Color3.fromRGB(248, 248, 250),
-	muted = Color3.fromRGB(190, 190, 196),
-	dim = Color3.fromRGB(137, 137, 145),
-	red = Color3.fromRGB(170, 170, 176),
+	muted = Color3.fromRGB(190, 191, 197),
+	dim = Color3.fromRGB(137, 138, 145),
+	red = Color3.fromRGB(190, 190, 196),
 	amber = Color3.fromRGB(238, 238, 242),
 	blue = Color3.fromRGB(210, 210, 216),
 }
@@ -306,6 +306,56 @@ local function button(parent, caption, callback, options)
 		if callback then callback(b) end
 	end)
 	return b
+end
+
+local function toggleRow(parent, labelText, initialState, callback, options)
+	options = options or {}
+	local enabled = initialState == true
+	local row = button(parent, "", function()
+		enabled = not enabled
+		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
+		if track and knob then
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+		end
+		if callback then callback(enabled) end
+	end, {
+		size = options.size or UDim2.new(1, 0, 0, 40),
+		radius = options.radius or 9,
+		textSize = 12,
+	})
+	row.BackgroundColor3 = C.surface
+	row:SetAttribute("BaseBackgroundColor", C.surface)
+	local label = text(row, labelText, options.textSize or 13, C.text, 22, true)
+	label.Position = UDim2.fromOffset(14, 0)
+	label.Size = UDim2.new(1, -76, 1, 0)
+	label.ZIndex = row.ZIndex + 2
+	local track = make("Frame", {
+		Name = "ToggleTrack",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.fromOffset(38, 22),
+		BackgroundColor3 = Color3.fromRGB(76, 77, 83),
+		BorderSizePixel = 0,
+		ZIndex = row.ZIndex + 1,
+	}, row)
+	addCorner(track, 11)
+	local knob = make("Frame", {
+		Name = "ToggleKnob",
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
+		Size = UDim2.fromOffset(16, 16),
+		BackgroundColor3 = Color3.fromRGB(248, 248, 250),
+		BorderSizePixel = 0,
+		ZIndex = row.ZIndex + 2,
+	}, track)
+	addCorner(knob, 8)
+	return {
+		row = row,
+		set = function(value)
+			enabled = value == true
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+		end,
+	}
 end
 
 local function iconButton(parent, caption, iconName, callback, options)
@@ -729,6 +779,7 @@ local panel = make("Frame", {
 	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.fromOffset(1000, 700),
 	BackgroundColor3 = C.bg,
+	BackgroundTransparency = 0.04,
 	BorderSizePixel = 0,
 	Visible = false,
 	Active = true,
@@ -736,7 +787,7 @@ local panel = make("Frame", {
 	ZIndex = 21,
 }, gui)
 addCorner(panel, 25)
-addStroke(panel, Color3.fromRGB(42, 42, 46), 0.55, 1)
+addStroke(panel, C.line, 0.35, 1)
 make("UIGradient", {
 	Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 23)),
@@ -1258,25 +1309,10 @@ local overviewAbilityList = make("Frame", {
 vertical(overviewAbilityList, 5)
 
 local function abilityControl(titleText, initialState, callback)
-	local row = make("Frame", {
-		Size = UDim2.new(1, 0, 0, 38),
-		BackgroundColor3 = C.surface,
-		BorderSizePixel = 0,
-	}, overviewAbilityList)
-	addCorner(row, 8)
-	local titleLabel = text(row, titleText, 13, C.text, 30, true)
-	titleLabel.Position = UDim2.fromOffset(12, 4)
-	titleLabel.Size = UDim2.new(1, -100, 0, 30)
-	local toggle = button(row, initialState and "ON" or "OFF", callback, {
-		size = UDim2.fromOffset(58, 26),
-		radius = 7,
-		textSize = 11,
-		bold = true,
-		primary = initialState,
-	})
-	toggle.AnchorPoint = Vector2.new(1, 0.5)
-	toggle.Position = UDim2.new(1, -8, 0.5, 0)
-	return {row = row, button = toggle}
+	local control = toggleRow(overviewAbilityList, titleText, initialState, function()
+		callback()
+	end, {size = UDim2.new(1, 0, 0, 38), textSize = 13})
+	return {row = control.row, button = control.row, set = control.set}
 end
 
 local flyControl = abilityControl("Flight Mode", flyEnabled, function()
@@ -1296,8 +1332,7 @@ local invisibleButton = invisibleControl.button
 local adminTitleButton = titleControl.button
 
 local function refreshAbilityControl(control, enabled)
-	control.button.Text = enabled and "ON" or "OFF"
-	setButtonBackground(control.button, enabled and C.green or C.surfaceHover)
+	control.set(enabled)
 end
 
 local function refreshOverviewAbilityButtons()
@@ -1655,20 +1690,23 @@ announceBox:GetPropertyChangedSignal("Text"):Connect(function()
 	announceCount.TextColor3 = #announceBox.Text > 280 and C.red or C.muted
 end)
 text(announceCard, "Audience", 18, C.text, 26, true)
-local audienceRow = addRow(announceCard, 54)
+local audienceRow = make("Frame", {
+	Size = UDim2.new(1, 0, 0, 82),
+	BackgroundTransparency = 1,
+}, announceCard)
+vertical(audienceRow, 5)
 local serverAudience
 local allAudience
-serverAudience = iconButton(audienceRow, "This Server", "users", function()
+serverAudience = toggleRow(audienceRow, "This Server", true, function()
 	audience = "This Server"
-	setButtonBackground(serverAudience, C.green)
-	setButtonBackground(allAudience, C.surface)
-end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
-allAudience = iconButton(audienceRow, "All Servers", "globe", function()
+	serverAudience.set(true)
+	allAudience.set(false)
+end, {size = UDim2.new(1, 0, 0, 38), textSize = 13})
+allAudience = toggleRow(audienceRow, "All Servers", false, function()
 	audience = "All Servers"
-	setButtonBackground(serverAudience, C.surface)
-	setButtonBackground(allAudience, C.green)
-end, {size = UDim2.new(0.5, -6, 0, 52), textSize = 16, bold = true})
-setButtonBackground(serverAudience, C.green)
+	serverAudience.set(false)
+	allAudience.set(true)
+end, {size = UDim2.new(1, 0, 0, 38), textSize = 13})
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
 local previewRow = addRow(announceCard, 52)
 local previewButton = iconButton(previewRow, "Preview", "eye", function()
