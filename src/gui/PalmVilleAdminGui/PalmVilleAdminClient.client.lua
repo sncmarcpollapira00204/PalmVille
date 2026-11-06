@@ -1495,13 +1495,20 @@ local function renderPlayers()
 	local roster = snapshot.players or {}
 	local visibleCount = 0
 	local selectedStillOnline = false
+	local selectedRow
 	for _, entry in ipairs(roster) do
-		if entry.userId == selectedUserId then selectedStillOnline = true break end
+		if entry.userId == selectedUserId then
+			selectedStillOnline = true
+			selectedRow = entry
+			break
+		end
 	end
 	if selectedUserId and not selectedStillOnline then
 		selectedUserId, selectedUsername = nil, nil
 		selectedLabel.Text = "Select a player to view details."
 		updatePlayerDetails(nil)
+	elseif selectedRow then
+		updatePlayerDetails(selectedRow)
 	end
 	playersScope.Text = string.format("This server · %d online", #roster)
 	for _, row in ipairs(roster) do
@@ -1879,15 +1886,50 @@ closeButton.Activated:Connect(function()
 end)
 -- Outside clicks no longer close the admin panel; use the close button or Escape.
 
+local FLY_KEY_MAP = {
+	[Enum.KeyCode.W] = "Forward",
+	[Enum.KeyCode.Up] = "Forward",
+	[Enum.KeyCode.S] = "Backward",
+	[Enum.KeyCode.Down] = "Backward",
+	[Enum.KeyCode.A] = "Left",
+	[Enum.KeyCode.Left] = "Left",
+	[Enum.KeyCode.D] = "Right",
+	[Enum.KeyCode.Right] = "Right",
+	[Enum.KeyCode.Space] = "Up",
+	[Enum.KeyCode.LeftControl] = "Down",
+	[Enum.KeyCode.C] = "Down",
+	[Enum.KeyCode.LeftShift] = "Fast",
+	[Enum.KeyCode.RightShift] = "Fast",
+}
+
 UserInputService.InputBegan:Connect(function(inputObject, processed)
+	if inputObject.UserInputType == Enum.UserInputType.Keyboard then
+		local flyKey = FLY_KEY_MAP[inputObject.KeyCode]
+		if flyKey and not processed then
+			flyKeys[flyKey] = true
+		end
+	end
 	if processed then return end
 	if inputObject.KeyCode == Enum.KeyCode.RightShift and authorized then
 		panelOpen = not panelOpen
 		applyPanel()
 	end
-	if inputObject.KeyCode == Enum.KeyCode.Escape and panelOpen then
-		panelOpen = false
-		applyPanel()
+	if inputObject.KeyCode == Enum.KeyCode.Escape then
+		if modalShade.Visible then
+			closeAdminModal()
+		elseif panelOpen then
+			panelOpen = false
+			applyPanel()
+		end
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(inputObject)
+	if inputObject.UserInputType == Enum.UserInputType.Keyboard then
+		local flyKey = FLY_KEY_MAP[inputObject.KeyCode]
+		if flyKey then
+			flyKeys[flyKey] = nil
+		end
 	end
 end)
 
@@ -1903,6 +1945,94 @@ local function restoreCamera()
 	savedCamera = nil
 end
 
+local function stopCameraFeed(token)
+	if token and cameraFeedToken and token ~= cameraFeedToken then return end
+	if cameraFeedConnection then
+		cameraFeedConnection:Disconnect()
+		cameraFeedConnection = nil
+	end
+	cameraFeedToken = nil
+end
+
+local function startCameraFeed(token)
+	stopCameraFeed()
+	cameraFeedToken = token
+	if type(token) ~= "string" or #token < 8 then
+		cameraFeedToken = nil
+		return
+	end
+	local lastSent = 0
+	cameraFeedConnection = RunService.RenderStepped:Connect(function()
+		if not cameraFeedToken or cameraFeedToken ~= token then
+			stopCameraFeed(token)
+			return
+		end
+		local now = os.clock()
+		if now - lastSent < 0.12 then return end
+		local camera = Workspace.CurrentCamera
+		if not camera then return end
+		lastSent = now
+		remote:FireServer("CameraFrame", {
+			token = token,
+			cframe = camera.CFrame,
+			fov = camera.FieldOfView,
+		})
+	end)
+end
+
+local function flyDirection()
+	local camera = Workspace.CurrentCamera
+	if not camera then return Vector3.zero, Vector3.new(0, 0, -1), 0 end
+
+	local look = camera.CFrame.LookVector
+	local flatForward = Vector3.new(look.X, 0, look.Z)
+	if flatForward.Magnitude < 0.01 then flatForward = Vector3.new(0, 0, -1) end
+	flatForward = flatForward.Unit
+
+	local right = Vector3.new(camera.CFrame.RightVector.X, 0, camera.CFrame.RightVector.Z)
+	if right.Magnitude < 0.01 then right = Vector3.xAxis end
+	right = right.Unit
+
+	local direction = Vector3.zero
+	if flyKeys.Forward then direction += look end
+	if flyKeys.Backward then direction -= look end
+	if flyKeys.Right then direction += right end
+	if flyKeys.Left then direction -= right end
+	if flyKeys.Up then direction += Vector3.yAxis end
+	if flyKeys.Down then direction -= Vector3.yAxis end
+
+	-- Touch thumbstick/gamepad movement remains available while flight is enabled.
+	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local moveDirection = humanoid.MoveDirection
+		if moveDirection.Magnitude > 0.05 then
+			direction += Vector3.new(moveDirection.X, 0, moveDirection.Z)
+		end
+	end
+
+	if direction.Magnitude > 1 then direction = direction.Unit end
+	local strafe = (flyKeys.Right and 1 or 0) - (flyKeys.Left and 1 or 0)
+	if strafe == 0 and direction.Magnitude > 0.01 then
+		strafe = math.clamp(direction:Dot(right), -1, 1)
+	end
+	local bank = math.clamp(-strafe * 0.2, -0.22, 0.22)
+	return direction, flatForward, bank
+end
+
+RunService.RenderStepped:Connect(function()
+	if not flyEnabled then return end
+	local now = os.clock()
+	if now - lastFlySend < 0.1 then return end
+	lastFlySend = now
+	local direction, facing, bank = flyDirection()
+	remote:FireServer("AbilityMove", {
+		direction = direction,
+		facing = facing,
+		bank = bank,
+		speed = flyKeys.Fast and 72 or 48,
+	})
+end)
+
 remote.OnClientEvent:Connect(function(event, data)
 	if event == "AccessGranted" then
 		if type(data) ~= "table" or type(data.role) ~= "string" then return end
@@ -1913,6 +2043,10 @@ remote.OnClientEvent:Connect(function(event, data)
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
 		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
+		adminTitleEnabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
+		overviewAbilityCard.Visible = canAccess("Tools")
+		refreshOverviewAbilityButtons()
+		refreshPlayerActionButtons()
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
 		if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
@@ -1927,6 +2061,7 @@ remote.OnClientEvent:Connect(function(event, data)
 			snapshot = data
 			updateMetrics()
 			if activeTab == "PLAYERS" then renderPlayers() end
+			if managerRole() and activeTab == "STAFF" then remote:FireServer("RequestStaff") end
 		end
 	elseif event == "StaffData" then
 		if type(data) == "table" then
@@ -1953,21 +2088,72 @@ remote.OnClientEvent:Connect(function(event, data)
 		setStatus("STAFF WARNING  ·  " .. tostring(data), true)
 	elseif event == "ChatMuteState" then
 		setStatus(data and "TEXT CHAT MUTED" or "TEXT CHAT UNMUTED")
+	elseif event == "SetFly" then
+		flyEnabled = data == true
+		if not flyEnabled then table.clear(flyKeys) end
+		refreshOverviewAbilityButtons()
+		setStatus(flyEnabled and "FLY ENABLED · WASD / SPACE / CTRL" or "FLY DISABLED")
 	elseif event == "SetInvisible" then
 		invisibleEnabled = data == true
+		refreshOverviewAbilityButtons()
 	elseif event == "SetAdminTitle" then
 		adminTitleEnabled = data == true
+		refreshOverviewAbilityButtons()
+	elseif event == "FreezeState" then
+		if type(data) == "table" and tonumber(data.userId) then
+			frozenTargets[tonumber(data.userId)] = data.enabled == true or nil
+			if selectedUserId == tonumber(data.userId) then
+				refreshPlayerActionButtons()
+			end
+		end
 	elseif event == "SpectateStarted" then
-		local target = type(data) == "table" and Players:GetPlayerByUserId(tonumber(data.targetUserId))
-		if target and target.Character then
+		if type(data) ~= "table" then return end
+		spectatingUserId = tonumber(data.targetUserId)
+		watchScreenMode = data.watchScreen == true
+		watchScreenToken = data.token
+		refreshPlayerActionButtons()
+		local camera = Workspace.CurrentCamera
+		if camera then
+			savedCamera = savedCamera or {type = camera.CameraType, subject = camera.CameraSubject, fov = camera.FieldOfView}
+			if watchScreenMode then
+				camera.CameraType = Enum.CameraType.Scriptable
+			else
+				local target = Players:GetPlayerByUserId(spectatingUserId)
+				local humanoid = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
+				if humanoid then
+					camera.CameraType = Enum.CameraType.Custom
+					camera.CameraSubject = humanoid
+				end
+			end
+		end
+	elseif event == "WatchScreenStarted" then
+		if type(data) == "table" then
+			watchScreenMode = true
+			watchScreenToken = data.token
 			local camera = Workspace.CurrentCamera
 			if camera then
 				savedCamera = savedCamera or {type = camera.CameraType, subject = camera.CameraSubject, fov = camera.FieldOfView}
-				camera.CameraType = Enum.CameraType.Custom
-				camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+				camera.CameraType = Enum.CameraType.Scriptable
 			end
 		end
+	elseif event == "LiveCamera" then
+		if watchScreenMode and type(data) == "table" and data.token == watchScreenToken then
+			local camera = Workspace.CurrentCamera
+			if camera and typeof(data.cframe) == "CFrame" then
+				camera.CameraType = Enum.CameraType.Scriptable
+				camera.CFrame = data.cframe
+				camera.FieldOfView = math.clamp(tonumber(data.fov) or 70, 20, 120)
+			end
+		end
+	elseif event == "BeginCameraFeed" then
+		if type(data) == "table" then startCameraFeed(data.token) end
+	elseif event == "StopCameraFeed" then
+		if type(data) == "table" then stopCameraFeed(data.token) end
 	elseif event == "SpectateStopped" then
+		spectatingUserId = nil
+		watchScreenMode = false
+		watchScreenToken = nil
+		refreshPlayerActionButtons()
 		restoreCamera()
 	end
 end)
