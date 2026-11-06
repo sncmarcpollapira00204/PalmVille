@@ -782,7 +782,7 @@ do
 	local prefix = RunService:IsStudio() and "PalmVilleAnnouncements_Test_v3" or "PalmVilleAnnouncements_v3"
 	local historyStore = tryGetDataStore(prefix)
 	local topic = prefix
-	local history, seen, cooldown, historyRequests = {}, {}, {}, {}
+	local history, seen, historyRequests = {}, {}, {}
 	local subscription
 	local function permitted(player)
 		return allowedRoles[getRoleById(player.UserId)] == true and hasPermission(player,"Announcements")
@@ -830,7 +830,6 @@ do
 	end
 	function announcements.send(player,data)
 		if not permitted(player)then notify(player,"Only Owner, Dev, and Head Admin can send announcements.");return end
-		if os.clock()<(cooldown[player.UserId] or 0)then notify(player,"Wait a few seconds before another announcement.");return end
 		local raw=type(data.message)=="string" and data.message or ""
 		if #raw==0 or #raw>280 or not utf8.len(raw) or raw:gsub("%s","")==""then
 			notify(player,"Enter a message within the 280-character limit.");return
@@ -839,7 +838,6 @@ do
 		if RunService:IsStudio() and data.audience=="All Servers"then
 			notify(player,"All Servers must be tested in the published game. Choose This Server in Studio.");return
 		end
-		cooldown[player.UserId]=os.clock()+8
 		local text=filterBroadcast(player,raw,280)
 		if not text then notify(player,"Announcement could not be filtered. Nothing was sent.");return end
 		if not permitted(player)then notify(player,"Announcement permission changed. Nothing was sent.");return end
@@ -865,7 +863,7 @@ do
 			end)
 		end
 	end
-	Players.PlayerRemoving:Connect(function(player)cooldown[player.UserId]=nil;historyRequests[player.UserId]=nil end)
+	Players.PlayerRemoving:Connect(function(player)historyRequests[player.UserId]=nil end)
 end
 
 local function applyChatMute(channel)
