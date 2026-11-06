@@ -15,7 +15,6 @@ local REWARDS = {
 	{minimum = 91, maximum = 93, amount = 1500},
 }
 -- The supplied reward odds total 93%; rolls 94-100 intentionally give no reward.
-local NO_REWARD_CHANCE = 7
 
 local random = Random.new()
 local claimsByChest = {}
@@ -184,12 +183,16 @@ local function registerChest(chest)
 		return
 	end
 
-	-- A model may contain a BasePart also named "Chest". Bind only the outer model.
-	if chest:IsA("BasePart") then
-		local modelAncestor = chest:FindFirstAncestorOfClass("Model")
-		if modelAncestor and modelAncestor.Name == CHEST_NAME and isInsideChestFolder(modelAncestor) then
+	-- Bind only the outermost Chest container, never its nested chest pieces.
+	local ancestor = chest.Parent
+	while ancestor and ancestor ~= Workspace do
+		if ancestor:IsA("Model") and ancestor.Name == CHEST_NAME then
 			return
 		end
+		if ancestor.Name == FOLDER_NAME then
+			break
+		end
+		ancestor = ancestor.Parent
 	end
 
 	local anchor = findChestAnchor(chest)
