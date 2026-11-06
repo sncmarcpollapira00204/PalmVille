@@ -1,7 +1,9 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
+
+local Economy = require(ServerScriptService:WaitForChild("PalmVilleEconomy"))
 
 local FOLDER_NAME = "Underwater Chest"
 local CHEST_NAME = "Chest"
@@ -102,45 +104,24 @@ local function getChestId(chest)
 	return table.concat(segments, "/")
 end
 
-local function getWallet(player)
-	local leaderstats = player:FindFirstChild("leaderstats")
-	local wallet = leaderstats and leaderstats:FindFirstChild("Money")
-	if wallet and (wallet:IsA("IntValue") or wallet:IsA("NumberValue")) then
-		return wallet
-	end
-
-	wallet = player:FindFirstChild("Money")
-	if wallet and (wallet:IsA("IntValue") or wallet:IsA("NumberValue")) then
-		return wallet
-	end
-
-	return nil
-end
-
 local function awardMoney(player, amount)
-	local adapter = ServerStorage:FindFirstChild("PalmVilleEconomy")
-	if adapter and adapter:IsA("ModuleScript") then
-		local ok, economy = pcall(require, adapter)
-		if ok and type(economy) == "table" and type(economy.AddMoney) == "function" then
-			local added, result = pcall(economy.AddMoney, player, amount, "UnderwaterChest")
-			if added and result ~= false then
-				return true
-			end
-			if not added then
-				warn("[Underwater Chest] PalmVilleEconomy.AddMoney failed: " .. tostring(result))
-			end
-		elseif not ok then
-			warn("[Underwater Chest] Could not load PalmVilleEconomy: " .. tostring(economy))
-		end
+	if not Economy.IsLoaded(player) then
+		return false, "Player profile is still loading."
 	end
 
-	local wallet = getWallet(player)
-	if not wallet then
-		return false
+	local ok, added, result = pcall(function()
+		return Economy.AddMoney(player, amount, "UnderwaterChest")
+	end)
+
+	if not ok then
+		warn("[Underwater Chest] Economy.AddMoney failed: " .. tostring(added))
+		return false, "Your reward could not be credited. Please try again."
+	end
+	if added ~= true then
+		return false, tostring(result or "Your reward could not be credited.")
 	end
 
-	wallet.Value += amount
-	return true
+	return true, result
 end
 
 local function rollReward()
@@ -272,15 +253,13 @@ local function registerChest(chest)
 		end
 
 		local amount = rollReward()
-		if amount and not awardMoney(player, amount) then
-			sendFeedback(
-				player,
-				"Underwater Chest",
-				"Money wallet not found. Connect leaderstats.Money or ServerStorage.PalmVilleEconomy first.",
-				"error"
-			)
-			claimLocks[lockKey] = nil
-			return
+		if amount then
+			local credited, creditMessage = awardMoney(player, amount)
+			if not credited then
+				sendFeedback(player, "Underwater Chest", creditMessage or "Your player data is still loading. Try again.", "error")
+				claimLocks[lockKey] = nil
+				return
+			end
 		end
 
 		claimsByChest[chestId] = claimsByChest[chestId] or {}
