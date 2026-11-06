@@ -736,7 +736,7 @@ local panel = make("Frame", {
 	ZIndex = 21,
 }, gui)
 addCorner(panel, 25)
-addStroke(panel, C.amber, 0.02, 1.7)
+addStroke(panel, C.line, 0.18, 1.2)
 make("UIGradient", {
 	Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 23)),
