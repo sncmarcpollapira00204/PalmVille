@@ -43,13 +43,13 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool.ToolTip = displayName
-	tool.Grip = CFrame.new(0, -0.12, -0.28)
+	tool.Grip = CFrame.new(0, -0.28, -0.42)
 	tool:SetAttribute("PalmVilleSeedPack", true)
 	tool:SetAttribute("SeedCode", code)
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.9, 1.08, 0.22)
+	handle.Size = Vector3.new(0.58, 0.76, 0.14)
 	handle.Color = Color3.fromRGB(190, 133, 76)
 	handle.Material = Enum.Material.Fabric
 	handle.CanCollide = false
