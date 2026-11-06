@@ -439,15 +439,23 @@ local announcementSound = make("Sound", {
 	Looped = false,
 }, game:GetService("SoundService"))
 
-local banner = make("CanvasGroup", {
-	Name = "AnnouncementBannerV2",
+local bannerStack = make("Frame", {
+	Name = "AnnouncementBannerStack",
 	AnchorPoint = Vector2.new(0.5, 0),
 	Position = UDim2.new(0.5, 0, 0, 86),
-	Size = UDim2.fromOffset(900, 100),
+	Size = UDim2.new(1, -32, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
 	BackgroundTransparency = 1,
-	Visible = false,
+	ClipsDescendants = false,
 	ZIndex = 80,
 }, gui)
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Vertical,
+	HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	VerticalAlignment = Enum.VerticalAlignment.Top,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Padding = UDim.new(0, 8),
+}, bannerStack)
 
 local bannerColors = {
 	OWNER = Color3.fromRGB(234, 197, 108),
@@ -458,92 +466,21 @@ local bannerColors = {
 	HELPER = Color3.fromRGB(166, 201, 133),
 }
 
-local bannerPrefix = make("TextLabel", {
-	Name = "AnnouncementPrefix",
-	BackgroundTransparency = 1,
-	Font = Enum.Font.FredokaOne,
-	TextSize = 32,
-	TextColor3 = C.text,
-	RichText = true,
-	TextStrokeColor3 = Color3.new(0, 0, 0),
-	TextStrokeTransparency = 0.35,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Center,
-	TextWrapped = false,
-	ZIndex = 81,
-}, banner)
+local activeAnnouncements = {}
+local announcementSerial = 0
 
-local bannerBadge = make("Frame", {
-	Name = "AnnouncementVerifiedBadge",
-	Size = UDim2.fromOffset(26, 26),
-	BackgroundColor3 = Color3.fromRGB(0, 149, 255),
-	BorderSizePixel = 0,
-	ZIndex = 81,
-}, banner)
-addCorner(bannerBadge, 13)
-make("Frame", {
-	Position = UDim2.fromOffset(6, 13),
-	Size = UDim2.fromOffset(7, 3),
-	Rotation = 45,
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BorderSizePixel = 0,
-	ZIndex = 82,
-}, bannerBadge)
-make("Frame", {
-	Position = UDim2.fromOffset(10, 11),
-	Size = UDim2.fromOffset(12, 3),
-	Rotation = -45,
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BorderSizePixel = 0,
-	ZIndex = 82,
-}, bannerBadge)
-
-local bannerMessage = make("TextLabel", {
-	Name = "AnnouncementMessage",
-	BackgroundTransparency = 1,
-	Font = Enum.Font.FredokaOne,
-	TextSize = 32,
-	TextColor3 = C.text,
-	TextStrokeColor3 = Color3.new(0, 0, 0),
-	TextStrokeTransparency = 0.35,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Top,
-	TextWrapped = true,
-	RichText = false,
-	ZIndex = 81,
-}, banner)
-
-local bannerPreview = make("TextLabel", {
-	Name = "PreviewLabel",
-	Position = UDim2.fromOffset(0, -22),
-	Size = UDim2.new(1, 0, 0, 20),
-	BackgroundTransparency = 1,
-	Text = "PREVIEW · ONLY YOU CAN SEE THIS",
-	Font = Enum.Font.FredokaOne,
-	TextSize = 15,
-	TextColor3 = C.text,
-	TextStrokeTransparency = 0.3,
-	TextXAlignment = Enum.TextXAlignment.Center,
-	Visible = false,
-	ZIndex = 82,
-}, banner)
-
-local bannerSerial = 0
-local bannerTween
-local currentAnnouncement
 local function escapeRichText(value)
 	return tostring(value):gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
 end
 
-local function fitAnnouncement()
-	if not currentAnnouncement then return end
-
+local function fitAnnouncement(entry)
+	local data = entry.data
 	local viewport = gui.AbsoluteSize
 	local fontSize = viewport.X < 650 and 23 or 32
 	local available = math.max(220, math.min(1180, viewport.X - 40))
-	local incomingRole = tostring(currentAnnouncement.role or "")
+	local incomingRole = tostring(data.role or "")
 	local roleTag = incomingRole == "MASTER DEVELOPER" and "DEV" or displayRole(incomingRole)
-	local authorName = tostring(currentAnnouncement.by or (incomingRole == "MASTER DEVELOPER" and "Lupin" or "Staff")):gsub("[\r\n]", " ")
+	local authorName = tostring(data.by or (incomingRole == "MASTER DEVELOPER" and "Lupin" or "Staff")):gsub("[\r\n]", " ")
 	local plainPrefix = "[" .. roleTag .. "] " .. authorName
 	local prefixWidth = TextService:GetTextSize(
 		plainPrefix,
@@ -568,29 +505,33 @@ local function fitAnnouncement()
 	end
 
 	local badgeSize = 26
-	local messageText = ": " .. tostring(currentAnnouncement.text or ""):gsub("[\r\n]+", " ")
+	local messageText = ": " .. tostring(data.text or ""):gsub("[\r\n]+", " ")
+	local messageX = prefixWidth + badgeSize + 16
+	local messageAvailable = math.max(80, available - messageX)
 	local naturalWidth = TextService:GetTextSize(
 		messageText,
 		fontSize,
 		Enum.Font.FredokaOne,
 		Vector2.new(10000, 10000)
 	).X + 6
-	local width = math.min(available, prefixWidth + badgeSize + 16 + naturalWidth)
-	local messageWidth = math.max(80, width - prefixWidth - badgeSize - 16)
+	local messageWidth = math.min(messageAvailable, math.max(80, naturalWidth))
+	local width = math.min(available, messageX + messageWidth)
 	local messageBounds = TextService:GetTextSize(
 		messageText,
 		fontSize,
 		Enum.Font.FredokaOne,
 		Vector2.new(messageWidth, 10000)
 	)
+	local contentHeight = math.max(fontSize + 12, messageBounds.Y + 12)
+	local previewOffset = entry.preview and 22 or 0
 
-	banner.Size = UDim2.fromOffset(width, math.max(fontSize + 12, messageBounds.Y + 12))
-	bannerPrefix.Position = UDim2.fromOffset(0, 0)
-	bannerPrefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 8)
-	bannerPrefix.TextSize = fontSize
+	entry.container.Size = UDim2.fromOffset(width, contentHeight + previewOffset)
+	entry.prefix.Position = UDim2.fromOffset(0, previewOffset)
+	entry.prefix.Size = UDim2.fromOffset(prefixWidth, fontSize + 8)
+	entry.prefix.TextSize = fontSize
 
 	local roleColor = bannerColors[incomingRole] or C.text
-	bannerPrefix.Text = string.format(
+	entry.prefix.Text = string.format(
 		'<b><font color="rgb(%d,%d,%d)">[%s]</font> %s</b>',
 		math.round(roleColor.R * 255),
 		math.round(roleColor.G * 255),
@@ -599,16 +540,34 @@ local function fitAnnouncement()
 		escapeRichText(authorName)
 	)
 
-	bannerBadge.Position = UDim2.fromOffset(prefixWidth + 3, math.floor((fontSize + 8 - badgeSize) / 2))
-	bannerMessage.Position = UDim2.fromOffset(prefixWidth + badgeSize + 12, 0)
-	bannerMessage.Size = UDim2.fromOffset(messageWidth, math.max(fontSize + 10, messageBounds.Y + 12))
-	bannerMessage.TextSize = fontSize
-	bannerMessage.Text = messageText
+	entry.badge.Position = UDim2.fromOffset(prefixWidth + 3, previewOffset + math.floor((fontSize + 8 - badgeSize) / 2))
+	entry.message.Position = UDim2.fromOffset(messageX, previewOffset)
+	entry.message.Size = UDim2.fromOffset(messageWidth, math.max(fontSize + 10, messageBounds.Y + 12))
+	entry.message.TextSize = fontSize
+	entry.message.TextYAlignment = messageBounds.Y > fontSize + 8 and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
+	entry.message.Text = messageText
+
+	entry.previewLabel.Visible = entry.preview
+	entry.previewLabel.Size = UDim2.new(1, 0, 0, 18)
+	entry.previewLabel.Position = UDim2.fromOffset(0, 0)
+end
+
+local function removeAnnouncement(entry)
+	for index = #activeAnnouncements, 1, -1 do
+		if activeAnnouncements[index] == entry then
+			table.remove(activeAnnouncements, index)
+			break
+		end
+	end
+	if entry.container and entry.container.Parent then
+		entry.container:Destroy()
+	end
 end
 
 local function showAnnouncement(data, preview)
 	if type(data) ~= "table" then return end
-	if tostring(data.text or ""):gsub("%s", "") == "" then return end
+	local message = tostring(data.text or "")
+	if message:gsub("%s", "") == "" then return end
 
 	if not preview then
 		announcementSound:Stop()
@@ -616,50 +575,127 @@ local function showAnnouncement(data, preview)
 		announcementSound:Play()
 	end
 
-	bannerSerial += 1
-	local token = bannerSerial
-	currentAnnouncement = data
-	if bannerTween then bannerTween:Cancel() end
+	announcementSerial += 1
+	local baseInset = game:GetService("GuiService"):GetGuiInset()
+	bannerStack.Position = UDim2.new(0.5, 0, 0, math.max(86, baseInset.Y + 26))
 
-	fitAnnouncement()
-	bannerPreview.Visible = preview == true
-	local inset = game:GetService("GuiService"):GetGuiInset()
-	local y = math.max(86, inset.Y + 26)
-	banner.Position = UDim2.new(0.5, 0, 0, y - 12)
-	banner.GroupTransparency = 1
-	banner.Visible = true
+	local container = make("CanvasGroup", {
+		Name = "Announcement_" .. announcementSerial,
+		Size = UDim2.fromOffset(900, 60),
+		BackgroundTransparency = 1,
+		GroupTransparency = 1,
+		LayoutOrder = announcementSerial,
+		ZIndex = 80,
+	}, bannerStack)
 
-	bannerTween = TweenService:Create(
-		banner,
+	local prefix = make("TextLabel", {
+		Name = "AnnouncementPrefix",
+		BackgroundTransparency = 1,
+		Font = Enum.Font.FredokaOne,
+		TextSize = 32,
+		TextColor3 = C.text,
+		RichText = true,
+		TextStrokeColor3 = Color3.new(0, 0, 0),
+		TextStrokeTransparency = 0.35,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextWrapped = false,
+		ZIndex = 81,
+	}, container)
+
+	local badge = make("Frame", {
+		Name = "AnnouncementVerifiedBadge",
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundColor3 = Color3.fromRGB(0, 149, 255),
+		BorderSizePixel = 0,
+		ZIndex = 81,
+	}, container)
+	addCorner(badge, 13)
+	make("Frame", {
+		Position = UDim2.fromOffset(6, 13),
+		Size = UDim2.fromOffset(7, 3),
+		Rotation = 45,
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ZIndex = 82,
+	}, badge)
+	make("Frame", {
+		Position = UDim2.fromOffset(10, 11),
+		Size = UDim2.fromOffset(12, 3),
+		Rotation = -45,
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ZIndex = 82,
+	}, badge)
+
+	local messageLabel = make("TextLabel", {
+		Name = "AnnouncementMessage",
+		BackgroundTransparency = 1,
+		Font = Enum.Font.FredokaOne,
+		TextSize = 32,
+		TextColor3 = C.text,
+		TextStrokeColor3 = Color3.new(0, 0, 0),
+		TextStrokeTransparency = 0.35,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextWrapped = true,
+		RichText = false,
+		ZIndex = 81,
+	}, container)
+
+	local previewLabel = make("TextLabel", {
+		Name = "PreviewLabel",
+		BackgroundTransparency = 1,
+		Text = "PREVIEW · ONLY YOU CAN SEE THIS",
+		Font = Enum.Font.FredokaOne,
+		TextSize = 15,
+		TextColor3 = C.text,
+		TextStrokeTransparency = 0.3,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		Visible = preview == true,
+		ZIndex = 82,
+	}, container)
+
+	local entry = {
+		data = data,
+		preview = preview == true,
+		container = container,
+		prefix = prefix,
+		badge = badge,
+		message = messageLabel,
+		previewLabel = previewLabel,
+	}
+	table.insert(activeAnnouncements, entry)
+	fitAnnouncement(entry)
+
+	TweenService:Create(
+		container,
 		TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{
-			GroupTransparency = 0,
-			Position = UDim2.new(0.5, 0, 0, y),
-		}
-	)
-	bannerTween:Play()
+		{GroupTransparency = 0}
+	):Play()
 
-	task.delay(math.clamp(tonumber(data.duration) or 8, 3, 12), function()
-		if bannerSerial ~= token then return end
-		bannerTween = TweenService:Create(
-			banner,
+	local duration = math.clamp(tonumber(data.duration) or 8, 3, 12)
+	task.delay(duration, function()
+		if not container.Parent then return end
+		local fade = TweenService:Create(
+			container,
 			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{
-				GroupTransparency = 1,
-				Position = UDim2.new(0.5, 0, 0, y - 8),
-			}
+			{GroupTransparency = 1}
 		)
-		bannerTween.Completed:Connect(function()
-			if bannerSerial == token then
-				banner.Visible = false
-				bannerPreview.Visible = false
-			end
+		fade.Completed:Connect(function()
+			removeAnnouncement(entry)
 		end)
-		bannerTween:Play()
+		fade:Play()
 	end)
 end
 
-gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitAnnouncement)
+gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	for _, entry in ipairs(activeAnnouncements) do
+		if entry.container.Parent then
+			fitAnnouncement(entry)
+		end
+	end
+end)
 
 local launcher = button(gui, "ADMIN", function() end, {size = UDim2.fromOffset(116, 40), primary = true, textSize = 12})
 launcher.Name = "PalmVilleAdminLauncherV2"
