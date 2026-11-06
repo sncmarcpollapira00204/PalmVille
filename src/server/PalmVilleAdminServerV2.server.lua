@@ -1483,7 +1483,20 @@ local function onPlayerAdded(player)
 	end
 end
 
-Players.PlayerAdded:Connect(onPlayerAdded)
+local function pushPlayerSnapshot()
+	local snapshot = playerSnapshot()
+	for _, admin in ipairs(Players:GetPlayers()) do
+		local adminRole = getRoleById(admin.UserId)
+		if adminRole and (hasPermission(admin, "Monitoring") or hasPermission(admin, "Server") or hasPermission(admin, "Players") or hasPermission(admin, "Moderation")) then
+			remote:FireClient(admin, "Snapshot", snapshot)
+		end
+	end
+end
+
+Players.PlayerAdded:Connect(function(player)
+	onPlayerAdded(player)
+	task.delay(0.5, pushPlayerSnapshot)
+end)
 Players.PlayerRemoving:Connect(function(player)
 	stopSpectate(player.UserId, false)
 	stopFly(player)
@@ -1502,6 +1515,7 @@ Players.PlayerRemoving:Connect(function(player)
 	requestTimes[player.UserId] = nil
 	accessRequestLogged[player.UserId] = nil
 	cameraTimes[player.UserId] = nil
+	task.delay(0.2, pushPlayerSnapshot)
 end)
 
 RunService.Heartbeat:Connect(function()
