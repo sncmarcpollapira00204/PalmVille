@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Economy = require(ServerScriptService:WaitForChild("PalmVilleEconomy"))
+local InventoryService = require(ServerScriptService:WaitForChild("PalmVilleInventoryService"))
 
 local STARTING_MONEY = 500
 local AUTOSAVE_INTERVAL = 60
@@ -280,6 +281,17 @@ local function loadPlayer(player)
 		startedAt = os.clock(),
 	}
 	attachLeaderstats(player, data)
+	InventoryService.SyncPlayer(player)
+	if not player:GetAttribute("PalmVilleInventoryRespawnBound") then
+		player:SetAttribute("PalmVilleInventoryRespawnBound", true)
+		player.CharacterAdded:Connect(function()
+			task.defer(function()
+				if player.Parent == Players and Economy.IsLoaded(player) then
+					InventoryService.SyncPlayer(player)
+				end
+			end)
+		end)
+	end
 
 	print(string.format(
 		"[PalmVille PlayerData] Loaded %s | Money: ₱%d | Level: %d | Store: %s",
