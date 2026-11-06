@@ -20,12 +20,12 @@ local BONE_NAMES = {
 }
 
 local CONFIG = {
-	Cadence = 8.5,
-	ThighSwing = math.rad(31),
-	KneeBend = math.rad(25),
-	WingSwing = math.rad(2),
-	HeadNod = math.rad(2),
-	PeckAngle = math.rad(24),
+	Cadence = 6.8,
+	ThighSwing = math.rad(16),
+	KneeBend = math.rad(12),
+	WingSwing = math.rad(1),
+	HeadNod = math.rad(1),
+	PeckAngle = math.rad(16),
 	PeckDuration = 0.48,
 }
 
@@ -158,7 +158,7 @@ connection = RunService.PreSimulation:Connect(function(dt)
 	end
 
 	if base["CHICKEN_-Spine"] then
-		local lean = walking and math.sin(phase * 2) * math.rad(1.2) or 0
+		local lean = walking and math.sin(phase * 2) * math.rad(0.5) or 0
 		setBone("CHICKEN_-Spine",
 			base["CHICKEN_-Spine"] * CFrame.Angles(lean, 0, 0))
 	end
@@ -191,7 +191,7 @@ connection = RunService.PreSimulation:Connect(function(dt)
 	end
 
 	if base["CHICKEN_-Tail"] then
-		local sway = walking and math.sin(phase) * math.rad(2.5) or math.sin(now * 1.1) * math.rad(1.2)
+		local sway = walking and math.sin(phase) * math.rad(1.2) or math.sin(now * 1.1) * math.rad(1.2)
 		setBone("CHICKEN_-Tail",
 			base["CHICKEN_-Tail"] * CFrame.Angles(0, 0, sway))
 	end
