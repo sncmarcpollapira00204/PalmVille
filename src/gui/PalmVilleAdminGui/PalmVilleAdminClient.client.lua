@@ -749,9 +749,45 @@ make("UIGradient", {
 }, panel)
 local panelScale = make("UIScale", {Scale = 1}, panel)
 
+local flyTouchControls = make("Frame", {
+	Name = "FlyTouchControls",
+	AnchorPoint = Vector2.new(1, 1),
+	Position = UDim2.new(1, -22, 1, -92),
+	Size = UDim2.fromOffset(116, 104),
+	BackgroundTransparency = 1,
+	Visible = false,
+	ZIndex = 80,
+}, gui)
+
+local function makeFlyHoldButton(caption, key, y)
+	local hold = button(flyTouchControls, caption, nil, {
+		size = UDim2.fromOffset(54, 46),
+		textSize = 14,
+		bold = true,
+	})
+	hold.Position = UDim2.fromOffset(31, y)
+	hold.ZIndex = 81
+	hold.InputBegan:Connect(function(inputObject)
+		if inputObject.UserInputType == Enum.UserInputType.Touch
+			or inputObject.UserInputType == Enum.UserInputType.MouseButton1 then
+			flyKeys[key] = true
+		end
+	end)
+	hold.InputEnded:Connect(function(inputObject)
+		if inputObject.UserInputType == Enum.UserInputType.Touch
+			or inputObject.UserInputType == Enum.UserInputType.MouseButton1 then
+			flyKeys[key] = nil
+		end
+	end)
+	return hold
+end
+
+makeFlyHoldButton("UP", "Up", 0)
+makeFlyHoldButton("DOWN", "Down", 52)
+
 local sidebar = make("Frame", {
 	Name = "Sidebar",
-	Size = UDim2.new(0, 240, 1, 0),"
+	Size = UDim2.new(0, 240, 1, 0),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 	ZIndex = 22,
@@ -970,9 +1006,33 @@ make("UIListLayout", {
 }, modalButtonRow)
 
 local modalCallback
+local modalPickerCallback
+
+local function renderModalPlayerPicker()
+	for _, child in ipairs(modalPicker:GetChildren()) do
+		if child:IsA("GuiObject") then child:Destroy() end
+	end
+	local roster = snapshot.players or {}
+	if #roster == 0 then
+		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
+		empty.Position = UDim2.fromOffset(4, 4)
+	else
+		for _, row in ipairs(roster) do
+			local username = tostring(row.username or "")
+			local displayName = tostring(row.displayName or username)
+			button(modalPicker, displayName .. "  ·  @" .. username, function()
+				local callback = modalPickerCallback
+				closeAdminModal()
+				if callback then callback(row) end
+			end, {size = UDim2.new(1, -6, 0, 46), textSize = 14})
+		end
+	end
+end
+
 local function closeAdminModal()
 	modalShade.Visible = false
 	modalCallback = nil
+	modalPickerCallback = nil
 	modalReason.Text = ""
 end
 
@@ -994,6 +1054,7 @@ end, {
 
 local function openConfirmModal(titleText, descriptionText, confirmText, needsReason, callback)
 	modalTitle.Text = titleText
+	modalConfirmButton.Text = confirmText or "CONFIRM"
 	modalDescription.Text = descriptionText
 	modalReason.Visible = needsReason == true
 	modalPicker.Visible = false
@@ -1015,26 +1076,12 @@ local function openPlayerPicker(titleText, descriptionText, callback)
 	modalCancelButton.Size = UDim2.new(1, 0, 0, 42)
 	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
 	modalCard.Size = UDim2.fromOffset(500, 470)
-	for _, child in ipairs(modalPicker:GetChildren()) do
-		if child:IsA("GuiObject") then child:Destroy() end
-	end
-	local roster = snapshot.players or {}
-	if #roster == 0 then
-		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
-		empty.Position = UDim2.fromOffset(4, 4)
-	else
-		for _, row in ipairs(roster) do
-			local username = tostring(row.username or "")
-			local displayName = tostring(row.displayName or username)
-			button(modalPicker, displayName .. "  ·  @" .. username, function()
-				closeAdminModal()
-				callback(row)
-			end, {size = UDim2.new(1, -6, 0, 46), textSize = 14})
-		end
-	end
+	modalPickerCallback = callback
+	renderModalPlayerPicker()
 	modalPicker.Visible = true
 	modalCallback = nil
 	modalShade.Visible = true
+	remote:FireServer("RequestSnapshot")
 end
 
 local pages = {}
@@ -1151,7 +1198,7 @@ for key, nav in pairs(navButtons) do
 		activeTab = key
 		refreshNavigation()
 		if key == "OVERVIEW" then
-			if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
+			if canAccess("Monitoring") or canAccess("Server") or canAccess("Players") or canAccess("Moderation") then remote:FireServer("RequestSnapshot") end
 		elseif key == "PLAYERS" then
 			remote:FireServer("RequestSnapshot")
 		elseif key == "STAFF" then
@@ -1898,8 +1945,7 @@ local FLY_KEY_MAP = {
 	[Enum.KeyCode.Space] = "Up",
 	[Enum.KeyCode.LeftControl] = "Down",
 	[Enum.KeyCode.C] = "Down",
-	[Enum.KeyCode.LeftShift] = "Fast",
-	[Enum.KeyCode.RightShift] = "Fast",
+	[Enum.KeyCode.LeftAlt] = "Fast",
 }
 
 UserInputService.InputBegan:Connect(function(inputObject, processed)
@@ -2060,6 +2106,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		if type(data) == "table" then
 			snapshot = data
 			updateMetrics()
+			if modalPicker.Visible then renderModalPlayerPicker() end
 			if activeTab == "PLAYERS" then renderPlayers() end
 			if managerRole() and activeTab == "STAFF" then remote:FireServer("RequestStaff") end
 		end
@@ -2091,6 +2138,7 @@ remote.OnClientEvent:Connect(function(event, data)
 	elseif event == "SetFly" then
 		flyEnabled = data == true
 		if not flyEnabled then table.clear(flyKeys) end
+		flyTouchControls.Visible = flyEnabled and UserInputService.TouchEnabled
 		refreshOverviewAbilityButtons()
 		setStatus(flyEnabled and "FLY ENABLED · WASD / SPACE / CTRL" or "FLY DISABLED")
 	elseif event == "SetInvisible" then
