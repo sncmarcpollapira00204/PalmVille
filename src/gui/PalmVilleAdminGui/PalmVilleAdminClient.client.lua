@@ -21,19 +21,19 @@ gui.DisplayOrder = 96
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local C = {
-	bg = Color3.fromRGB(4, 22, 12),
-	panel = Color3.fromRGB(8, 34, 19),
-	surface = Color3.fromRGB(17, 49, 28),
-	surfaceHover = Color3.fromRGB(31, 75, 41),
-	green = Color3.fromRGB(83, 124, 52),
-	greenBright = Color3.fromRGB(137, 166, 76),
-	line = Color3.fromRGB(127, 148, 82),
-	text = Color3.fromRGB(248, 246, 221),
-	muted = Color3.fromRGB(216, 218, 185),
-	dim = Color3.fromRGB(164, 177, 136),
-	red = Color3.fromRGB(184, 72, 65),
-	amber = Color3.fromRGB(239, 226, 170),
-	blue = Color3.fromRGB(112, 192, 61),
+	bg = Color3.fromRGB(8, 8, 9),
+	panel = Color3.fromRGB(17, 17, 19),
+	surface = Color3.fromRGB(28, 28, 31),
+	surfaceHover = Color3.fromRGB(48, 48, 52),
+	green = Color3.fromRGB(225, 225, 228),
+	greenBright = Color3.fromRGB(255, 255, 255),
+	line = Color3.fromRGB(82, 82, 88),
+	text = Color3.fromRGB(248, 248, 250),
+	muted = Color3.fromRGB(190, 190, 196),
+	dim = Color3.fromRGB(137, 137, 145),
+	red = Color3.fromRGB(170, 170, 176),
+	amber = Color3.fromRGB(238, 238, 242),
+	blue = Color3.fromRGB(210, 210, 216),
 }
 
 local role = ""
@@ -1254,27 +1254,66 @@ local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
 local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
 
 local overviewAbilityCard = card(pages.OVERVIEW, "ADMIN CONTROLS", "Personal abilities for your current session.", "settings")
-local overviewAbilityRow = addRow(overviewAbilityCard, 50)
-local flyButton = button(overviewAbilityRow, "FLY  ·  OFF", function()
+local overviewAbilityRow = addRow(overviewAbilityCard, 68)
+
+local function abilityControl(titleText, description, initialState, callback)
+	local control = button(overviewAbilityRow, "", callback, {
+		size = UDim2.new(0.333, -8, 0, 64),
+		radius = 12,
+		textSize = 13,
+		bold = true,
+	})
+	local titleLabel = text(control, titleText, 15, C.text, 22, true)
+	titleLabel.Position = UDim2.fromOffset(14, 9)
+	titleLabel.Size = UDim2.new(1, -28, 0, 22)
+	local detailLabel = text(control, description, 11, C.muted, 18)
+	detailLabel.Position = UDim2.fromOffset(14, 31)
+	detailLabel.Size = UDim2.new(1, -90, 0, 18)
+	local statusPill = make("TextLabel", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.fromOffset(54, 24),
+		BackgroundColor3 = C.surfaceHover,
+		BorderSizePixel = 0,
+		Text = "OFF",
+		TextColor3 = C.text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		ZIndex = control.ZIndex + 2,
+	}, control)
+	addCorner(statusPill, 8)
+	addStroke(statusPill, C.line, 0.15, 1)
+	return {button = control, detail = detailLabel, pill = statusPill, enabled = initialState}
+end
+
+local flyControl = abilityControl("FLIGHT MODE", "Move freely around the map", flyEnabled, function()
 	sendAction("SetFly", {enabled = not flyEnabled})
 	setStatus(flyEnabled and "Disabling flight..." or "Enabling flight...")
-end, {size = UDim2.new(0.333, -8, 0, 48), textSize = 14, bold = true})
-local invisibleButton = button(overviewAbilityRow, "INVISIBLE  ·  OFF", function()
+end)
+local invisibleControl = abilityControl("VISIBILITY", "Hide your character", invisibleEnabled, function()
 	sendAction("SetInvisible", {enabled = not invisibleEnabled})
-	setStatus(invisibleEnabled and "Disabling invisibility..." or "Enabling invisibility...")
-end, {size = UDim2.new(0.333, -8, 0, 48), textSize = 13, bold = true})
-local adminTitleButton = button(overviewAbilityRow, "ROLE TITLE  ·  ON", function()
+	setStatus(invisibleEnabled and "Restoring visibility..." or "Hiding character...")
+end)
+local titleControl = abilityControl("ROLE TITLE", "Show your developer title", adminTitleEnabled, function()
 	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
 	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
-end, {size = UDim2.new(0.334, -8, 0, 48), textSize = 13, bold = true})
+end)
+local flyButton = flyControl.button
+local invisibleButton = invisibleControl.button
+local adminTitleButton = titleControl.button
+
+local function refreshAbilityControl(control, enabled, onText, offText)
+	control.detail.Text = enabled and onText or offText
+	control.pill.Text = enabled and "ACTIVE" or "OFF"
+	control.pill.BackgroundColor3 = enabled and C.text or C.surfaceHover
+	control.pill.TextColor3 = enabled and C.bg or C.text
+	setButtonBackground(control.button, enabled and Color3.fromRGB(55, 55, 60) or C.surface)
+end
 
 local function refreshOverviewAbilityButtons()
-	flyButton.Text = "FLY  ·  " .. (flyEnabled and "ON" or "OFF")
-	invisibleButton.Text = "INVISIBLE  ·  " .. (invisibleEnabled and "ON" or "OFF")
-	adminTitleButton.Text = "ROLE TITLE  ·  " .. (adminTitleEnabled and "ON" or "OFF")
-	setButtonBackground(flyButton, flyEnabled and C.green or C.surface)
-	setButtonBackground(invisibleButton, invisibleEnabled and C.green or C.surface)
-	setButtonBackground(adminTitleButton, adminTitleEnabled and C.green or C.surface)
+	refreshAbilityControl(flyControl, flyEnabled, "Flight enabled", "Move freely around the map")
+	refreshAbilityControl(invisibleControl, invisibleEnabled, "Character hidden", "Hide your character")
+	refreshAbilityControl(titleControl, adminTitleEnabled, "Title visible", "Developer title hidden")
 end
 
 local playersWorkspace = make("Frame", {
