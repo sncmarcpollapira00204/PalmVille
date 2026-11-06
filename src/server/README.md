@@ -6,7 +6,6 @@ The Admin backend is consolidated into one server Script:
 - `PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
 - `PalmVilleRoleTitlesV2.server.lua` — role title billboards driven by the Admin role resolver.
 - `FarmVilleGraphicsSettingsPersistence.server.lua` — separate non-Admin graphics preferences service.
-- `PalmVilleChickenNPC.server.lua` — replaces the old Workspace Chicken with an optimized articulated hen rig at the same location, including alternating leg steps, wing/head motion, pecking, and no-jump wandering AI at runtime.
 
 The former `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in the Admin server and archived under `archive/merged-server-backups/`. Their existing DataStore names and RemoteFunction endpoints are retained. Their old standalone Scripts must not be restored.
 
