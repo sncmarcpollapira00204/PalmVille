@@ -373,23 +373,23 @@ local function card(parent, titleText, subtitle, icon)
 	addCorner(root, 17)
 	addStroke(root, C.line, 0.04, 1.4)
 	make("UIPadding", {
-		PaddingTop = UDim.new(0, 24),
-		PaddingBottom = UDim.new(0, 24),
-		PaddingLeft = UDim.new(0, 26),
-		PaddingRight = UDim.new(0, 26),
+		PaddingTop = UDim.new(0, 12),
+		PaddingBottom = UDim.new(0, 10),
+		PaddingLeft = UDim.new(0, 16),
+		PaddingRight = UDim.new(0, 16),
 	}, root)
-	local layout = vertical(root, 13)
+	local layout = vertical(root, 7)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	if icon then
-		local head = make("Frame", {Size = UDim2.new(1, 0, 0, 62), BackgroundTransparency = 1}, root)
-		local headingIcon = drawIcon(head, icon, 38, C.amber)
-		headingIcon.Position = UDim2.fromOffset(10, 12)
-		local heading = text(head, titleText, 27, C.text, 34, true)
-		heading.Position = UDim2.fromOffset(66, 0)
-		heading.Size = UDim2.new(1, -66, 0, 34)
-		local sub = text(head, subtitle or "", 17, C.muted, 25)
-		sub.Position = UDim2.fromOffset(66, 34)
-		sub.Size = UDim2.new(1, -66, 0, 25)
+		local head = make("Frame", {Size = UDim2.new(1, 0, 0, 46), BackgroundTransparency = 1}, root)
+		local headingIcon = drawIcon(head, icon, 28, C.amber)
+		headingIcon.Position = UDim2.fromOffset(8, 8)
+		local heading = text(head, titleText, 22, C.text, 28, true)
+		heading.Position = UDim2.fromOffset(54, 0)
+		heading.Size = UDim2.new(1, -54, 0, 28)
+		local sub = text(head, subtitle or "", 13, C.muted, 18)
+		sub.Position = UDim2.fromOffset(54, 27)
+		sub.Size = UDim2.new(1, -54, 0, 18)
 	else
 		text(root, titleText, 24, C.text, 32, true)
 		if subtitle and subtitle ~= "" then
@@ -407,7 +407,7 @@ local function addRow(parent, height)
 	make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 12),
+		Padding = UDim.new(0, 8),
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 	}, row)
 	return row
@@ -1143,12 +1143,12 @@ for navIndex, entry in ipairs(navOrder) do
 		Visible = false,
 	}, content)
 	make("UIPadding", {
-		PaddingTop = UDim.new(0, 18),
-		PaddingBottom = UDim.new(0, 24),
-		PaddingLeft = UDim.new(0, 20),
-		PaddingRight = UDim.new(0, 20),
+		PaddingTop = UDim.new(0, 10),
+		PaddingBottom = UDim.new(0, 12),
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 12),
 	}, page)
-	vertical(page, 18)
+	vertical(page, 9)
 	pages[key] = page
 end
 
@@ -1253,48 +1253,44 @@ local overviewMetricRow = addRow(pages.OVERVIEW, 148)
 local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
 local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
 
-local overviewAbilityCard = card(pages.OVERVIEW, "ADMIN CONTROLS", "Personal abilities for your current session.", "settings")
-local overviewAbilityRow = addRow(overviewAbilityCard, 68)
+local overviewAbilityCard = card(pages.OVERVIEW, "ADMIN CONTROLS", "Personal session settings.", nil)
+local overviewAbilityList = make("Frame", {
+	Size = UDim2.new(1, 0, 0, 126),
+	BackgroundTransparency = 1,
+}, overviewAbilityCard)
+vertical(overviewAbilityList, 5)
 
-local function abilityControl(titleText, description, initialState, callback)
-	local control = button(overviewAbilityRow, "", callback, {
-		size = UDim2.new(0.333, -8, 0, 64),
-		radius = 12,
-		textSize = 13,
-		bold = true,
-	})
-	local titleLabel = text(control, titleText, 15, C.text, 22, true)
-	titleLabel.Position = UDim2.fromOffset(14, 9)
-	titleLabel.Size = UDim2.new(1, -28, 0, 22)
-	local detailLabel = text(control, description, 11, C.muted, 18)
-	detailLabel.Position = UDim2.fromOffset(14, 31)
-	detailLabel.Size = UDim2.new(1, -90, 0, 18)
-	local statusPill = make("TextLabel", {
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -10, 0.5, 0),
-		Size = UDim2.fromOffset(54, 24),
-		BackgroundColor3 = C.surfaceHover,
+local function abilityControl(titleText, initialState, callback)
+	local row = make("Frame", {
+		Size = UDim2.new(1, 0, 0, 38),
+		BackgroundColor3 = C.surface,
 		BorderSizePixel = 0,
-		Text = "OFF",
-		TextColor3 = C.text,
-		Font = Enum.Font.GothamBold,
-		TextSize = 10,
-		ZIndex = control.ZIndex + 2,
-	}, control)
-	addCorner(statusPill, 8)
-	addStroke(statusPill, C.line, 0.15, 1)
-	return {button = control, detail = detailLabel, pill = statusPill, enabled = initialState}
+	}, overviewAbilityList)
+	addCorner(row, 8)
+	local titleLabel = text(row, titleText, 13, C.text, 30, true)
+	titleLabel.Position = UDim2.fromOffset(12, 4)
+	titleLabel.Size = UDim2.new(1, -100, 0, 30)
+	local toggle = button(row, initialState and "ON" or "OFF", callback, {
+		size = UDim2.fromOffset(58, 26),
+		radius = 7,
+		textSize = 11,
+		bold = true,
+		primary = initialState,
+	})
+	toggle.AnchorPoint = Vector2.new(1, 0.5)
+	toggle.Position = UDim2.new(1, -8, 0.5, 0)
+	return {row = row, button = toggle}
 end
 
-local flyControl = abilityControl("FLIGHT MODE", "Move freely around the map", flyEnabled, function()
+local flyControl = abilityControl("Flight Mode", flyEnabled, function()
 	sendAction("SetFly", {enabled = not flyEnabled})
 	setStatus(flyEnabled and "Disabling flight..." or "Enabling flight...")
 end)
-local invisibleControl = abilityControl("VISIBILITY", "Hide your character", invisibleEnabled, function()
+local invisibleControl = abilityControl("Invisible Character", invisibleEnabled, function()
 	sendAction("SetInvisible", {enabled = not invisibleEnabled})
 	setStatus(invisibleEnabled and "Restoring visibility..." or "Hiding character...")
 end)
-local titleControl = abilityControl("ROLE TITLE", "Show your developer title", adminTitleEnabled, function()
+local titleControl = abilityControl("Developer Role Title", adminTitleEnabled, function()
 	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
 	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
 end)
@@ -1302,23 +1298,20 @@ local flyButton = flyControl.button
 local invisibleButton = invisibleControl.button
 local adminTitleButton = titleControl.button
 
-local function refreshAbilityControl(control, enabled, onText, offText)
-	control.detail.Text = enabled and onText or offText
-	control.pill.Text = enabled and "ACTIVE" or "OFF"
-	control.pill.BackgroundColor3 = enabled and C.text or C.surfaceHover
-	control.pill.TextColor3 = enabled and C.bg or C.text
-	setButtonBackground(control.button, enabled and Color3.fromRGB(55, 55, 60) or C.surface)
+local function refreshAbilityControl(control, enabled)
+	control.button.Text = enabled and "ON" or "OFF"
+	setButtonBackground(control.button, enabled and C.green or C.surfaceHover)
 end
 
 local function refreshOverviewAbilityButtons()
-	refreshAbilityControl(flyControl, flyEnabled, "Flight enabled", "Move freely around the map")
-	refreshAbilityControl(invisibleControl, invisibleEnabled, "Character hidden", "Hide your character")
-	refreshAbilityControl(titleControl, adminTitleEnabled, "Title visible", "Developer title hidden")
+	refreshAbilityControl(flyControl, flyEnabled)
+	refreshAbilityControl(invisibleControl, invisibleEnabled)
+	refreshAbilityControl(titleControl, adminTitleEnabled)
 end
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
-	Size = UDim2.new(1, 0, 0, 850),
+	Size = UDim2.new(1, 0, 0, 500),
 	BackgroundTransparency = 1,
 }, pages.PLAYERS)
 
@@ -1340,175 +1333,161 @@ local playersDetailsPanel = make("Frame", {
 addCorner(playersDetailsPanel, 18)
 addStroke(playersDetailsPanel, C.line, 0.06, 1.4)
 
-local playersHeadingIcon = drawIcon(playersListPanel, "users", 30, C.amber)
-playersHeadingIcon.Position = UDim2.fromOffset(26, 23)
-local playersHeading = text(playersListPanel, "Online Players", 25, C.text, 34, true)
-playersHeading.Position = UDim2.fromOffset(72, 17)
-playersHeading.Size = UDim2.new(1, -90, 0, 34)
-local playersScope = text(playersListPanel, "This server · 0 online", 15, C.muted, 24)
-playersScope.Position = UDim2.fromOffset(72, 51)
-playersScope.Size = UDim2.new(1, -90, 0, 24)
-local playerSearch = input(playersListPanel, "Search name or username...", "")
-playerSearch.Position = UDim2.fromOffset(18, 92)
-playerSearch.Size = UDim2.new(1, -36, 0, 48)
-local selectedLabel = text(playersListPanel, "Select a player to view details.", 13, C.muted, 26)
-selectedLabel.Position = UDim2.fromOffset(20, 145)
-selectedLabel.Size = UDim2.new(1, -40, 0, 26)
+local playersHeading = text(playersListPanel, "Online Players", 19, C.text, 28, true)
+playersHeading.Position = UDim2.fromOffset(16, 12)
+playersHeading.Size = UDim2.new(1, -32, 0, 28)
+local playersScope = text(playersListPanel, "This server · 0 online", 12, C.muted, 18)
+playersScope.Position = UDim2.fromOffset(16, 40)
+playersScope.Size = UDim2.new(1, -32, 0, 18)
+local playerSearch = input(playersListPanel, "Search players...", "")
+playerSearch.Position = UDim2.fromOffset(12, 66)
+playerSearch.Size = UDim2.new(1, -24, 0, 36)
+local selectedLabel = text(playersListPanel, "Select a player.", 11, C.muted, 18)
+selectedLabel.Position = UDim2.fromOffset(14, 105)
+selectedLabel.Size = UDim2.new(1, -28, 0, 18)
 local playerRows = make("ScrollingFrame", {
 	Name = "PlayerRows",
-	Position = UDim2.fromOffset(18, 181),
-	Size = UDim2.new(1, -36, 1, -199),
+	Position = UDim2.fromOffset(12, 130),
+	Size = UDim2.new(1, -24, 1, -142),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 	CanvasSize = UDim2.new(),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
-	ScrollBarThickness = 4,
+	ScrollBarThickness = 3,
 	ScrollBarImageColor3 = C.line,
 }, playersListPanel)
-vertical(playerRows, 9)
+vertical(playerRows, 5)
 
-local detailsIcon = drawIcon(playersDetailsPanel, "file", 29, C.amber)
-detailsIcon.Position = UDim2.fromOffset(28, 22)
-local detailTitle = text(playersDetailsPanel, "Player Details", 25, C.text, 36, true)
-detailTitle.Position = UDim2.fromOffset(78, 18)
-detailTitle.Size = UDim2.new(1, -104, 0, 36)
+local detailTitle = text(playersDetailsPanel, "Player Details", 19, C.text, 28, true)
+detailTitle.Position = UDim2.fromOffset(18, 12)
+detailTitle.Size = UDim2.new(1, -36, 0, 28)
 make("Frame", {
-	Position = UDim2.fromOffset(24, 68),
-	Size = UDim2.new(1, -48, 0, 1),
+	Position = UDim2.fromOffset(16, 46),
+	Size = UDim2.new(1, -32, 0, 1),
 	BackgroundColor3 = C.line,
 	BorderSizePixel = 0,
 }, playersDetailsPanel)
 
 local detailAvatar = make("ImageLabel", {
-	Position = UDim2.fromOffset(30, 91),
-	Size = UDim2.fromOffset(112, 112),
+	Position = UDim2.fromOffset(18, 60),
+	Size = UDim2.fromOffset(76, 76),
 	BackgroundColor3 = C.surface,
 	BorderSizePixel = 0,
 	ScaleType = Enum.ScaleType.Crop,
 }, playersDetailsPanel)
-addCorner(detailAvatar, 56)
-addStroke(detailAvatar, C.amber, 0.02, 1.4)
-local detailName = text(playersDetailsPanel, "Select a player", 30, C.text, 38, true)
-detailName.Position = UDim2.fromOffset(166, 92)
-detailName.Size = UDim2.new(1, -194, 0, 38)
-local detailUsername = text(playersDetailsPanel, "@username", 18, C.muted, 28)
-detailUsername.Position = UDim2.fromOffset(168, 132)
-detailUsername.Size = UDim2.new(1, -196, 0, 28)
-local detailOnline = text(playersDetailsPanel, "●  Waiting for selection", 15, C.muted, 26)
-detailOnline.Position = UDim2.fromOffset(168, 166)
-detailOnline.Size = UDim2.new(1, -196, 0, 26)
+addCorner(detailAvatar, 38)
+addStroke(detailAvatar, C.amber, 0.02, 1.2)
+local detailName = text(playersDetailsPanel, "Select a player", 21, C.text, 28, true)
+detailName.Position = UDim2.fromOffset(108, 60)
+detailName.Size = UDim2.new(1, -126, 0, 28)
+local detailUsername = text(playersDetailsPanel, "@username", 13, C.muted, 20)
+detailUsername.Position = UDim2.fromOffset(108, 89)
+detailUsername.Size = UDim2.new(1, -126, 0, 20)
+local detailOnline = text(playersDetailsPanel, "Waiting for selection", 11, C.muted, 18)
+detailOnline.Position = UDim2.fromOffset(108, 111)
+detailOnline.Size = UDim2.new(1, -126, 0, 18)
 make("Frame", {
-	Position = UDim2.fromOffset(24, 222),
-	Size = UDim2.new(1, -48, 0, 1),
+	Position = UDim2.fromOffset(16, 146),
+	Size = UDim2.new(1, -32, 0, 1),
 	BackgroundColor3 = C.line,
 	BorderSizePixel = 0,
 }, playersDetailsPanel)
-local progressTitle = text(playersDetailsPanel, "Progress", 22, C.text, 30, true)
-progressTitle.Position = UDim2.fromOffset(28, 236)
-progressTitle.Size = UDim2.new(1, -56, 0, 30)
+local progressTitle = text(playersDetailsPanel, "Progress", 15, C.text, 22, true)
+progressTitle.Position = UDim2.fromOffset(18, 153)
+progressTitle.Size = UDim2.new(1, -36, 0, 22)
 
 local function detailStat(x, y, width, labelText, initial)
 	local tile = make("Frame", {
-		Position = UDim2.new(x, x == 0 and 28 or 8, 0, y),
-		Size = UDim2.new(width, width == 0.5 and -42 or -56, 0, 66),
+		Position = UDim2.new(x, x == 0 and 18 or 6, 0, y),
+		Size = UDim2.new(width, width == 0.5 and -27 or -36, 0, 48),
 		BackgroundColor3 = C.surface,
 		BorderSizePixel = 0,
 	}, playersDetailsPanel)
-	addCorner(tile, 12)
-	addStroke(tile, C.line, 0.18, 1.1)
-	local label = text(tile, labelText, 14, C.muted, 20, true)
-	label.Position = UDim2.fromOffset(14, 8)
-	label.Size = UDim2.new(1, -28, 0, 20)
-	local value = text(tile, initial, 16, C.text, 24, true)
-	value.Position = UDim2.fromOffset(14, 34)
-	value.Size = UDim2.new(1, -28, 0, 24)
+	addCorner(tile, 8)
+	addStroke(tile, C.line, 0.18, 1)
+	local label = text(tile, labelText, 11, C.muted, 15, true)
+	label.Position = UDim2.fromOffset(10, 5)
+	label.Size = UDim2.new(1, -20, 0, 15)
+	local value = text(tile, initial, 13, C.text, 19, true)
+	value.Position = UDim2.fromOffset(10, 23)
+	value.Size = UDim2.new(1, -20, 0, 19)
 	return value
 end
-local detailMoney = detailStat(0, 276, 0.5, "Money", "Not available")
-local detailEarned = detailStat(0.5, 276, 0.5, "Earned Today", "Not available")
-local detailLevel = detailStat(0, 351, 0.5, "Level", "Not available")
-local detailPlaytime = detailStat(0.5, 351, 0.5, "Total Playtime", "Not available")
-local detailXp = detailStat(0, 426, 1, "XP", "Not available")
-local detailMetadata = text(playersDetailsPanel, "User ID: —   ·   Role: —   ·   Health: —", 14, C.muted, 24)
-detailMetadata.Position = UDim2.fromOffset(30, 505)
-detailMetadata.Size = UDim2.new(1, -60, 0, 24)
-local detailPosition = text(playersDetailsPanel, "Position: —", 13, C.dim, 22)
-detailPosition.Position = UDim2.fromOffset(30, 531)
-detailPosition.Size = UDim2.new(1, -60, 0, 22)
-local playerActionHeading = text(playersDetailsPanel, "Player Actions", 19, C.text, 26, true)
-playerActionHeading.Position = UDim2.fromOffset(30, 563)
-playerActionHeading.Size = UDim2.new(1, -60, 0, 26)
+local detailMoney = detailStat(0, 181, 0.5, "Money", "Not available")
+local detailEarned = detailStat(0.5, 181, 0.5, "Earned Today", "Not available")
+local detailLevel = detailStat(0, 235, 0.5, "Level", "Not available")
+local detailPlaytime = detailStat(0.5, 235, 0.5, "Total Playtime", "Not available")
+local detailXp = detailStat(0, 289, 1, "XP", "Not available")
+local detailMetadata = text(playersDetailsPanel, "User ID: —   ·   Role: —   ·   Health: —", 11, C.muted, 18)
+detailMetadata.Position = UDim2.fromOffset(18, 342)
+detailMetadata.Size = UDim2.new(1, -36, 0, 18)
+local detailPosition = text(playersDetailsPanel, "Position: —", 10, C.dim, 16)
+detailPosition.Position = UDim2.fromOffset(18, 361)
+detailPosition.Size = UDim2.new(1, -36, 0, 16)
+local playerActionHeading = text(playersDetailsPanel, "Player Actions", 14, C.text, 20, true)
+playerActionHeading.Position = UDim2.fromOffset(18, 383)
+playerActionHeading.Size = UDim2.new(1, -36, 0, 20)
 
 local playerActionRow = make("Frame", {
-	Position = UDim2.fromOffset(28, 594),
-	Size = UDim2.new(1, -56, 0, 46),
+	Position = UDim2.fromOffset(16, 407),
+	Size = UDim2.new(1, -32, 0, 36),
 	BackgroundTransparency = 1,
 }, playersDetailsPanel)
 make("UIListLayout", {
 	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 8),
+	Padding = UDim.new(0, 6),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, playerActionRow)
-button(playerActionRow, "GO TO PLAYER", function()
+button(playerActionRow, "TELEPORT", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Teleport", targetData())
-end, {size = UDim2.new(0.333, -6, 0, 44), primary = true, textSize = 12, bold = true})
+end, {size = UDim2.new(0.333, -4, 0, 34), primary = true, textSize = 10, bold = true})
 local spectateButton = button(playerActionRow, "SPECTATE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
-	if spectatingUserId == selectedUserId then
-		sendAction("StopSpectate")
-	else
-		sendAction("Spectate", targetData())
-	end
-end, {size = UDim2.new(0.333, -6, 0, 44), textSize = 12, bold = true})
+	if spectatingUserId == selectedUserId then sendAction("StopSpectate") else sendAction("Spectate", targetData()) end
+end, {size = UDim2.new(0.333, -4, 0, 34), textSize = 10, bold = true})
 local freezeButton = button(playerActionRow, "FREEZE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction(frozenTargets[selectedUserId] and "Unfreeze" or "Freeze", targetData())
-end, {size = UDim2.new(0.334, -6, 0, 44), textSize = 12, bold = true})
+end, {size = UDim2.new(0.334, -4, 0, 34), textSize = 10, bold = true})
 
 local function refreshPlayerActionButtons()
-	spectateButton.Text = spectatingUserId == selectedUserId and "STOP SPECTATING" or "SPECTATE"
+	spectateButton.Text = spectatingUserId == selectedUserId and "STOP" or "SPECTATE"
 	freezeButton.Text = frozenTargets[selectedUserId] and "UNFREEZE" or "FREEZE"
 	setButtonBackground(spectateButton, spectatingUserId == selectedUserId and C.green or C.surface)
 	setButtonBackground(freezeButton, frozenTargets[selectedUserId] and C.green or C.surface)
 end
 
 local moreActionsMenu = make("Frame", {
-	Position = UDim2.fromOffset(28, 700),
-	Size = UDim2.new(1, -56, 0, 96),
+	Position = UDim2.fromOffset(16, 454),
+	Size = UDim2.new(1, -32, 0, 70),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 	Visible = false,
 	ZIndex = playersDetailsPanel.ZIndex + 2,
 }, playersDetailsPanel)
-addCorner(moreActionsMenu, 12)
-addStroke(moreActionsMenu, C.line, 0.08, 1.2)
+addCorner(moreActionsMenu, 9)
+addStroke(moreActionsMenu, C.line, 0.08, 1)
 make("UIPadding", {
-	PaddingTop = UDim.new(0, 7),
-	PaddingBottom = UDim.new(0, 7),
-	PaddingLeft = UDim.new(0, 8),
-	PaddingRight = UDim.new(0, 8),
+	PaddingTop = UDim.new(0, 5),
+	PaddingBottom = UDim.new(0, 5),
+	PaddingLeft = UDim.new(0, 6),
+	PaddingRight = UDim.new(0, 6),
 }, moreActionsMenu)
-vertical(moreActionsMenu, 5)
-local moreRow1 = addRow(moreActionsMenu, 32)
+vertical(moreActionsMenu, 4)
+local moreRow1 = addRow(moreActionsMenu, 28)
 button(moreRow1, "BRING PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Bring", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+end, {size = UDim2.new(0.5, -4, 0, 28), textSize = 10})
 button(moreRow1, "WATCH SCREEN", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("WatchScreen", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
-local moreRow2 = addRow(moreActionsMenu, 32)
-button(moreRow2, "RESET PLAYER", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("ResetTarget", targetData())
-end, {size = UDim2.new(1, 0, 0, 32), danger = true, textSize = 12})
-
+end, {size = UDim2.new(0.5, -4, 0, 28), textSize = 10})
 local moreActionsButton = button(playersDetailsPanel, "MORE ACTIONS", function()
 	moreActionsMenu.Visible = not moreActionsMenu.Visible
-end, {size = UDim2.new(1, -56, 0, 42), textSize = 14})
-moreActionsButton.Position = UDim2.fromOffset(28, 648)
+end, {size = UDim2.new(1, -32, 0, 30), textSize = 11})
+moreActionsButton.Position = UDim2.fromOffset(16, 454)
 moreActionsButton.TextXAlignment = Enum.TextXAlignment.Center
 
 local function formatAdminMoney(value)
