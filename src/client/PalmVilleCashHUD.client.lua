@@ -89,10 +89,10 @@ local function showLoadedBalance()
 	local money = leaderstats and leaderstats:FindFirstChild("Money")
 
 	if money and (money:IsA("IntValue") or money:IsA("NumberValue")) then
-		balanceLabel.Text = "₱" .. formatMoney(money.Value)
+		balanceLabel.Text = formatMoney(money.Value)
 		balanceLabel.TextColor3 = Color3.fromRGB(255, 240, 190)
 		moneyConnection = money:GetPropertyChangedSignal("Value"):Connect(function()
-			balanceLabel.Text = "₱" .. formatMoney(money.Value)
+			balanceLabel.Text = formatMoney(money.Value)
 		end)
 		return true
 	end
