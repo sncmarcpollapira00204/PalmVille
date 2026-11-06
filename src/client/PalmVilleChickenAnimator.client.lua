@@ -24,9 +24,10 @@ local CONFIG = {
 	ThighSwing = math.rad(23),
 	KneeBend = math.rad(14),
 	WingSwing = math.rad(1),
-	HeadNod = math.rad(1),
-	PeckAngle = math.rad(16),
-	PeckDuration = 0.48,
+	HeadNod = math.rad(6),
+	IdleHeadLook = math.rad(7),
+	PeckAngle = math.rad(27),
+	PeckDuration = 0.62,
 }
 
 local function findChicken()
@@ -109,21 +110,41 @@ local peckStarted = 0
 local nextPeck = os.clock() + 2.5
 local alive = true
 
-local function getWorldSideAxisInBoneSpace(bone)
-	-- Convert the chicken's sideways axis into each bone's own local space.
-	-- This keeps both legs swinging forward/back instead of rotating inward.
-	local worldSide = model:GetPivot().RightVector
-	local localAxis = bone.WorldCFrame:VectorToObjectSpace(worldSide)
+local function getAxisInBoneSpace(bone, worldAxis)
+	local localAxis = bone.WorldCFrame:VectorToObjectSpace(worldAxis)
 	if localAxis.Magnitude < 0.001 then
 		return Vector3.xAxis
 	end
 	return localAxis.Unit
 end
 
+-- Cache axes from the imported bind pose so they remain stable while the model turns.
+local worldSide = model:GetPivot().RightVector
+local worldUp = Vector3.yAxis
+local hingeAxes = {}
+
+for _, name in ipairs({
+	"CHICKEN_-L-Thigh",
+	"CHICKEN_-L-Calf",
+	"CHICKEN_-R-Thigh",
+	"CHICKEN_-R-Calf",
+}) do
+	if bones[name] then
+		hingeAxes[name] = getAxisInBoneSpace(bones[name], worldSide)
+	end
+end
+
+local neckPitchAxis
+local neckYawAxis
+if bones["CHICKEN_-Neck"] then
+	neckPitchAxis = getAxisInBoneSpace(bones["CHICKEN_-Neck"], worldSide)
+	neckYawAxis = getAxisInBoneSpace(bones["CHICKEN_-Neck"], worldUp)
+end
+
 local function setHinge(name, angle)
 	local bone = bones[name]
-	if bone then
-		local axis = getWorldSideAxisInBoneSpace(bone)
+	local axis = hingeAxes[name]
+	if bone and axis then
 		bone.Transform = base[name] * CFrame.fromAxisAngle(axis, angle)
 	end
 end
@@ -184,7 +205,10 @@ connection = RunService.PreSimulation:Connect(function(dt)
 			base["CHICKEN_-Spine"] * CFrame.Angles(lean, 0, 0))
 	end
 
+	-- Visible head/neck motion: a gentle forward bob while walking,
+	-- small look-around turns while idle, and a clear downward peck.
 	local neckMotion = walking and math.sin(phase * 2) * CONFIG.HeadNod or 0
+	local idleLook = not walking and math.sin(now * 0.72) * CONFIG.IdleHeadLook or 0
 	local peckMotion = 0
 
 	if not walking then
@@ -194,21 +218,26 @@ connection = RunService.PreSimulation:Connect(function(dt)
 		end
 
 		if pecking then
-			local alpha = (now - peckStarted) / CONFIG.PeckDuration
+			local alpha = math.clamp((now - peckStarted) / CONFIG.PeckDuration, 0, 1)
 			if alpha >= 1 then
 				pecking = false
 				nextPeck = now + 3 + math.random() * 4
+			elseif alpha < 0.38 then
+				local down = alpha / 0.38
+				peckMotion = math.sin(down * math.pi * 0.5) * CONFIG.PeckAngle
 			else
-				peckMotion = math.sin(alpha * math.pi) * CONFIG.PeckAngle
+				local up = (alpha - 0.38) / 0.62
+				peckMotion = math.cos(up * math.pi * 0.5) * CONFIG.PeckAngle
 			end
 		end
 	else
 		pecking = false
 	end
 
-	if base["CHICKEN_-Neck"] then
-		setBone("CHICKEN_-Neck",
-			base["CHICKEN_-Neck"] * CFrame.Angles(neckMotion + peckMotion, 0, 0))
+	if bones["CHICKEN_-Neck"] and neckPitchAxis and neckYawAxis then
+		local pitch = CFrame.fromAxisAngle(neckPitchAxis, neckMotion + peckMotion)
+		local look = CFrame.fromAxisAngle(neckYawAxis, idleLook)
+		bones["CHICKEN_-Neck"].Transform = base["CHICKEN_-Neck"] * pitch * look
 	end
 
 	if base["CHICKEN_-Tail"] then
