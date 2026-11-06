@@ -264,18 +264,8 @@ local function saveStaffChange(userId, role, name)
 	end
 
 	local result
-	if not staffStore and RunService:IsStudio() then
-		-- Explicit session-only fallback for Studio when API Services are unavailable.
-		result = copyTable(staff)
-		if role then
-			result[id] = {role = role, name = tostring(name or id):sub(1, 20)}
-		else
-			result[id] = nil
-		end
-		for protectedId, protectedEntry in pairs(BOOTSTRAP) do
-			result[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
-		end
-	else
+	local savedOk = false
+	if staffStore then
 		local ok, saved = pcall(function()
 			return staffStore:UpdateAsync("staff", function(current)
 				local nextStaff = type(current) == "table" and current or {}
@@ -290,10 +280,29 @@ local function saveStaffChange(userId, role, name)
 				return nextStaff
 			end)
 		end)
-		if not ok or type(saved) ~= "table" then
+		if ok and type(saved) == "table" then
+			result = saved
+			savedOk = true
+		elseif not RunService:IsStudio() then
 			return false, "Role storage is unavailable. No role change was saved."
+		else
+			warn("[PalmVille Admin] Studio role DataStore write failed; applying a session-only change: " .. tostring(saved))
 		end
-		result = saved
+	elseif not RunService:IsStudio() then
+		return false, "Role storage is unavailable. No role change was saved."
+	end
+
+	if not savedOk then
+		-- Explicit session-only fallback for Studio when API Services are unavailable or failing.
+		result = copyTable(staff)
+		if role then
+			result[id] = {role = role, name = tostring(name or id):sub(1, 20)}
+		else
+			result[id] = nil
+		end
+		for protectedId, protectedEntry in pairs(BOOTSTRAP) do
+			result[protectedId] = {role = protectedEntry.role, name = protectedEntry.name}
+		end
 	end
 
 	staff = result
@@ -312,6 +321,7 @@ local function savePermission(role, area, enabled)
 		return false
 	end
 
+	local savedOk = false
 	if permissionStore then
 		local ok, result = pcall(function()
 			return permissionStore:UpdateAsync("areas", function(current)
@@ -321,7 +331,8 @@ local function savePermission(role, area, enabled)
 				return nextPermissions
 			end)
 		end)
-		if not ok or type(result) ~= "table" then
+		savedOk = ok and type(result) == "table"
+		if not savedOk and not RunService:IsStudio() then
 			return false
 		end
 	elseif not RunService:IsStudio() then
@@ -329,6 +340,9 @@ local function savePermission(role, area, enabled)
 	end
 
 	-- Studio fallback is intentionally session-only; published servers require a successful save.
+	if not savedOk and RunService:IsStudio() then
+		warn("[PalmVille Admin] Studio permission DataStore write failed; applying a session-only change.")
+	end
 	rolePermissions[role] = rolePermissions[role] or copyTable(DEFAULT_PERMISSIONS[role])
 	rolePermissions[role][area] = enabled
 	if not RunService:IsStudio() then
