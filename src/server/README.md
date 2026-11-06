@@ -3,12 +3,22 @@
 The Admin backend is consolidated into one server Script:
 
 - `PalmVilleAdminServerV2.server.lua` — authoritative Admin roles and permissions, remote access/actions, moderation, announcements, logs, tools, cross-server Players directory, and overview analytics.
+- `PalmVilleEconomy.lua` — server-only ModuleScript API for player profiles and Money: `RegisterProfile`, `IsLoaded`, `GetProfile`, `GetMoney`, `AddMoney`, `SpendMoney`, `SetMoney`, `AddXP`, and `UnregisterProfile`. Other server scripts should use this module instead of creating or changing their own wallet.
+- `PalmVillePlayerData.server.lua` — loads and saves one persistent player profile per UserId using `PalmVille_PlayerData_v1`; Studio uses the separate `PalmVille_PlayerData_Test_v1` store. Includes session locking, 60-second autosave, save/release on leave and shutdown, `leaderstats.Money`, `leaderstats.Level`, and the Admin player-data adapter. New profiles start with ₱500; change `STARTING_MONEY` in this script to adjust it.
 - `PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
 - `PalmVilleRoleTitlesV2.server.lua` — role title billboards driven by the Admin role resolver.
 - `FarmVilleGraphicsSettingsPersistence.server.lua` — separate non-Admin graphics preferences service.
-- `src/client/UnderwaterChestFeedback.client.lua` — displays chest reward, jackpot, empty-roll, and wallet-configuration notifications.
-- `UnderwaterChestService.server.lua` — detects each outer `Chest` model or part inside `Workspace.Underwater Chest`, adds an E/tap ProximityPrompt, validates distance on the server, and grants weighted Money rewards once per player per chest per server session.
+- `UnderwaterChestService.server.lua` — detects each outer `Chest` model or part inside `Workspace.Underwater Chest`, adds an E/tap ProximityPrompt, validates distance and one-claim-per-player-per-chest rules on the server, and credits rewards through `PalmVilleEconomy.AddMoney`.
+- `src/client/UnderwaterChestFeedback.client.lua` — displays chest reward, jackpot, empty-roll, and wallet-loading notifications.
 
 The former `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in the Admin server and archived under `archive/merged-server-backups/`. Their existing DataStore names and RemoteFunction endpoints are retained. Their old standalone Scripts must not be restored.
 
 The old duplicate `AdminClient` placeholder is removed. The active Admin interface is `PalmVilleAdminClient.client.lua` under `src/gui/PalmVilleAdminGui`.
+
+## Player data and currency
+
+The player profile is stored under the stable key `Player_<UserId>` in one DataStore record. The initial schema contains Money, Level, XP, seeds, inventory, farm plots, and statistics so later farming systems can extend the same profile instead of creating competing databases.
+
+Server scripts should require `ServerScriptService.PalmVilleEconomy` and call `AddMoney(player, amount, reason)` or `SpendMoney(player, amount, reason)`. Do not accept client-submitted balance changes. The module returns failure while the player profile is not loaded.
+
+Studio uses `PalmVille_PlayerData_Test_v1`; published servers use `PalmVille_PlayerData_v1`. Enable Studio API access only in a separate test experience. A load failure is fail-closed: the player is not given a fresh unsaved profile that could overwrite existing progress.
