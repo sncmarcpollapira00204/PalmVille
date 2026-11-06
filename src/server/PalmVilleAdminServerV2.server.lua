@@ -55,10 +55,11 @@ local function tryGetDataStore(name)
 	return nil
 end
 
-local staffStore = tryGetDataStore("PalmVilleAdminRoles_v2")
-local permissionStore = tryGetDataStore("PalmVilleAdminPermissions_v2")
-local logStore = tryGetDataStore("PalmVilleAdminLogs_v2")
-local moderationStore = tryGetDataStore("PalmVilleAdminModeration_v2")
+local adminStoreSuffix = RunService:IsStudio() and "_StudioTest" or ""
+local staffStore = tryGetDataStore("PalmVilleAdminRoles_v2" .. adminStoreSuffix)
+local permissionStore = tryGetDataStore("PalmVilleAdminPermissions_v2" .. adminStoreSuffix)
+local logStore = tryGetDataStore("PalmVilleAdminLogs_v2" .. adminStoreSuffix)
+local moderationStore = tryGetDataStore("PalmVilleAdminModeration_v2" .. adminStoreSuffix)
 local staff = {}
 local rolePermissions = {}
 local memoryLogs = {}
