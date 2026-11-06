@@ -101,8 +101,8 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromOffset(132, 34)
-	billboard.StudsOffset = Vector3.new(0, 2.72, 0)
+	billboard.Size = UDim2.fromOffset(160, 40)
+	billboard.StudsOffset = Vector3.new(0, 2.78, 0)
 	billboard.MaxDistance = 100
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
@@ -137,13 +137,13 @@ local function createTitle(player, character)
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 14
-	sizeLimit.MaxTextSize = 16
+	sizeLimit.MinTextSize = 18
+	sizeLimit.MaxTextSize = 20
 	sizeLimit.Parent = label
 
 	local shadowSizeLimit = Instance.new("UITextSizeConstraint")
-	shadowSizeLimit.MinTextSize = 14
-	shadowSizeLimit.MaxTextSize = 16
+	shadowSizeLimit.MinTextSize = 18
+	shadowSizeLimit.MaxTextSize = 20
 	shadowSizeLimit.Parent = shadow
 
 	local glow = Instance.new("UIStroke")
