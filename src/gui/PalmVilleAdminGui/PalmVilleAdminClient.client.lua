@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 local Workspace = game:GetService("Workspace")
 
@@ -49,9 +50,20 @@ local selectedUserId
 local selectedUsername
 local selectedStaffId
 local audience = "This Server"
-local itemTargetMode = "Player"
+local itemTargetMode = "Self"
 local invisibleEnabled = false
 local adminTitleEnabled = true
+local flyEnabled = false
+local frozenTargets = {}
+local spectatingUserId
+local watchScreenMode = false
+local watchScreenToken
+local cameraFeedToken
+local cameraFeedConnection
+local flyKeys = {}
+local lastFlySend = 0
+local moderationTargetUserId
+local moderationTargetUsername
 local currentReason = ""
 local savedCamera
 
@@ -718,7 +730,7 @@ local panel = make("Frame", {
 	Name = "AdminPanelV2",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(1540, 900),
+	Size = UDim2.fromOffset(1000, 700),
 	BackgroundColor3 = C.bg,
 	BorderSizePixel = 0,
 	Visible = false,
@@ -739,7 +751,7 @@ local panelScale = make("UIScale", {Scale = 1}, panel)
 
 local sidebar = make("Frame", {
 	Name = "Sidebar",
-	Size = UDim2.new(0, 340, 1, 0),
+	Size = UDim2.new(0, 240, 1, 0),"
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 	ZIndex = 22,
@@ -756,14 +768,14 @@ make("Frame", {
 local profileAvatar = make("ImageLabel", {
 	Name = "AdminAvatar",
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 38),
-	Size = UDim2.fromOffset(140, 140),
+	Position = UDim2.new(0.5, 0, 0, 20),
+	Size = UDim2.fromOffset(104, 104),
 	BackgroundColor3 = C.surface,
 	BorderSizePixel = 0,
 	ScaleType = Enum.ScaleType.Crop,
 	ZIndex = 24,
 }, sidebar)
-addCorner(profileAvatar, 70)
+addCorner(profileAvatar, 52)
 addStroke(profileAvatar, C.amber, 0.02, 1.5)
 task.spawn(function()
 	local ok, thumbnail = pcall(function()
@@ -773,17 +785,17 @@ task.spawn(function()
 end)
 
 local profileName = text(sidebar, player.Name, 25, C.text, 34, true)
-profileName.Position = UDim2.fromOffset(18, 186)
-profileName.Size = UDim2.new(1, -36, 0, 34)
+profileName.Position = UDim2.fromOffset(16, 132)
+profileName.Size = UDim2.new(1, -32, 0, 30)
 profileName.TextXAlignment = Enum.TextXAlignment.Center
 local profileUser = text(sidebar, "@" .. player.Name, 14, C.muted, 22)
-profileUser.Position = UDim2.fromOffset(18, 218)
-profileUser.Size = UDim2.new(1, -36, 0, 22)
+profileUser.Position = UDim2.fromOffset(16, 161)
+profileUser.Size = UDim2.new(1, -32, 0, 20)
 profileUser.TextXAlignment = Enum.TextXAlignment.Center
 local profileRole = make("TextLabel", {
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 249),
-	Size = UDim2.fromOffset(174, 38),
+	Position = UDim2.new(0.5, 0, 0, 190),
+	Size = UDim2.fromOffset(150, 30),
 	BackgroundColor3 = C.amber,
 	BorderSizePixel = 0,
 	Text = "STAFF",
@@ -793,10 +805,10 @@ local profileRole = make("TextLabel", {
 	TextXAlignment = Enum.TextXAlignment.Center,
 	ZIndex = 24,
 }, sidebar)
-addCorner(profileRole, 20)
+addCorner(profileRole, 16)
 make("Frame", {
-	Position = UDim2.fromOffset(28, 305),
-	Size = UDim2.new(1, -56, 0, 1),
+	Position = UDim2.fromOffset(20, 231),
+	Size = UDim2.new(1, -40, 0, 1),
 	BackgroundColor3 = C.line,
 	BorderSizePixel = 0,
 	ZIndex = 24,
@@ -804,16 +816,16 @@ make("Frame", {
 
 local header = make("Frame", {
 	Name = "Header",
-	Position = UDim2.fromOffset(340, 0),
-	Size = UDim2.new(1, -340, 0, 110),
+	Position = UDim2.fromOffset(240, 0),
+	Size = UDim2.new(1, -240, 0, 86),
 	BackgroundColor3 = C.panel,
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
 local logoMark = make("Frame", {
-	Position = UDim2.fromOffset(30, 20),
-	Size = UDim2.fromOffset(62, 68),
+	Position = UDim2.fromOffset(22, 14),
+	Size = UDim2.fromOffset(48, 56),
 	BackgroundColor3 = C.amber,
 	BorderSizePixel = 0,
 	ZIndex = 24,
@@ -827,18 +839,18 @@ local logoInset = make("Frame", {
 	ZIndex = 25,
 }, logoMark)
 addCorner(logoInset, 14)
-local logoIcon = drawIcon(logoInset, "shield", 36, C.amber)
-logoIcon.Position = UDim2.fromOffset(10, 13)
+local logoIcon = drawIcon(logoInset, "shield", 30, C.amber)
+logoIcon.Position = UDim2.fromOffset(6, 10)
 logoIcon.ZIndex = 26
-local pageTitle = text(header, "PalmVille Admin", 37, C.text, 48, true)
-pageTitle.Position = UDim2.fromOffset(116, 16)
-pageTitle.Size = UDim2.new(1, -220, 0, 48)
-local pageSubtitle = text(header, "Overview", 18, C.muted, 26)
-pageSubtitle.Position = UDim2.fromOffset(118, 64)
-pageSubtitle.Size = UDim2.new(1, -220, 0, 26)
+local pageTitle = text(header, "PalmVille Admin", 29, C.text, 38, true)
+pageTitle.Position = UDim2.fromOffset(88, 9)
+pageTitle.Size = UDim2.new(1, -180, 0, 38)
+local pageSubtitle = text(header, "Overview", 15, C.muted, 22)
+pageSubtitle.Position = UDim2.fromOffset(90, 46)
+pageSubtitle.Size = UDim2.new(1, -180, 0, 22)
 local closeButton = button(header, "×", function()
 	panelOpen = false
-end, {size = UDim2.fromOffset(58, 58), textSize = 35, radius = 12})
+end, {size = UDim2.fromOffset(44, 44), textSize = 29, radius = 11})
 closeButton.AnchorPoint = Vector2.new(1, 0.5)
 closeButton.Position = UDim2.new(1, -20, 0.5, 0)
 addStroke(closeButton, C.line, 0.02, 1.5)
@@ -852,20 +864,177 @@ make("Frame", {
 
 local content = make("Frame", {
 	Name = "Content",
-	Position = UDim2.fromOffset(340, 110),
-	Size = UDim2.new(1, -340, 1, -110),
+	Position = UDim2.fromOffset(240, 86),
+	Size = UDim2.new(1, -240, 1, -86),
 	BackgroundTransparency = 1,
 	ClipsDescendants = true,
 	ZIndex = 22,
 }, panel)
 local footer = text(panel, "READY", 12, C.dim, 22)
-footer.Position = UDim2.new(0, 360, 1, -26)
-footer.Size = UDim2.new(1, -390, 0, 18)
+footer.Position = UDim2.new(0, 256, 1, -23)
+footer.Size = UDim2.new(1, -280, 0, 16)
 footer.TextXAlignment = Enum.TextXAlignment.Right
 
 local function setStatus(message, isError)
 	footer.Text = tostring(message or "")
 	footer.TextColor3 = isError and Color3.fromRGB(235, 145, 145) or C.greenBright
+end
+
+
+local modalShade = make("Frame", {
+	Name = "AdminConfirmationShade",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.new(0, 0, 0),
+	BackgroundTransparency = 0.38,
+	Visible = false,
+	ZIndex = 100,
+}, gui)
+
+local modalCard = make("Frame", {
+	Name = "AdminConfirmationCard",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromOffset(500, 270),
+	BackgroundColor3 = C.panel,
+	BorderSizePixel = 0,
+	ZIndex = 101,
+}, modalShade)
+addCorner(modalCard, 18)
+addStroke(modalCard, C.amber, 0.02, 1.5)
+
+local modalTitle = text(modalCard, "CONFIRM ACTION", 23, C.text, 32, true)
+modalTitle.Position = UDim2.fromOffset(24, 20)
+modalTitle.Size = UDim2.new(1, -48, 0, 32)
+modalTitle.ZIndex = 103
+
+local modalDescription = text(modalCard, "", 15, C.muted, 48)
+modalDescription.Position = UDim2.fromOffset(24, 58)
+modalDescription.Size = UDim2.new(1, -48, 0, 48)
+modalDescription.TextYAlignment = Enum.TextYAlignment.Top
+modalDescription.ZIndex = 103
+
+local modalReason = make("TextBox", {
+	Name = "ConfirmationReason",
+	Position = UDim2.fromOffset(24, 116),
+	Size = UDim2.new(1, -48, 0, 86),
+	BackgroundColor3 = C.bg,
+	BorderSizePixel = 0,
+	ClearTextOnFocus = false,
+	Font = Enum.Font.Gotham,
+	TextSize = 15,
+	TextColor3 = C.text,
+	PlaceholderColor3 = C.dim,
+	PlaceholderText = "Type the reason here...",
+	Text = "",
+	TextWrapped = true,
+	MultiLine = true,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	Visible = false,
+	ZIndex = 103,
+}, modalCard)
+addCorner(modalReason, 10)
+addStroke(modalReason, C.line, 0.08, 1.2)
+make("UIPadding", {
+	PaddingTop = UDim.new(0, 10),
+	PaddingBottom = UDim.new(0, 8),
+	PaddingLeft = UDim.new(0, 12),
+	PaddingRight = UDim.new(0, 10),
+}, modalReason)
+
+local modalPicker = make("ScrollingFrame", {
+	Name = "ConfirmationPlayerPicker",
+	Position = UDim2.fromOffset(24, 112),
+	Size = UDim2.new(1, -48, 0, 300),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	ScrollBarThickness = 4,
+	ScrollBarImageColor3 = C.line,
+	Visible = false,
+	ZIndex = 103,
+}, modalCard)
+vertical(modalPicker, 6)
+
+local modalButtonRow = make("Frame", {
+	Position = UDim2.new(0, 24, 1, -62),
+	Size = UDim2.new(1, -48, 0, 42),
+	BackgroundTransparency = 1,
+	ZIndex = 103,
+}, modalCard)
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Padding = UDim.new(0, 10),
+}, modalButtonRow)
+
+local modalCallback
+local function closeAdminModal()
+	modalShade.Visible = false
+	modalCallback = nil
+	modalReason.Text = ""
+end
+
+local modalCancelButton = button(modalButtonRow, "CANCEL", closeAdminModal, {
+	size = UDim2.new(0.5, -5, 0, 42),
+	textSize = 14,
+})
+local modalConfirmButton = button(modalButtonRow, "CONFIRM", function()
+	local callback = modalCallback
+	local reason = modalReason.Text
+	closeAdminModal()
+	if callback then callback(reason) end
+end, {
+	size = UDim2.new(0.5, -5, 0, 42),
+	primary = true,
+	textSize = 14,
+	bold = true,
+})
+
+local function openConfirmModal(titleText, descriptionText, confirmText, needsReason, callback)
+	modalTitle.Text = titleText
+	modalDescription.Text = descriptionText
+	modalReason.Visible = needsReason == true
+	modalPicker.Visible = false
+	modalConfirmButton.Visible = true
+	modalCancelButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalConfirmButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
+	modalCard.Size = UDim2.fromOffset(500, needsReason and 330 or 255)
+	modalReason.Text = ""
+	modalCallback = callback
+	modalShade.Visible = true
+end
+
+local function openPlayerPicker(titleText, descriptionText, callback)
+	modalTitle.Text = titleText
+	modalDescription.Text = descriptionText
+	modalReason.Visible = false
+	modalConfirmButton.Visible = false
+	modalCancelButton.Size = UDim2.new(1, 0, 0, 42)
+	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
+	modalCard.Size = UDim2.fromOffset(500, 470)
+	for _, child in ipairs(modalPicker:GetChildren()) do
+		if child:IsA("GuiObject") then child:Destroy() end
+	end
+	local roster = snapshot.players or {}
+	if #roster == 0 then
+		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
+		empty.Position = UDim2.fromOffset(4, 4)
+	else
+		for _, row in ipairs(roster) do
+			local username = tostring(row.username or "")
+			local displayName = tostring(row.displayName or username)
+			button(modalPicker, displayName .. "  ·  @" .. username, function()
+				closeAdminModal()
+				callback(row)
+			end, {size = UDim2.new(1, -6, 0, 46), textSize = 14})
+		end
+	end
+	modalPicker.Visible = true
+	modalCallback = nil
+	modalShade.Visible = true
 end
 
 local pages = {}
@@ -893,21 +1062,21 @@ for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
 	local nav = button(sidebar, "", function()
 		activeTab = key
-	end, {size = UDim2.new(1, -48, 0, 60), textSize = 17, radius = 12})
+	end, {size = UDim2.new(1, -32, 0, 48), textSize = 15, radius = 10})
 	nav.Name = "Nav_" .. key
-	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 68))
+	nav.Position = UDim2.fromOffset(16, 244 + ((navIndex - 1) * 56))
 	nav.Text = ""
 	nav.RichText = false
 	setButtonBackground(nav, C.panel)
 	nav.BackgroundTransparency = 0.08
 	nav:SetAttribute("NavCaption", caption)
-	local navIcon = drawIcon(nav, navIcons[key], 23, C.amber)
+	local navIcon = drawIcon(nav, navIcons[key], 20, C.amber)
 	navIcon.Name = "NavIcon"
-	navIcon.Position = UDim2.new(0, 18, 0.5, -11)
-	local navLabel = text(nav, caption, 17, C.muted, 60, true)
+	navIcon.Position = UDim2.new(0, 14, 0.5, -10)
+	local navLabel = text(nav, caption, 15, C.muted, 48, true)
 	navLabel.Name = "NavLabel"
-	navLabel.Position = UDim2.fromOffset(60, 0)
-	navLabel.Size = UDim2.new(1, -72, 1, 0)
+	navLabel.Position = UDim2.fromOffset(50, 0)
+	navLabel.Size = UDim2.new(1, -60, 1, 0)
 	navLabel.TextWrapped = false
 	navLabel.ZIndex = nav.ZIndex + 2
 	local navStroke = nav:FindFirstChildOfClass("UIStroke")
@@ -926,10 +1095,10 @@ for navIndex, entry in ipairs(navOrder) do
 		Visible = false,
 	}, content)
 	make("UIPadding", {
-		PaddingTop = UDim.new(0, 24),
-		PaddingBottom = UDim.new(0, 34),
-		PaddingLeft = UDim.new(0, 30),
-		PaddingRight = UDim.new(0, 30),
+		PaddingTop = UDim.new(0, 18),
+		PaddingBottom = UDim.new(0, 24),
+		PaddingLeft = UDim.new(0, 20),
+		PaddingRight = UDim.new(0, 20),
 	}, page)
 	vertical(page, 18)
 	pages[key] = page
@@ -1035,6 +1204,30 @@ end
 local overviewMetricRow = addRow(pages.OVERVIEW, 148)
 local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
 local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
+
+local overviewAbilityCard = card(pages.OVERVIEW, "ADMIN CONTROLS", "Personal abilities for your current session.", "settings")
+local overviewAbilityRow = addRow(overviewAbilityCard, 50)
+local flyButton = button(overviewAbilityRow, "FLY  ·  OFF", function()
+	sendAction("SetFly", {enabled = not flyEnabled})
+	setStatus(flyEnabled and "Disabling flight..." or "Enabling flight...")
+end, {size = UDim2.new(0.333, -8, 0, 48), textSize = 14, bold = true})
+local invisibleButton = button(overviewAbilityRow, "INVISIBLE  ·  OFF", function()
+	sendAction("SetInvisible", {enabled = not invisibleEnabled})
+	setStatus(invisibleEnabled and "Disabling invisibility..." or "Enabling invisibility...")
+end, {size = UDim2.new(0.333, -8, 0, 48), textSize = 13, bold = true})
+local adminTitleButton = button(overviewAbilityRow, "ROLE TITLE  ·  ON", function()
+	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
+	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
+end, {size = UDim2.new(0.334, -8, 0, 48), textSize = 13, bold = true})
+
+local function refreshOverviewAbilityButtons()
+	flyButton.Text = "FLY  ·  " .. (flyEnabled and "ON" or "OFF")
+	invisibleButton.Text = "INVISIBLE  ·  " .. (invisibleEnabled and "ON" or "OFF")
+	adminTitleButton.Text = "ROLE TITLE  ·  " .. (adminTitleEnabled and "ON" or "OFF")
+	setButtonBackground(flyButton, flyEnabled and C.green or C.surface)
+	setButtonBackground(invisibleButton, invisibleEnabled and C.green or C.surface)
+	setButtonBackground(adminTitleButton, adminTitleEnabled and C.green or C.surface)
+end
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
@@ -1166,21 +1359,36 @@ local playerActionRow = make("Frame", {
 }, playersDetailsPanel)
 make("UIListLayout", {
 	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 10),
+	Padding = UDim.new(0, 8),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, playerActionRow)
 button(playerActionRow, "GO TO PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Teleport", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 44), primary = true, textSize = 14, bold = true})
-button(playerActionRow, "SPECTATE", function()
+end, {size = UDim2.new(0.333, -6, 0, 44), primary = true, textSize = 12, bold = true})
+local spectateButton = button(playerActionRow, "SPECTATE", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Spectate", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 44), textSize = 14, bold = true})
+	if spectatingUserId == selectedUserId then
+		sendAction("StopSpectate")
+	else
+		sendAction("Spectate", targetData())
+	end
+end, {size = UDim2.new(0.333, -6, 0, 44), textSize = 12, bold = true})
+local freezeButton = button(playerActionRow, "FREEZE", function()
+	if not selectedUserId then setStatus("Select a player first.", true); return end
+	sendAction(frozenTargets[selectedUserId] and "Unfreeze" or "Freeze", targetData())
+end, {size = UDim2.new(0.334, -6, 0, 44), textSize = 12, bold = true})
+
+local function refreshPlayerActionButtons()
+	spectateButton.Text = spectatingUserId == selectedUserId and "STOP SPECTATING" or "SPECTATE"
+	freezeButton.Text = frozenTargets[selectedUserId] and "UNFREEZE" or "FREEZE"
+	setButtonBackground(spectateButton, spectatingUserId == selectedUserId and C.green or C.surface)
+	setButtonBackground(freezeButton, frozenTargets[selectedUserId] and C.green or C.surface)
+end
 
 local moreActionsMenu = make("Frame", {
 	Position = UDim2.fromOffset(28, 700),
-	Size = UDim2.new(1, -56, 0, 126),
+	Size = UDim2.new(1, -56, 0, 96),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
 	Visible = false,
@@ -1200,32 +1408,31 @@ button(moreRow1, "BRING PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("Bring", targetData())
 end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
-button(moreRow1, "FREEZE", function()
+button(moreRow1, "WATCH SCREEN", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Freeze", targetData())
+	sendAction("WatchScreen", targetData())
 end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
 local moreRow2 = addRow(moreActionsMenu, 32)
-button(moreRow2, "UNFREEZE", function()
-	if not selectedUserId then setStatus("Select a player first.", true); return end
-	sendAction("Unfreeze", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
 button(moreRow2, "RESET PLAYER", function()
 	if not selectedUserId then setStatus("Select a player first.", true); return end
 	sendAction("ResetTarget", targetData())
-end, {size = UDim2.new(0.5, -5, 0, 32), danger = true, textSize = 12})
-local moreRow3 = addRow(moreActionsMenu, 32)
-button(moreRow3, "RETURN", function()
-	sendAction("Return")
-end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
-button(moreRow3, "STOP SPECTATING", function()
-	sendAction("StopSpectate")
-end, {size = UDim2.new(0.5, -5, 0, 32), textSize = 12})
+end, {size = UDim2.new(1, 0, 0, 32), danger = true, textSize = 12})
 
 local moreActionsButton = button(playersDetailsPanel, "MORE ACTIONS", function()
 	moreActionsMenu.Visible = not moreActionsMenu.Visible
 end, {size = UDim2.new(1, -56, 0, 42), textSize = 14})
 moreActionsButton.Position = UDim2.fromOffset(28, 648)
 moreActionsButton.TextXAlignment = Enum.TextXAlignment.Center
+
+local function formatAdminMoney(value)
+	local formatted = tostring(math.max(0, math.floor(tonumber(value) or 0)))
+	while true do
+		local changed
+		formatted, changed = formatted:gsub("^(%d+)(%d%d%d)", "%1,%2")
+		if changed == 0 then break end
+	end
+	return "₱" .. formatted
+end
 
 local function updatePlayerDetails(row)
 	if not row then
@@ -1243,22 +1450,32 @@ local function updatePlayerDetails(row)
 		detailAvatar.Image = ""
 		return
 	end
+
 	detailName.Text = tostring(row.displayName or row.username or "Player")
 	detailUsername.Text = "@" .. tostring(row.username or "unknown")
-	local isOnline = row.online == nil or row.online == true
-	detailOnline.Text = isOnline and "●  Online" or "●  Offline"
-	detailOnline.TextColor3 = isOnline and C.greenBright or C.dim
+	detailOnline.Text = "●  Online"
+	detailOnline.TextColor3 = C.greenBright
 	local healthText = row.health ~= nil and (tostring(row.health) .. "/" .. tostring(row.maxHealth or row.health)) or "Not available"
 	detailMetadata.Text = string.format("User ID: %s   ·   Role: %s   ·   Health: %s",
 		tostring(row.userId or "—"), displayRole(row.role), healthText)
 	detailPosition.Text = "Position: " .. tostring(row.position or "Not available")
-	if row.playtime ~= nil then
-		detailPlaytime.Text = string.format("%dm %02ds",
-			math.floor((tonumber(row.playtime) or 0) / 60),
-			math.floor((tonumber(row.playtime) or 0) % 60))
-	else
-		detailPlaytime.Text = "Not available"
+
+	local progress = type(row.progress) == "table" and row.progress or {}
+	detailMoney.Text = progress.money ~= nil and formatAdminMoney(progress.money) or "Not available"
+	detailEarned.Text = progress.earnedToday ~= nil and formatAdminMoney(progress.earnedToday) or "Not available"
+	detailLevel.Text = progress.level ~= nil and tostring(math.floor(progress.level)) or "Not available"
+	detailPlaytime.Text = progress.totalPlaytime ~= nil
+		and string.format("%dh %02dm", math.floor(progress.totalPlaytime / 3600), math.floor((progress.totalPlaytime % 3600) / 60))
+		or "Not available"
+	detailXp.Text = progress.xp ~= nil
+		and (tostring(math.floor(progress.xp)) .. (progress.xpNeeded and (" / " .. tostring(math.floor(progress.xpNeeded))) or " XP"))
+		or "Not available"
+
+	if row.frozen ~= nil then
+		frozenTargets[tonumber(row.userId)] = row.frozen == true or nil
 	end
+	refreshPlayerActionButtons()
+
 	local userId = tonumber(row.userId)
 	if userId then
 		task.spawn(function()
@@ -1401,72 +1618,92 @@ local sendAnnouncementButton = iconButton(sendRow, "Send Announcement", "send", 
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
-	sendAction("Announce", {message = value, audience = audience})
-	setStatus("Sending announcement...")
+	openConfirmModal(
+		"CONFIRM ANNOUNCEMENT",
+		"Send this announcement to " .. audience .. "?\n\n" .. value,
+		"CONFIRM & SEND",
+		false,
+		function()
+			sendAction("Announce", {message = value, audience = audience})
+			setStatus("Sending announcement...")
+		end
+	)
 end, {size = UDim2.new(1, 0, 0, 54), primary = true, textSize = 18, bold = true})
 showPageStatus(announceCard, "Only Owner, Developer, and Head Admin can send announcements. All Servers is disabled in Studio.")
-local moderationCard = card(pages.MODERATION, "TARGET PLAYER", "Online targets are required for warning, mute, kick, and bans. Unban/history can use a username.")
-local moderationUsername = addField(moderationCard, "USERNAME", "Select from Players or enter username")
-local reasonBox = addField(moderationCard, "REASON", "Reason required for warn, kick, and ban")
-local durationBox = addField(moderationCard, "TEMP BAN DAYS", "1–365", "1")
+local moderationCard = card(pages.MODERATION, "CHOOSE PLAYER", "Select an online player before applying a moderation action.")
+local moderationTargetButton = button(moderationCard, "SELECT PLAYER", function()
+	openPlayerPicker("SELECT MODERATION TARGET", "Choose the online player you want to moderate.", function(row)
+		moderationTargetUserId = tonumber(row.userId)
+		moderationTargetUsername = tostring(row.username or row.displayName or "Player")
+		moderationTargetButton.Text = tostring(row.displayName or moderationTargetUsername) .. "  ·  @" .. moderationTargetUsername
+		setStatus("Moderation target selected: " .. moderationTargetUsername)
+	end)
+end, {primary = true, size = UDim2.new(1, 0, 0, 48), textSize = 15, bold = true})
 
 local function moderationTarget()
-	local username = tostring(moderationUsername.Text or "")
-	if username == "" and selectedUsername then username = selectedUsername end
-	local userId = selectedUserId
-	if selectedUsername and string.lower(username) ~= string.lower(selectedUsername) then
-		userId = nil
-	end
-	return {targetUserId = userId, username = username}
+	return {targetUserId = moderationTargetUserId, username = moderationTargetUsername or ""}
 end
+
+local function hasModerationTarget()
+	if not moderationTargetUserId then
+		setStatus("Choose a player first.", true)
+		return false
+	end
+	return true
+end
+
 local modActionRow1 = addRow(moderationCard, 48)
 button(modActionRow1, "WARN", function()
+	if not hasModerationTarget() then return end
 	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	target.reason = reasonBox.Text
-	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
+	target.reason = "Please follow the PalmVille game rules."
 	sendAction("Warn", target)
-end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
+end, {size = UDim2.new(0.333, -6, 0, 46), textSize = 14})
 button(modActionRow1, "TOGGLE CHAT MUTE", function()
-	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	sendAction("MuteChat", target)
-end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
+	if not hasModerationTarget() then return end
+	sendAction("MuteChat", moderationTarget())
+end, {size = UDim2.new(0.333, -6, 0, 46), textSize = 13})
 button(modActionRow1, "KICK", function()
+	if not hasModerationTarget() then return end
 	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	target.reason = reasonBox.Text
-	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
-	sendAction("Kick", target)
-end, {size = UDim2.new(0.34, -5, 0, 46), danger = true, textSize = 14})
+	openConfirmModal(
+		"CONFIRM KICK",
+		"Kick @" .. target.username .. " from this server? Enter the reason below.",
+		"KICK PLAYER",
+		true,
+		function(reason)
+			if reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
+			target.reason = reason
+			sendAction("Kick", target)
+		end
+	)
+end, {size = UDim2.new(0.334, -6, 0, 46), danger = true, textSize = 14})
+
 local modActionRow2 = addRow(moderationCard, 48)
-button(modActionRow2, "TEMP BAN", function()
+button(modActionRow2, "BAN PLAYER", function()
+	if not hasModerationTarget() then return end
 	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	target.reason = reasonBox.Text
-	target.durationDays = math.clamp(math.floor(tonumber(durationBox.Text) or 1), 1, 365)
-	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
-	sendAction("TempBan", target)
-end, {size = UDim2.new(0.33, -5, 0, 46), danger = true, textSize = 14})
-button(modActionRow2, "PERMANENT BAN", function()
-	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	target.reason = reasonBox.Text
-	if target.reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
-	sendAction("PermanentBan", target)
-end, {size = UDim2.new(0.33, -5, 0, 46), danger = true, textSize = 14})
+	openConfirmModal(
+		"CONFIRM PERMANENT BAN",
+		"Ban @" .. target.username .. " from PalmVille permanently? This cannot be undone here. Enter a reason.",
+		"PERMANENT BAN",
+		true,
+		function(reason)
+			if reason:gsub("%s", "") == "" then setStatus("A reason is required.", true); return end
+			target.reason = reason
+			sendAction("PermanentBan", target)
+		end
+	)
+end, {size = UDim2.new(0.5, -6, 0, 46), danger = true, textSize = 14})
 button(modActionRow2, "UNBAN", function()
-	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	target.reason = reasonBox.Text
-	sendAction("Unban", target)
-end, {size = UDim2.new(0.34, -5, 0, 46), textSize = 14})
-local historyCard = card(pages.MODERATION, "MODERATION HISTORY", "Saved actions for the entered or selected account.")
+	if not hasModerationTarget() then return end
+	sendAction("Unban", moderationTarget())
+end, {size = UDim2.new(0.5, -6, 0, 46), textSize = 14})
+
+local historyCard = card(pages.MODERATION, "MODERATION HISTORY", "Saved actions for the selected account.")
 local historyButton = button(historyCard, "LOAD HISTORY", function()
-	local target = moderationTarget()
-	target.username = moderationUsername.Text
-	if not target.targetUserId and target.username == "" then setStatus("Enter a username or select a player.", true); return end
-	sendAction("ModerationHistory", target)
+	if not hasModerationTarget() then return end
+	sendAction("ModerationHistory", moderationTarget())
 end, {primary = true})
 local historyText = text(historyCard, "No history loaded.", 14, C.muted, 110)
 historyText.TextYAlignment = Enum.TextYAlignment.Top
@@ -1511,36 +1748,25 @@ local permissionList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSiz
 vertical(permissionList, 4)
 
 local toolsCard = card(pages.TOOLS, "GIVE ITEM", "Uses the registered item catalog and server-enforced role limits.")
-local itemCode = addField(toolsCard, "ITEM CODE", "Registered item code", "RICE_SEED")
+local itemCode = addField(toolsCard, "ITEM", "Type here", "")
 local itemAmount = addField(toolsCard, "AMOUNT", "1–99", "1")
 local itemModeRow = addRow(toolsCard, 48)
-for _, mode in ipairs({"Player", "Self", "All"}) do
-	button(itemModeRow, string.upper(mode), function(b)
+for _, mode in ipairs({"Self", "All"}) do
+	button(itemModeRow, mode == "Self" and "GIVE TO ME" or "GIVE TO ALL", function(b)
 		itemTargetMode = mode
 		for _, other in ipairs(itemModeRow:GetChildren()) do
 			if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 		end
-	end, {size = UDim2.new(0.33, -5, 0, 46), textSize = 14})
+	end, {size = UDim2.new(0.5, -6, 0, 46), textSize = 14})
 end
 button(toolsCard, "GIVE REGISTERED ITEM", function()
-	if itemTargetMode == "Player" and not selectedUserId then setStatus("Select a player in Players first.", true); return end
+	if itemCode.Text:gsub("%s", "") == "" then setStatus("Enter an item code first.", true); return end
 	sendAction("GiveItem", {
 		itemCode = itemCode.Text,
 		amount = tonumber(itemAmount.Text),
 		targetMode = itemTargetMode,
-		targetUserId = selectedUserId,
-		username = selectedUsername,
 	})
 end, {primary = true})
-local toolsToggleCard = card(pages.TOOLS, "PLAYER OPTIONS", "Server-side tools with the existing Admin V2 permission checks.")
-button(toolsToggleCard, "TOGGLE INVISIBILITY", function()
-	invisibleEnabled = not invisibleEnabled
-	sendAction("SetInvisible", {enabled = invisibleEnabled})
-end)
-button(toolsToggleCard, "TOGGLE ADMIN ROLE TITLE", function()
-	adminTitleEnabled = not adminTitleEnabled
-	sendAction("SetAdminTitle", {enabled = adminTitleEnabled})
-end)
 
 local logsCard = card(pages.LOGS, "SERVER ACTIVITY", "Recent server-side administrative actions.")
 button(logsCard, "REFRESH LOGS", function() remote:FireServer("RequestLogs") end, {primary = true})
@@ -1561,7 +1787,9 @@ local function renderStaff()
 				selectedStaffId = tonumber(row.userId)
 				selectedUserId = tonumber(row.userId)
 				selectedUsername = name
-				moderationUsername.Text = name
+				moderationTargetUserId = tonumber(row.userId)
+				moderationTargetUsername = name
+				moderationTargetButton.Text = name .. "  ·  @" .. name
 				selectedLabel.Text = "SELECTED  ·  " .. name
 				updatePlayerDetails(row)
 				for _, other in ipairs(staffList:GetChildren()) do
@@ -1633,7 +1861,7 @@ end
 local function fitPanel()
 	local size = gui.AbsoluteSize
 	if size.X <= 0 or size.Y <= 0 then return end
-	panelScale.Scale = math.min(1, (size.X - 32) / 1540, (size.Y - 32) / 900)
+	panelScale.Scale = math.min(1, (size.X - 32) / 1000, (size.Y - 32) / 700)
 end
 
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
