@@ -21,6 +21,7 @@ local CONFIG = {
 }
 
 local states = {}
+local registering = setmetatable({}, {__mode = "k"})
 local random = Random.new()
 
 local REQUIRED_BONES = {
@@ -54,17 +55,20 @@ local function hasRequiredBones(mesh)
 end
 
 local function registerChicken(model)
-	if states[model] or not model:IsDescendantOf(Workspace) then
+	if states[model] or registering[model] or not model:IsDescendantOf(Workspace) then
 		return false
 	end
+	registering[model] = true
 
 	local mesh = findChickenMesh(model)
 	if not mesh then
+		registering[model] = nil
 		return false
 	end
 
 	local valid, missingBone = hasRequiredBones(mesh)
 	if not valid then
+		registering[model] = nil
 		warn(string.format("[PalmVille Chicken] %s is missing bone %s.", model:GetFullName(), missingBone))
 		return false
 	end
@@ -108,6 +112,7 @@ local function registerChicken(model)
 	}
 
 	states[model] = state
+	registering[model] = nil
 	model:SetAttribute("PalmVilleChickenControllerReady", true)
 	model:SetAttribute("PalmVilleChickenIsWalking", false)
 	CollectionService:AddTag(model, TAG)
@@ -117,7 +122,7 @@ local function registerChicken(model)
 end
 
 local function tryRegister(model)
-	if states[model] then return end
+	if states[model] or registering[model] then return end
 
 	task.spawn(function()
 		for _ = 1, 20 do
