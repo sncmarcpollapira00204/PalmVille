@@ -9,12 +9,54 @@ local connected = setmetatable({}, {__mode = "k"})
 local handled = setmetatable({}, {__mode = "k"})
 
 local styles = {
-	OWNER = {text = "OWNER", color = Color3.fromRGB(245, 72, 82), glow = Color3.fromRGB(255, 62, 76), outline = Color3.fromRGB(78, 22, 30)},
-	["MASTER DEVELOPER"] = {text = "DEV", color = Color3.fromRGB(255, 225, 145), glow = Color3.fromRGB(255, 205, 100), outline = Color3.fromRGB(67, 43, 19)},
-	["HEAD ADMIN"] = {text = "HEAD ADMIN", color = Color3.fromRGB(255, 150, 195), glow = Color3.fromRGB(255, 138, 190), outline = Color3.fromRGB(88, 43, 65)},
-	ADMIN = {text = "ADMIN", color = Color3.fromRGB(225, 225, 225), glow = Color3.fromRGB(200, 200, 200), outline = Color3.fromRGB(55, 55, 55)},
-	MODERATOR = {text = "MODERATOR", color = Color3.fromRGB(230, 230, 230), glow = Color3.fromRGB(205, 205, 205), outline = Color3.fromRGB(55, 55, 55)},
-	HELPER = {text = "HELPER", color = Color3.fromRGB(255, 235, 207), glow = Color3.fromRGB(255, 220, 170), outline = Color3.fromRGB(82, 70, 54)},
+	OWNER = {
+		text = "OWNER",
+		color = Color3.fromRGB(255, 224, 75),
+		glow = Color3.fromRGB(255, 190, 0),
+		outline = Color3.fromRGB(91, 58, 0),
+		glowThickness = 2.2,
+		glowTransparency = 0.18,
+	},
+	["MASTER DEVELOPER"] = {
+		text = "DEV",
+		color = Color3.fromRGB(85, 185, 255),
+		glow = Color3.fromRGB(0, 125, 255),
+		outline = Color3.fromRGB(15, 48, 91),
+		glowThickness = 1.8,
+		glowTransparency = 0.28,
+	},
+	["HEAD ADMIN"] = {
+		text = "HEAD ADMIN",
+		color = Color3.fromRGB(255, 72, 190),
+		glow = Color3.fromRGB(255, 0, 170),
+		outline = Color3.fromRGB(91, 13, 62),
+		glowThickness = 2,
+		glowTransparency = 0.2,
+	},
+	ADMIN = {
+		text = "ADMIN",
+		color = Color3.fromRGB(92, 255, 125),
+		glow = Color3.fromRGB(0, 225, 75),
+		outline = Color3.fromRGB(17, 82, 39),
+		glowThickness = 1.8,
+		glowTransparency = 0.26,
+	},
+	MODERATOR = {
+		text = "MODERATOR",
+		color = Color3.fromRGB(230, 230, 230),
+		glow = Color3.fromRGB(205, 205, 205),
+		outline = Color3.fromRGB(55, 55, 55),
+		glowThickness = 1.2,
+		glowTransparency = 0.62,
+	},
+	HELPER = {
+		text = "HELPER",
+		color = Color3.fromRGB(255, 235, 207),
+		glow = Color3.fromRGB(255, 220, 170),
+		outline = Color3.fromRGB(82, 70, 54),
+		glowThickness = 1.2,
+		glowTransparency = 0.62,
+	},
 }
 
 local function getRole(player)
@@ -88,8 +130,8 @@ local function createTitle(player, character)
 	glow.Name = "SoftGlow"
 	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 	glow.Color = style.glow
-	glow.Thickness = 1.2
-	glow.Transparency = 0.62
+	glow.Thickness = style.glowThickness or 1.2
+	glow.Transparency = style.glowTransparency or 0.62
 	glow.Parent = label
 	billboard.Parent = head
 end
