@@ -20,9 +20,9 @@ local BONE_NAMES = {
 }
 
 local CONFIG = {
-	Cadence = 6.8,
-	ThighSwing = math.rad(16),
-	KneeBend = math.rad(12),
+	Cadence = 7.2,
+	ThighSwing = math.rad(23),
+	KneeBend = math.rad(14),
 	WingSwing = math.rad(1),
 	HeadNod = math.rad(1),
 	PeckAngle = math.rad(16),
@@ -109,6 +109,25 @@ local peckStarted = 0
 local nextPeck = os.clock() + 2.5
 local alive = true
 
+local function getWorldSideAxisInBoneSpace(bone)
+	-- Convert the chicken's sideways axis into each bone's own local space.
+	-- This keeps both legs swinging forward/back instead of rotating inward.
+	local worldSide = model:GetPivot().RightVector
+	local localAxis = bone.WorldCFrame:VectorToObjectSpace(worldSide)
+	if localAxis.Magnitude < 0.001 then
+		return Vector3.xAxis
+	end
+	return localAxis.Unit
+end
+
+local function setHinge(name, angle)
+	local bone = bones[name]
+	if bone then
+		local axis = getWorldSideAxisInBoneSpace(bone)
+		bone.Transform = base[name] * CFrame.fromAxisAngle(axis, angle)
+	end
+end
+
 local function setBone(name, transform)
 	local bone = bones[name]
 	if bone then
@@ -139,10 +158,12 @@ connection = RunService.PreSimulation:Connect(function(dt)
 	local leftKnee = CONFIG.KneeBend * (walking and math.max(0, math.sin(phase + 0.45)) or 0)
 	local rightKnee = CONFIG.KneeBend * (walking and math.max(0, math.sin(phase + math.pi + 0.45)) or 0)
 
-	setBone("CHICKEN_-L-Thigh", base["CHICKEN_-L-Thigh"] * CFrame.Angles(leftStride, 0, 0))
-	setBone("CHICKEN_-R-Thigh", base["CHICKEN_-R-Thigh"] * CFrame.Angles(rightStride, 0, 0))
-	setBone("CHICKEN_-L-Calf", base["CHICKEN_-L-Calf"] * CFrame.Angles(-leftKnee, 0, 0))
-	setBone("CHICKEN_-R-Calf", base["CHICKEN_-R-Calf"] * CFrame.Angles(-rightKnee, 0, 0))
+	-- Rotate each leg around the chicken's true side-to-side axis.
+	-- The axis is converted into the individual bone's local coordinates.
+	setHinge("CHICKEN_-L-Thigh", leftStride)
+	setHinge("CHICKEN_-R-Thigh", rightStride)
+	setHinge("CHICKEN_-L-Calf", -leftKnee)
+	setHinge("CHICKEN_-R-Calf", -rightKnee)
 
 	local walkWing = walking and math.sin(phase * 2) * CONFIG.WingSwing or 0
 	local idleWing = math.sin(now * 1.7) * math.rad(0.7)
