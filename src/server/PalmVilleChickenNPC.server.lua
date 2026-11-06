@@ -161,6 +161,7 @@ local headJoint = motor(
 	rootFrame * CFrame.new(0, 2.91, -0.91),
 	"NeckJoint"
 )
+local headJointBase = headJoint.C0
 
 local combRed = Color3.fromRGB(177, 42, 35)
 for index, offset in ipairs({
@@ -362,6 +363,7 @@ hen.Name = "Chicken"
 hen.Parent = Workspace
 
 oldChicken:Destroy()
+rayParams.FilterDescendantsInstances = {hen}
 
 local currentPosition = spawnPosition
 local targetPosition = spawnPosition
@@ -448,9 +450,8 @@ local function animate(dt, now)
 			end
 		end
 	end
-	headJoint.C0 = headJoint.Part0.CFrame:ToObjectSpace(
-		rootFrame * CFrame.new(0, 2.91, -0.91)
-	) * CFrame.Angles(peck + (isWalking and math.sin(walkPhase * 2) * math.rad(2) or 0), 0, 0)
+	headJoint.C0 = headJointBase
+		* CFrame.Angles(peck + (isWalking and math.sin(walkPhase * 2) * math.rad(2) or 0), 0, 0)
 end
 
 local heartbeat
