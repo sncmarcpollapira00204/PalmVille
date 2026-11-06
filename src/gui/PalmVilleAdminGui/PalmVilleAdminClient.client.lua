@@ -2088,14 +2088,14 @@ remote.OnClientEvent:Connect(function(event, data)
 		launcher.Visible = true
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
-		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
+		profileRole.Text = role == "MASTER DEVELOPER" and "DEV" or displayRole(role)
 		adminTitleEnabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
 		overviewAbilityCard.Visible = canAccess("Tools")
 		refreshOverviewAbilityButtons()
 		refreshPlayerActionButtons()
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
-		if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
+		if canAccess("Monitoring") or canAccess("Server") or canAccess("Players") or canAccess("Moderation") then remote:FireServer("RequestSnapshot") end
 		if managerRole() then remote:FireServer("RequestStaff") end
 	elseif event == "AccessDenied" then
 		authorized = false
