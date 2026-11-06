@@ -311,7 +311,8 @@ end
 local function toggleRow(parent, labelText, initialState, callback, options)
 	options = options or {}
 	local enabled = initialState == true
-	local row = button(parent, "", function()
+	local row
+	row = button(parent, "", function()
 		enabled = not enabled
 		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
 		if track and knob then
