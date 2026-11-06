@@ -317,6 +317,8 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
 		if track and knob then
 			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
+			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end
 		if callback then callback(enabled) end
 	end, {
@@ -335,7 +337,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -10, 0.5, 0),
 		Size = UDim2.fromOffset(38, 22),
-		BackgroundColor3 = Color3.fromRGB(76, 77, 83),
+		BackgroundColor3 = enabled and C.text or C.surfaceHover,
 		BorderSizePixel = 0,
 		ZIndex = row.ZIndex + 1,
 	}, row)
@@ -345,7 +347,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
 		Size = UDim2.fromOffset(16, 16),
-		BackgroundColor3 = Color3.fromRGB(248, 248, 250),
+		BackgroundColor3 = enabled and C.bg or C.text,
 		BorderSizePixel = 0,
 		ZIndex = row.ZIndex + 2,
 	}, track)
@@ -355,6 +357,8 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		set = function(value)
 			enabled = value == true
 			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
+			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end,
 	}
 end
@@ -1345,7 +1349,7 @@ end
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
-	Size = UDim2.new(1, 0, 0, 540),
+	Size = UDim2.new(1, 0, 0, 570),
 	BackgroundTransparency = 1,
 }, pages.PLAYERS)
 
@@ -1490,7 +1494,7 @@ local function refreshPlayerActionButtons()
 end
 
 local moreActionsMenu = make("Frame", {
-	Position = UDim2.fromOffset(16, 454),
+	Position = UDim2.fromOffset(16, 490),
 	Size = UDim2.new(1, -32, 0, 70),
 	BackgroundColor3 = C.panel,
 	BorderSizePixel = 0,
@@ -1668,8 +1672,8 @@ playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "megaphone")
 text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
-	Size = UDim2.new(1, 0, 0, 176),
-	BackgroundColor3 = C.bg,
+	Size = UDim2.new(1, 0, 0, 156),
+	BackgroundColor3 = C.surface,
 	BorderSizePixel = 0,
 	ClearTextOnFocus = false,
 	Font = Enum.Font.Gotham,
