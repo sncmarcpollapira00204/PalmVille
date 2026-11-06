@@ -21,19 +21,19 @@ gui.DisplayOrder = 96
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local C = {
-	bg = Color3.fromRGB(20, 21, 24),
-	panel = Color3.fromRGB(25, 26, 30),
-	surface = Color3.fromRGB(36, 37, 42),
-	surfaceHover = Color3.fromRGB(49, 50, 56),
-	green = Color3.fromRGB(76, 77, 84),
+	bg = Color3.fromRGB(13, 14, 16),
+	panel = Color3.fromRGB(20, 21, 24),
+	surface = Color3.fromRGB(29, 30, 34),
+	surfaceHover = Color3.fromRGB(43, 44, 49),
+	green = Color3.fromRGB(69, 71, 78),
 	greenBright = Color3.fromRGB(255, 255, 255),
-	line = Color3.fromRGB(58, 59, 65),
-	text = Color3.fromRGB(248, 248, 250),
-	muted = Color3.fromRGB(190, 191, 197),
-	dim = Color3.fromRGB(137, 138, 145),
-	red = Color3.fromRGB(190, 190, 196),
-	amber = Color3.fromRGB(238, 238, 242),
-	blue = Color3.fromRGB(210, 210, 216),
+	line = Color3.fromRGB(49, 50, 56),
+	text = Color3.fromRGB(248, 249, 251),
+	muted = Color3.fromRGB(178, 180, 187),
+	dim = Color3.fromRGB(126, 129, 138),
+	red = Color3.fromRGB(225, 145, 145),
+	amber = Color3.fromRGB(232, 234, 238),
+	blue = Color3.fromRGB(200, 210, 225),
 }
 
 local role = ""
@@ -416,10 +416,11 @@ local function card(parent, titleText, subtitle, icon)
 	local root = make("Frame", {
 		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		BackgroundTransparency = 1,
+		BackgroundColor3 = C.panel,
+		BackgroundTransparency = 0,
 		BorderSizePixel = 0,
 	}, parent)
-	addCorner(root, 17)
+	addCorner(root, 14)
 	make("UIPadding", {
 		PaddingTop = UDim.new(0, 12),
 		PaddingBottom = UDim.new(0, 10),
@@ -778,9 +779,9 @@ local panel = make("Frame", {
 	Name = "AdminPanelV2",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(1000, 700),
+	Size = UDim2.fromOffset(1040, 720),
 	BackgroundColor3 = C.bg,
-	BackgroundTransparency = 0.04,
+	BackgroundTransparency = 0,
 	BorderSizePixel = 0,
 	Visible = false,
 	Active = true,
@@ -788,7 +789,7 @@ local panel = make("Frame", {
 	ZIndex = 21,
 }, gui)
 addCorner(panel, 25)
-addStroke(panel, C.line, 0.35, 1)
+addStroke(panel, C.line, 0.45, 1)
 make("UIGradient", {
 	Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 23)),
@@ -861,7 +862,7 @@ local profileAvatar = make("ImageLabel", {
 	ZIndex = 24,
 }, sidebar)
 addCorner(profileAvatar, 52)
-addStroke(profileAvatar, C.amber, 0.02, 1.5)
+addStroke(profileAvatar, C.line, 0.12, 1)
 task.spawn(function()
 	local ok, thumbnail = pcall(function()
 		return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
@@ -950,7 +951,7 @@ make("Frame", {
 local content = make("Frame", {
 	Name = "Content",
 	Position = UDim2.fromOffset(240, 86),
-	Size = UDim2.new(1, -240, 1, -86),
+	Size = UDim2.new(1, -240, 1, -110),
 	BackgroundTransparency = 1,
 	ClipsDescendants = true,
 	ZIndex = 22,
@@ -985,7 +986,7 @@ local modalCard = make("Frame", {
 	ZIndex = 101,
 }, modalShade)
 addCorner(modalCard, 18)
-addStroke(modalCard, C.amber, 0.02, 1.5)
+addStroke(modalCard, C.line, 0.18, 1)
 
 local modalTitle = text(modalCard, "CONFIRM ACTION", 23, C.text, 32, true)
 modalTitle.Position = UDim2.fromOffset(24, 20)
@@ -1344,7 +1345,7 @@ end
 
 local playersWorkspace = make("Frame", {
 	Name = "PlayersWorkspace",
-	Size = UDim2.new(1, 0, 0, 500),
+	Size = UDim2.new(1, 0, 0, 540),
 	BackgroundTransparency = 1,
 }, pages.PLAYERS)
 
@@ -1407,7 +1408,7 @@ local detailAvatar = make("ImageLabel", {
 	ScaleType = Enum.ScaleType.Crop,
 }, playersDetailsPanel)
 addCorner(detailAvatar, 38)
-addStroke(detailAvatar, C.amber, 0.02, 1.2)
+addStroke(detailAvatar, C.line, 0.12, 1)
 local detailName = text(playersDetailsPanel, "Select a player", 21, C.text, 28, true)
 detailName.Position = UDim2.fromOffset(108, 60)
 detailName.Size = UDim2.new(1, -126, 0, 28)
@@ -1621,23 +1622,23 @@ local function renderPlayers()
 						setButtonBackground(other, other:GetAttribute("UserId") == selectedUserId and C.green or C.surface)
 					end
 				end
-			end, {size = UDim2.new(1, -4, 0, 86), radius = 13})
+			end, {size = UDim2.new(1, -4, 0, 70), radius = 12})
 			item:SetAttribute("UserId", row.userId)
 			setButtonBackground(item, row.userId == selectedUserId and C.green or C.surface)
 			local avatar = make("ImageLabel", {
 				Position = UDim2.fromOffset(12, 12),
-				Size = UDim2.fromOffset(60, 60),
+				Size = UDim2.fromOffset(48, 48),
 				BackgroundColor3 = C.panel,
 				BorderSizePixel = 0,
 				ScaleType = Enum.ScaleType.Crop,
 			}, item)
-			addCorner(avatar, 30)
-			local nameLabel = text(item, displayName, 19, C.text, 27, true)
-			nameLabel.Position = UDim2.fromOffset(86, 14)
-			nameLabel.Size = UDim2.new(1, -102, 0, 27)
-			local usernameLabel = text(item, "@" .. username, 14, C.muted, 22)
-			usernameLabel.Position = UDim2.fromOffset(86, 42)
-			usernameLabel.Size = UDim2.new(1, -102, 0, 22)
+			addCorner(avatar, 24)
+			local nameLabel = text(item, displayName, 16, C.text, 24, true)
+			nameLabel.Position = UDim2.fromOffset(72, 10)
+			nameLabel.Size = UDim2.new(1, -90, 0, 24)
+			local usernameLabel = text(item, "@" .. username, 12, C.muted, 18)
+			usernameLabel.Position = UDim2.fromOffset(72, 34)
+			usernameLabel.Size = UDim2.new(1, -90, 0, 18)
 			local onlineDot = make("Frame", {
 				AnchorPoint = Vector2.new(1, 0.5),
 				Position = UDim2.new(1, -15, 0.5, 0),
@@ -1962,7 +1963,7 @@ end
 local function fitPanel()
 	local size = gui.AbsoluteSize
 	if size.X <= 0 or size.Y <= 0 then return end
-	panelScale.Scale = math.max(0.55, math.min(0.88, (size.X - 48) / 1000, (size.Y - 48) / 700))
+	panelScale.Scale = math.max(0.5, math.min(0.94, (size.X - 32) / 1040, (size.Y - 32) / 720))
 end
 
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
