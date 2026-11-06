@@ -101,37 +101,57 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromScale(4.2, 0.95)
-	billboard.StudsOffset = Vector3.new(0, 2.85, 0)
-	billboard.MaxDistance = 110
+	billboard.Size = UDim2.fromOffset(132, 34)
+	billboard.StudsOffset = Vector3.new(0, 2.72, 0)
+	billboard.MaxDistance = 100
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0.15
 	billboard.Enabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
+
+	local shadow = Instance.new("TextLabel")
+	shadow.Name = "TitleShadow"
+	shadow.BackgroundTransparency = 1
+	shadow.Position = UDim2.fromOffset(1, 2)
+	shadow.Size = UDim2.fromScale(1, 1)
+	shadow.Font = Enum.Font.FredokaOne
+	shadow.Text = style.text
+	shadow.TextColor3 = Color3.fromRGB(8, 13, 22)
+	shadow.TextTransparency = 0.12
+	shadow.TextScaled = true
+	shadow.TextWrapped = false
+	shadow.ZIndex = 1
+	shadow.Parent = billboard
 
 	local label = Instance.new("TextLabel")
 	label.Name = "Title"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.Nunito
+	label.Font = Enum.Font.FredokaOne
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextStrokeColor3 = style.outline
-	label.TextStrokeTransparency = 0.25
+	label.TextStrokeTransparency = 0.08
 	label.TextScaled = true
 	label.TextWrapped = false
+	label.ZIndex = 2
 	label.Parent = billboard
 
 	local sizeLimit = Instance.new("UITextSizeConstraint")
-	sizeLimit.MinTextSize = 24
-	sizeLimit.MaxTextSize = 38
+	sizeLimit.MinTextSize = 14
+	sizeLimit.MaxTextSize = 16
 	sizeLimit.Parent = label
+
+	local shadowSizeLimit = Instance.new("UITextSizeConstraint")
+	shadowSizeLimit.MinTextSize = 14
+	shadowSizeLimit.MaxTextSize = 16
+	shadowSizeLimit.Parent = shadow
 
 	local glow = Instance.new("UIStroke")
 	glow.Name = "SoftGlow"
 	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 	glow.Color = style.glow
-	glow.Thickness = style.glowThickness or 1.2
-	glow.Transparency = style.glowTransparency or 0.62
+	glow.Thickness = 1.25
+	glow.Transparency = 0.28
 	glow.Parent = label
 	billboard.Parent = head
 end
