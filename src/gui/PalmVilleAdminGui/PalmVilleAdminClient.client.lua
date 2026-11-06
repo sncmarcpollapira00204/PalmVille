@@ -1916,7 +1916,7 @@ end
 local function fitPanel()
 	local size = gui.AbsoluteSize
 	if size.X <= 0 or size.Y <= 0 then return end
-	panelScale.Scale = math.min(1, (size.X - 32) / 1000, (size.Y - 32) / 700)
+	panelScale.Scale = math.max(0.55, math.min(0.88, (size.X - 48) / 1000, (size.Y - 48) / 700))
 end
 
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
