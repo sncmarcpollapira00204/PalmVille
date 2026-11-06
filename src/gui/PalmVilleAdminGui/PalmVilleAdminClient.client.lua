@@ -766,21 +766,25 @@ local navIcons = {
 }
 for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
-	local nav = button(sidebar, caption, function()
+	local nav = button(sidebar, "", function()
 		activeTab = key
-	end, {size = UDim2.new(1, -48, 0, 56), textSize = 17, radius = 12})
+	end, {size = UDim2.new(1, -48, 0, 60), textSize = 17, radius = 12})
 	nav.Name = "Nav_" .. key
-	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 64))
-	nav.TextXAlignment = Enum.TextXAlignment.Left
-	nav.Font = Enum.Font.GothamBold
-	nav.TextSize = 17
+	nav.Position = UDim2.fromOffset(24, 326 + ((navIndex - 1) * 68))
+	nav.Text = ""
 	nav.RichText = false
 	setButtonBackground(nav, C.panel)
 	nav.BackgroundTransparency = 0.08
 	nav:SetAttribute("NavCaption", caption)
-	make("UIPadding", {PaddingLeft = UDim.new(0, 62), PaddingRight = UDim.new(0, 12)}, nav)
 	local navIcon = drawIcon(nav, navIcons[key], 23, C.amber)
+	navIcon.Name = "NavIcon"
 	navIcon.Position = UDim2.new(0, 18, 0.5, -11)
+	local navLabel = text(nav, caption, 17, C.muted, 60, true)
+	navLabel.Name = "NavLabel"
+	navLabel.Position = UDim2.fromOffset(60, 0)
+	navLabel.Size = UDim2.new(1, -72, 1, 0)
+	navLabel.TextWrapped = false
+	navLabel.ZIndex = nav.ZIndex + 2
 	local navStroke = nav:FindFirstChildOfClass("UIStroke")
 	if navStroke then navStroke.Transparency = 0.72 end
 	navButtons[key] = nav
@@ -826,11 +830,11 @@ local function refreshNavigation()
 		local active = activeTab == key
 		setButtonBackground(nav, active and C.green or C.panel)
 		nav.BackgroundTransparency = active and 0 or 0.08
-		nav.TextColor3 = active and C.text or C.muted
-		nav.Text = nav:GetAttribute("NavCaption") or key
-		nav.Font = Enum.Font.GothamBold
-		nav.TextSize = 17
-		nav.TextXAlignment = Enum.TextXAlignment.Left
+		local navLabel = nav:FindFirstChild("NavLabel")
+		if navLabel then
+			navLabel.Text = nav:GetAttribute("NavCaption") or key
+			navLabel.TextColor3 = active and C.text or C.muted
+		end
 		local navStroke = nav:FindFirstChildOfClass("UIStroke")
 		if navStroke then navStroke.Transparency = active and 0.02 or 0.78 end
 		pages[key].Visible = panelOpen and active and allowed
@@ -1562,7 +1566,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		launcher.Visible = true
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
-		profileRole.Text = role == "MASTER DEVELOPER" and "MASTER DEVELOPER" or displayRole(role)
+		profileRole.Text = role == "MASTER DEVELOPER" and "DEVELOPER" or displayRole(role)
 		setStatus("AUTHORIZED  ·  " .. role)
 		refreshNavigation()
 		if canAccess("Monitoring") or canAccess("Server") then remote:FireServer("RequestSnapshot") end
