@@ -43,13 +43,13 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool.ToolTip = displayName
-	tool.Grip = CFrame.new(0, -0.28, -0.42)
+	tool.Grip = CFrame.new(0, -0.18, -0.3)
 	tool:SetAttribute("PalmVilleSeedPack", true)
 	tool:SetAttribute("SeedCode", code)
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.58, 0.76, 0.14)
+	handle.Size = Vector3.new(0.42, 0.58, 0.1)
 	handle.Color = Color3.fromRGB(190, 133, 76)
 	handle.Material = Enum.Material.Fabric
 	handle.CanCollide = false
@@ -58,22 +58,13 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	handle.BottomSurface = Enum.SurfaceType.Smooth
 	handle.Parent = tool
 
-	local face = Instance.new("SurfaceGui")
-	face.Name = "SeedPackArtwork"
-	face.Face = Enum.NormalId.Front
-	face.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	face.PixelsPerStud = 100
-	face.LightInfluence = 0
-	face.Parent = handle
-
-	local artwork = Instance.new("ImageLabel")
-	artwork.Name = "Artwork"
-	artwork.Size = UDim2.fromScale(1, 1)
-	artwork.BackgroundTransparency = 1
-	artwork.BorderSizePixel = 0
-	artwork.ScaleType = Enum.ScaleType.Fit
-	artwork.Image = "rbxassetid://" .. seedImageIds[code]
-	artwork.Parent = face
+	for _, side in ipairs({Enum.NormalId.Front, Enum.NormalId.Back}) do
+		local artwork = Instance.new("Decal")
+		artwork.Name = "SeedPackArtwork"
+		artwork.Face = side
+		artwork.Texture = "rbxassetid://" .. seedImageIds[code]
+		artwork.Parent = handle
+	end
 
 	tool.Parent = seedTemplates
 	return tool
