@@ -254,28 +254,6 @@ local function drawIcon(parent, name, size, color)
 	return root
 end
 
-local function iconButton(parent, caption, iconName, callback, options)
-	options = options or {}
-	local buttonOptions = table.clone(options)
-	local target = button(parent, "", callback, buttonOptions)
-	target.Text = ""
-	target.TextXAlignment = Enum.TextXAlignment.Left
-
-	local iconSize = options.iconSize or 20
-	local iconRoot = drawIcon(target, iconName, iconSize, C.amber)
-	iconRoot.Name = "ButtonIcon"
-	iconRoot.Position = UDim2.new(0, 17, 0.5, -iconSize * 0.5)
-
-	local label = text(target, caption, options.textSize or 16, options.danger and Color3.fromRGB(255, 226, 218) or C.text, 24, options.bold == true)
-	label.Name = "ButtonLabel"
-	label.Position = UDim2.new(0, 48, 0, 0)
-	label.Size = UDim2.new(1, -62, 1, 0)
-	label.TextWrapped = false
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.ZIndex = target.ZIndex + 2
-	return target
-end
-
 local function setButtonBackground(target, color)
 	if not target then return end
 	target:SetAttribute("BaseBackgroundColor", color)
@@ -317,6 +295,28 @@ local function button(parent, caption, callback, options)
 		if callback then callback(b) end
 	end)
 	return b
+end
+
+local function iconButton(parent, caption, iconName, callback, options)
+	options = options or {}
+	local buttonOptions = table.clone(options)
+	local target = button(parent, "", callback, buttonOptions)
+	target.Text = ""
+	target.TextXAlignment = Enum.TextXAlignment.Left
+
+	local iconSize = options.iconSize or 20
+	local iconRoot = drawIcon(target, iconName, iconSize, C.amber)
+	iconRoot.Name = "ButtonIcon"
+	iconRoot.Position = UDim2.new(0, 17, 0.5, -iconSize * 0.5)
+
+	local label = text(target, caption, options.textSize or 16, options.danger and Color3.fromRGB(255, 226, 218) or C.text, 24, options.bold == true)
+	label.Name = "ButtonLabel"
+	label.Position = UDim2.new(0, 48, 0, 0)
+	label.Size = UDim2.new(1, -62, 1, 0)
+	label.TextWrapped = false
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = target.ZIndex + 2
+	return target
 end
 
 local function input(parent, placeholder, defaultText, height)
