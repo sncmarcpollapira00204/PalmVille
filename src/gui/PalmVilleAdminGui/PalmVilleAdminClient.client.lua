@@ -2216,3 +2216,17 @@ local function runAccessHandshake()
 end
 
 task.spawn(runAccessHandshake)
+
+task.spawn(function()
+	while gui.Parent do
+		task.wait(1.5)
+		if authorized and panelOpen and (
+			canAccess("Monitoring")
+			or canAccess("Server")
+			or canAccess("Players")
+			or canAccess("Moderation")
+		) then
+			remote:FireServer("RequestSnapshot")
+		end
+	end
+end)
