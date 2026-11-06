@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -38,7 +39,7 @@ local gui = make("ScreenGui", {
 local holder = make("Frame", {
 	Name = "CashPanel",
 	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.new(0, 24, 1, -30),
+	Position = UDim2.new(0, 24, 1, UserInputService.TouchEnabled and -190 or -30),
 	Size = UDim2.fromOffset(218, 66),
 	BackgroundColor3 = Color3.fromRGB(11, 34, 23),
 	BackgroundTransparency = 0.06,
@@ -110,14 +111,21 @@ local balanceLabel = make("TextLabel", {
 	TextTruncate = Enum.TextTruncate.AtEnd,
 }, holder)
 
+local moneyConnection
+
 local function showLoadedBalance()
+	if moneyConnection then
+		moneyConnection:Disconnect()
+		moneyConnection = nil
+	end
+
 	local leaderstats = player:FindFirstChild("leaderstats")
 	local money = leaderstats and leaderstats:FindFirstChild("Money")
 
 	if money and (money:IsA("IntValue") or money:IsA("NumberValue")) then
 		balanceLabel.Text = "₱" .. formatMoney(money.Value)
 		balanceLabel.TextColor3 = Color3.fromRGB(255, 240, 190)
-		money:GetPropertyChangedSignal("Value"):Connect(function()
+		moneyConnection = money:GetPropertyChangedSignal("Value"):Connect(function()
 			balanceLabel.Text = "₱" .. formatMoney(money.Value)
 		end)
 		return true
