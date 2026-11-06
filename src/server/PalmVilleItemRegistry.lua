@@ -43,7 +43,7 @@ local function makeSeedPackTemplate(code, displayName, fruitName)
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool.ToolTip = displayName
-	tool.Grip = CFrame.new(0, -0.18, -0.3)
+	tool.Grip = CFrame.new()
 	tool:SetAttribute("PalmVilleSeedPack", true)
 	tool:SetAttribute("SeedCode", code)
 
