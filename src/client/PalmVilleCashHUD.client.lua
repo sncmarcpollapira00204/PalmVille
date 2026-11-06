@@ -36,78 +36,44 @@ local gui = make("ScreenGui", {
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 }, playerGui)
 
+-- Upload the supplied transparent PNG to Roblox and paste its image asset ID here.
+local COIN_IMAGE_ID = "rbxassetid://0"
+
 local holder = make("Frame", {
-	Name = "CashPanel",
+	Name = "CashDisplay",
 	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.new(0, 24, 1, UserInputService.TouchEnabled and -190 or -30),
-	Size = UDim2.fromOffset(218, 66),
-	BackgroundColor3 = Color3.fromRGB(11, 34, 23),
-	BackgroundTransparency = 0.06,
+	Position = UDim2.new(0, 18, 1, UserInputService.TouchEnabled and -184 or -22),
+	Size = UDim2.fromOffset(250, 76),
+	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 }, gui)
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 16)
-corner.Parent = holder
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(204, 170, 91)
-stroke.Thickness = 1.5
-stroke.Transparency = 0.08
-stroke.Parent = holder
-
-local coin = make("Frame", {
-	Name = "CoinIcon",
-	AnchorPoint = Vector2.new(0, 0.5),
-	Position = UDim2.new(0, 11, 0.5, 0),
-	Size = UDim2.fromOffset(46, 46),
-	BackgroundColor3 = Color3.fromRGB(238, 174, 44),
+local coinImage = make("ImageLabel", {
+	Name = "CashCoinImage",
+	Position = UDim2.fromOffset(0, 2),
+	Size = UDim2.fromOffset(104, 69),
+	BackgroundTransparency = 1,
+	Image = COIN_IMAGE_ID,
+	ImageTransparency = 0,
+	ScaleType = Enum.ScaleType.Fit,
 	BorderSizePixel = 0,
-}, holder)
-
-local coinCorner = Instance.new("UICorner")
-coinCorner.CornerRadius = UDim.new(1, 0)
-coinCorner.Parent = coin
-
-local coinStroke = Instance.new("UIStroke")
-coinStroke.Color = Color3.fromRGB(255, 225, 130)
-coinStroke.Thickness = 2
-coinStroke.Parent = coin
-
-make("TextLabel", {
-	Name = "CurrencySymbol",
-	BackgroundTransparency = 1,
-	Size = UDim2.fromScale(1, 1),
-	Text = "₱",
-	Font = Enum.Font.GothamBlack,
-	TextSize = 27,
-	TextColor3 = Color3.fromRGB(255, 249, 218),
-	TextStrokeColor3 = Color3.fromRGB(143, 83, 16),
-	TextStrokeTransparency = 0.25,
-}, coin)
-
-make("TextLabel", {
-	Name = "CashCaption",
-	Position = UDim2.fromOffset(68, 9),
-	Size = UDim2.new(1, -78, 0, 17),
-	BackgroundTransparency = 1,
-	Text = "CASH BALANCE",
-	Font = Enum.Font.GothamBold,
-	TextSize = 10,
-	TextColor3 = Color3.fromRGB(194, 190, 158),
-	TextXAlignment = Enum.TextXAlignment.Left,
 }, holder)
 
 local balanceLabel = make("TextLabel", {
 	Name = "CashAmount",
-	Position = UDim2.fromOffset(67, 26),
-	Size = UDim2.new(1, -77, 0, 29),
+	AnchorPoint = Vector2.new(0, 0.5),
+	Position = UDim2.new(0, 105, 0.5, 0),
+	Size = UDim2.new(1, -110, 0, 48),
 	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
 	Text = "Loading...",
-	Font = Enum.Font.GothamBold,
-	TextSize = 22,
-	TextColor3 = Color3.fromRGB(255, 240, 190),
+	Font = Enum.Font.GothamBlack,
+	TextSize = 25,
+	TextColor3 = Color3.fromRGB(255, 244, 207),
+	TextStrokeColor3 = Color3.fromRGB(77, 43, 12),
+	TextStrokeTransparency = 0.22,
 	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Center,
 	TextTruncate = Enum.TextTruncate.AtEnd,
 }, holder)
 
