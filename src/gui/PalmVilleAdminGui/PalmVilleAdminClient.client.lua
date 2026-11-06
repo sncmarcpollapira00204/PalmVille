@@ -579,7 +579,8 @@ local function showAnnouncement(data, preview)
 	)
 	local messageWidth = math.min(messageAvailable, math.max(64, math.ceil(messageBounds.X + 8)))
 	local totalWidth = math.min(availableWidth, messageX + messageWidth)
-	local bannerHeight = math.max(fontSize + 12, math.ceil(messageBounds.Y + 10))
+	local wrapsToMultipleLines = messageBounds.Y > fontSize + 8
+	local bannerHeight = wrapsToMultipleLines and math.ceil(messageBounds.Y + 8) or (fontSize + 12)
 
 	banner.Size = UDim2.fromOffset(totalWidth, bannerHeight)
 	bannerPrefix.Position = UDim2.fromOffset(0, 0)
@@ -591,7 +592,7 @@ local function showAnnouncement(data, preview)
 	bannerMessage.Position = UDim2.fromOffset(messageX, 0)
 	bannerMessage.Size = UDim2.fromOffset(messageWidth, bannerHeight)
 	bannerMessage.TextSize = fontSize
-	bannerMessage.TextYAlignment = messageBounds.Y > fontSize + 4 and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
+	bannerMessage.TextYAlignment = wrapsToMultipleLines and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
 
 	local roleColor = (incomingRole == "OWNER" or incomingRole == "MASTER DEVELOPER")
 		and "rgb(234,197,108)" or "rgb(166,201,133)"
