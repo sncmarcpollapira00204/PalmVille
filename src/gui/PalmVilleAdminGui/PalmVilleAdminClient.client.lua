@@ -291,7 +291,6 @@ local function button(parent, caption, callback, options)
 	}, parent)
 	b:SetAttribute("BaseBackgroundColor", baseColor)
 	addCorner(b, options.radius or 11)
-	addStroke(b, options.danger and C.red or (options.primary and C.amber or C.line), 0.08, 1.3)
 	b.MouseEnter:Connect(function()
 		if not options.disabled then
 			b:SetAttribute("PointerHover", true)
@@ -348,8 +347,7 @@ local function input(parent, placeholder, defaultText, height)
 		TextWrapped = false,
 	}, parent)
 	addCorner(box, 10)
-	addStroke(box, C.line, 0.08, 1.3)
-	make("UIPadding", {
+		make("UIPadding", {
 		PaddingLeft = UDim.new(0, 14),
 		PaddingRight = UDim.new(0, 12),
 	}, box)
@@ -367,11 +365,10 @@ local function card(parent, titleText, subtitle, icon)
 	local root = make("Frame", {
 		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		BackgroundColor3 = C.panel,
+		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 	}, parent)
 	addCorner(root, 17)
-	addStroke(root, C.line, 0.04, 1.4)
 	make("UIPadding", {
 		PaddingTop = UDim.new(0, 12),
 		PaddingBottom = UDim.new(0, 10),
@@ -953,7 +950,7 @@ local modalReason = make("TextBox", {
 	Name = "ConfirmationReason",
 	Position = UDim2.fromOffset(24, 116),
 	Size = UDim2.new(1, -48, 0, 86),
-	BackgroundColor3 = C.bg,
+	BackgroundColor3 = C.surface,
 	BorderSizePixel = 0,
 	ClearTextOnFocus = false,
 	Font = Enum.Font.Gotham,
@@ -1322,7 +1319,6 @@ local playersListPanel = make("Frame", {
 	BorderSizePixel = 0,
 }, playersWorkspace)
 addCorner(playersListPanel, 18)
-addStroke(playersListPanel, C.line, 0.06, 1.4)
 local playersDetailsPanel = make("Frame", {
 	Name = "PlayerDetailsPanel",
 	Position = UDim2.new(0.39, 10, 0, 0),
@@ -1331,7 +1327,6 @@ local playersDetailsPanel = make("Frame", {
 	BorderSizePixel = 0,
 }, playersWorkspace)
 addCorner(playersDetailsPanel, 18)
-addStroke(playersDetailsPanel, C.line, 0.06, 1.4)
 
 local playersHeading = text(playersListPanel, "Online Players", 19, C.text, 28, true)
 playersHeading.Position = UDim2.fromOffset(16, 12)
@@ -1404,7 +1399,6 @@ local function detailStat(x, y, width, labelText, initial)
 		BorderSizePixel = 0,
 	}, playersDetailsPanel)
 	addCorner(tile, 8)
-	addStroke(tile, C.line, 0.18, 1)
 	local label = text(tile, labelText, 11, C.muted, 15, true)
 	label.Position = UDim2.fromOffset(10, 5)
 	label.Size = UDim2.new(1, -20, 0, 15)
@@ -1467,7 +1461,6 @@ local moreActionsMenu = make("Frame", {
 	ZIndex = playersDetailsPanel.ZIndex + 2,
 }, playersDetailsPanel)
 addCorner(moreActionsMenu, 9)
-addStroke(moreActionsMenu, C.line, 0.08, 1)
 make("UIPadding", {
 	PaddingTop = UDim.new(0, 5),
 	PaddingBottom = UDim.new(0, 5),
@@ -1654,7 +1647,6 @@ local announceBox = make("TextBox", {
 	TextYAlignment = Enum.TextYAlignment.Top,
 }, announceCard)
 addCorner(announceBox, 14)
-addStroke(announceBox, C.line, 0.02, 1.4)
 make("UIPadding", {PaddingTop = UDim.new(0, 18), PaddingBottom = UDim.new(0, 12), PaddingLeft = UDim.new(0, 20), PaddingRight = UDim.new(0, 18)}, announceBox)
 local announceCount = text(announceCard, "0 / 280", 14, C.muted, 22)
 announceCount.TextXAlignment = Enum.TextXAlignment.Right
