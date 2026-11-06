@@ -43,4 +43,4 @@ end
 ```
 
 Do not create a second Money value or let a LocalScript submit a balance. The replicated `leaderstats.Money` is for display; the server Economy module is the authority.
-The lower-left cash display is a standalone LocalScript at `src/client/PalmVilleCashHUD.client.lua`. It reads the replicated `leaderstats.Money` value after `PalmVilleDataLoaded` becomes true, formats it as Philippine pesos, and moves higher on touch devices to avoid the default mobile joystick. The custom uploaded coin PNG can replace the temporary gold peso badge after its Roblox image asset ID is available.
+The lower-left cash display is a standalone LocalScript at `src/client/PalmVilleCashHUD.client.lua`. It reads the replicated `leaderstats.Money` value after `PalmVilleDataLoaded` becomes true, formats it as Philippine pesos, and moves higher on touch devices to avoid the default mobile joystick. Its coin ImageLabel and amount text have transparent backgrounds. Set `COIN_IMAGE_ID` to the uploaded Roblox image asset ID for the supplied transparent coin PNG.
