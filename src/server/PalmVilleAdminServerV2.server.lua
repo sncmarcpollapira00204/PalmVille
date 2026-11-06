@@ -1093,7 +1093,7 @@ local function handleAction(player, data)
 	end
 
 	if action == "Freeze" or action == "Unfreeze" then
-		if not requireArea("Moderation") then return end
+		if not hasPermission(player, "Moderation") and not requireArea("Players") then return end
 		if not target or not requireTarget() then return end
 		local enabled = action == "Freeze"
 		if not setFrozen(target, enabled) then notify(player, "The target character is not ready."); return end
@@ -1106,7 +1106,7 @@ local function handleAction(player, data)
 	end
 
 	if action == "Spectate" or action == "WatchScreen" then
-		if not requireArea("Monitoring") then return end
+		if not hasPermission(player, "Players") and not requireArea("Monitoring") then return end
 		if not target or not requireTarget() then return end
 		local watchScreen = action == "WatchScreen"
 		beginSpectate(player, target, watchScreen)
@@ -1121,7 +1121,7 @@ local function handleAction(player, data)
 		logActivity(player, action, target, "Started")
 		return
 	elseif action == "StopSpectate" then
-		if not requireArea("Monitoring") then return end
+		if not hasPermission(player, "Players") and not requireArea("Monitoring") then return end
 		stopSpectate(player.UserId, true)
 		logActivity(player, action, nil, "Success")
 		return
