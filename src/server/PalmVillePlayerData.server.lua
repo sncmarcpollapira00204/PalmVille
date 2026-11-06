@@ -412,13 +412,15 @@ adminAdapter.OnInvoke = function(player)
 	if not data then return nil end
 
 	local stats = data.statistics or {}
+	local session = sessions[player]
+	local liveSeconds = session and math.max(0, math.floor(os.clock() - session.startedAt)) or 0
 	return {
 		money = data.money,
 		earnedToday = stats.earnedToday or 0,
 		level = data.level,
 		xp = data.xp,
 		xpNeeded = data.xpNeeded,
-		totalPlaytime = stats.totalPlaytimeSeconds or 0,
+		totalPlaytime = (stats.totalPlaytimeSeconds or 0) + liveSeconds,
 	}
 end
 
