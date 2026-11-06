@@ -21,10 +21,10 @@ gui.DisplayOrder = 96
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local C = {
-	bg = Color3.fromRGB(8, 8, 9),
-	panel = Color3.fromRGB(17, 17, 19),
-	surface = Color3.fromRGB(28, 28, 31),
-	surfaceHover = Color3.fromRGB(12, 12, 14),
+	bg = Color3.fromRGB(24, 24, 27),
+	panel = Color3.fromRGB(15, 15, 17),
+	surface = Color3.fromRGB(34, 34, 38),
+	surfaceHover = Color3.fromRGB(48, 48, 52),
 	green = Color3.fromRGB(0, 0, 0),
 	greenBright = Color3.fromRGB(255, 255, 255),
 	line = Color3.fromRGB(82, 82, 88),
@@ -333,7 +333,7 @@ end
 local function input(parent, placeholder, defaultText, height)
 	local box = make("TextBox", {
 		Size = UDim2.new(1, 0, 0, height or 46),
-		BackgroundColor3 = C.bg,
+		BackgroundColor3 = C.surface,
 		BorderSizePixel = 0,
 		ClearTextOnFocus = false,
 		Font = Enum.Font.Gotham,
@@ -739,8 +739,8 @@ addCorner(panel, 25)
 addStroke(panel, C.amber, 0.02, 1.7)
 make("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(7, 31, 17)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(3, 18, 10)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 23)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 14)),
 	}),
 	Rotation = 90,
 }, panel)
