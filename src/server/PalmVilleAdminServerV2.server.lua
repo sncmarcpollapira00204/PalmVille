@@ -1387,7 +1387,9 @@ remote.OnServerEvent:Connect(function(player, action, data)
 		remote:FireClient(player, "LogsData", getRecentLogs())
 		return
 	elseif action == "CameraFrame" then
-		if not getRoleById(player.UserId) or not canRequest(player, 0.06) then return end
+		-- Camera frames are sent by the watched player, not by the admin.
+		-- Authorization is based on the server-issued watcher token below.
+		if not canRequest(player, 0.06) then return end
 		local token = tostring(data.token or "")
 		local cframe = data.cframe
 		local fov = tonumber(data.fov)
