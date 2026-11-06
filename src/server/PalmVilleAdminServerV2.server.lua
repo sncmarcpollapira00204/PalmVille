@@ -1375,8 +1375,16 @@ remote.OnServerEvent:Connect(function(player, action, data)
 		announcements.history(player)
 		return
 	elseif action == "RequestSnapshot" then
-		if not getRoleById(player.UserId) or (not hasPermission(player, "Monitoring") and not hasPermission(player, "Server") and not hasPermission(player, "Players") and not hasPermission(player, "Moderation")) or not canRequest(player, 0.45) then return end
-		remote:FireClient(player, "Snapshot", playerSnapshot())
+		if not getRoleById(player.UserId) then
+			warn(string.format("[PalmVille Admin] Snapshot denied: %s has no active staff role.", player.Name))
+			return
+		end
+		if not (hasPermission(player, "Monitoring") or hasPermission(player, "Server") or hasPermission(player, "Players") or hasPermission(player, "Moderation")) then
+			warn(string.format("[PalmVille Admin] Snapshot denied: %s has no player-list permission.", player.Name))
+			return
+		end
+		local roster = playerSnapshot()
+		remote:FireClient(player, "Snapshot", roster)
 		return
 	elseif action == "RequestStaff" then
 		if not canManageStaff(player) or not canRequest(player, 0.25) then return end
