@@ -1691,23 +1691,20 @@ announceBox:GetPropertyChangedSignal("Text"):Connect(function()
 	announceCount.TextColor3 = #announceBox.Text > 280 and C.red or C.muted
 end)
 text(announceCard, "Audience", 18, C.text, 26, true)
-local audienceRow = make("Frame", {
-	Size = UDim2.new(1, 0, 0, 82),
-	BackgroundTransparency = 1,
-}, announceCard)
-vertical(audienceRow, 5)
+local audienceRow = addRow(announceCard, 48)
 local serverAudience
 local allAudience
-serverAudience = toggleRow(audienceRow, "This Server", true, function()
+serverAudience = iconButton(audienceRow, "This Server", "users", function()
 	audience = "This Server"
-	serverAudience.set(true)
-	allAudience.set(false)
-end, {size = UDim2.new(1, 0, 0, 38), textSize = 13})
-allAudience = toggleRow(audienceRow, "All Servers", false, function()
+	setButtonBackground(serverAudience, C.green)
+	setButtonBackground(allAudience, C.surface)
+end, {size = UDim2.new(0.5, -5, 0, 42), textSize = 13, bold = true})
+allAudience = iconButton(audienceRow, "All Servers", "globe", function()
 	audience = "All Servers"
-	serverAudience.set(false)
-	allAudience.set(true)
-end, {size = UDim2.new(1, 0, 0, 38), textSize = 13})
+	setButtonBackground(serverAudience, C.surface)
+	setButtonBackground(allAudience, C.green)
+end, {size = UDim2.new(0.5, -5, 0, 42), textSize = 13, bold = true})
+setButtonBackground(serverAudience, C.green)
 local announceDivider = make("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = C.line, BorderSizePixel = 0}, announceCard)
 local previewRow = addRow(announceCard, 52)
 local previewButton = iconButton(previewRow, "Preview", "eye", function()
