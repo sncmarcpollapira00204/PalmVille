@@ -1,10 +1,12 @@
 local RunService = game:GetService("RunService")
+local CollectionService = game:GetService("CollectionService")
 local Workspace = game:GetService("Workspace")
 
+local TAG = "PalmVilleChickenNPC"
 local MODEL_NAMES = {
-	"PalmVilleChicken - Owned",
-	"PalmVilleChicken",
-	"fullpollo",
+	["PalmVilleChicken - Owned"] = true,
+	PalmVilleChicken = true,
+	fullpollo = true,
 }
 
 local CONFIG = {
@@ -18,165 +20,220 @@ local CONFIG = {
 	FaceYawOffset = 180,
 }
 
-local rng = Random.new()
+local states = {}
+local random = Random.new()
 
-local function findImportedChicken()
-	for _, name in ipairs(MODEL_NAMES) do
-		local candidate = Workspace:FindFirstChild(name)
-		if candidate and candidate:IsA("Model") then
-			local mesh = candidate:FindFirstChild("pollo", true)
-			if mesh and mesh:IsA("MeshPart") then
-				return candidate, mesh
-			end
-		end
-	end
-
-	for _, descendant in ipairs(Workspace:GetDescendants()) do
-		if descendant:IsA("Model") then
-			local mesh = descendant:FindFirstChild("pollo", true)
-			if mesh and mesh:IsA("MeshPart") then
-				return descendant, mesh
-			end
-		end
-	end
-
-	return nil, nil
-end
-
-local model, mesh
-for _ = 1, 60 do
-	model, mesh = findImportedChicken()
-	if model and mesh then break end
-	task.wait(1)
-end
-
-if not model or not mesh then
-	warn("[PalmVille Chicken] Imported model not found. Expected a Workspace model containing a MeshPart named 'pollo'.")
-	return
-end
-
-local requiredBones = {
+local REQUIRED_BONES = {
 	"CHICKEN_-L-Thigh",
 	"CHICKEN_-L-Calf",
 	"CHICKEN_-R-Thigh",
 	"CHICKEN_-R-Calf",
 }
-for _, name in ipairs(requiredBones) do
-	local bone = mesh:FindFirstChild(name, true)
-	if not bone or not bone:IsA("Bone") then
-		warn("[PalmVille Chicken] Required rig bone missing: " .. name)
-		return
+
+local function findChickenMesh(model)
+	if not model:IsA("Model") or not MODEL_NAMES[model.Name] then
+		return nil
 	end
-end
 
--- Server owns world movement. Bone.Transform is animated by each client,
--- because Bone.Transform itself does not replicate.
-for _, descendant in ipairs(model:GetDescendants()) do
-	if descendant:IsA("BasePart") then
-		descendant.Anchored = true
-		descendant.CanCollide = false
-		descendant.CanTouch = false
-		descendant.CanQuery = false
+	local mesh = model:FindFirstChild("pollo", true)
+	if mesh and mesh:IsA("MeshPart") then
+		return mesh
 	end
+
+	return nil
 end
-mesh.Anchored = true
 
-local homePivot = model:GetPivot()
-local homePosition = homePivot.Position
-local homeRotation = homePivot.Rotation
-local fixedY = homePosition.Y
-local currentPosition = Vector3.new(homePosition.X, fixedY, homePosition.Z)
-
--- Preserve the imported FBX pitch/roll. Only yaw around world-up is allowed.
-local homeLook = homePivot.LookVector
-local homeForward = Vector3.new(homeLook.X, 0, homeLook.Z)
-if homeForward.Magnitude < 0.001 then
-	homeForward = Vector3.new(0, 0, -1)
-else
-	homeForward = homeForward.Unit
+local function hasRequiredBones(mesh)
+	for _, name in ipairs(REQUIRED_BONES) do
+		local bone = mesh:FindFirstChild(name, true)
+		if not bone or not bone:IsA("Bone") then
+			return false, name
+		end
+	end
+	return true
 end
-local currentDirection = homeForward
-local targetPosition = currentPosition
-local walking = false
-local nextDecision = os.clock() + 1.5
 
-model:SetAttribute("PalmVilleChickenControllerReady", true)
-model:SetAttribute("PalmVilleChickenIsWalking", false)
+local function registerChicken(model)
+	if states[model] or not model:IsDescendantOf(Workspace) then
+		return false
+	end
 
-local function chooseTarget()
+	local mesh = findChickenMesh(model)
+	if not mesh then
+		return false
+	end
+
+	local valid, missingBone = hasRequiredBones(mesh)
+	if not valid then
+		warn(string.format("[PalmVille Chicken] %s is missing bone %s.", model:GetFullName(), missingBone))
+		return false
+	end
+
+	-- Each duplicated model gets its own fixed-height movement state.
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = false
+		end
+	end
+	mesh.Anchored = true
+
+	local homePivot = model:GetPivot()
+	local homePosition = homePivot.Position
+	local homeRotation = homePivot.Rotation
+	local homeLook = homePivot.LookVector
+	local homeForward = Vector3.new(homeLook.X, 0, homeLook.Z)
+
+	if homeForward.Magnitude < 0.001 then
+		homeForward = Vector3.new(0, 0, -1)
+	else
+		homeForward = homeForward.Unit
+	end
+
+	local state = {
+		model = model,
+		mesh = mesh,
+		homePosition = homePosition,
+		homeRotation = homeRotation,
+		homeForward = homeForward,
+		fixedY = homePosition.Y,
+		position = Vector3.new(homePosition.X, homePosition.Y, homePosition.Z),
+		direction = homeForward,
+		target = Vector3.new(homePosition.X, homePosition.Y, homePosition.Z),
+		walking = false,
+		nextDecision = os.clock() + random:NextNumber(1, 4),
+		rng = Random.new(),
+	}
+
+	states[model] = state
+	model:SetAttribute("PalmVilleChickenControllerReady", true)
+	model:SetAttribute("PalmVilleChickenIsWalking", false)
+	CollectionService:AddTag(model, TAG)
+
+	print("[PalmVille Chicken] Registered: " .. model:GetFullName())
+	return true
+end
+
+local function tryRegister(model)
+	if states[model] then return end
+
+	task.spawn(function()
+		for _ = 1, 20 do
+			if not model.Parent then return end
+			if registerChicken(model) then return end
+			task.wait(0.25)
+		end
+
+		if model.Parent and MODEL_NAMES[model.Name] then
+			warn("[PalmVille Chicken] Could not register duplicated model: " .. model:GetFullName())
+		end
+	end)
+end
+
+local function chooseTarget(state)
 	for _ = 1, 12 do
-		local angle = rng:NextNumber(0, math.pi * 2)
-		local distance = rng:NextNumber(CONFIG.MinWalkDistance, CONFIG.MaxWalkDistance)
-		local candidate = Vector3.new(
-			homePosition.X + math.cos(angle) * distance,
-			fixedY,
-			homePosition.Z + math.sin(angle) * distance
+		local angle = state.rng:NextNumber(0, math.pi * 2)
+		local distance = state.rng:NextNumber(
+			CONFIG.MinWalkDistance,
+			CONFIG.MaxWalkDistance
 		)
 
-		if (candidate - homePosition).Magnitude <= CONFIG.WanderRadius then
-			targetPosition = candidate
-			walking = true
-			model:SetAttribute("PalmVilleChickenIsWalking", true)
+		local candidate = Vector3.new(
+			state.homePosition.X + math.cos(angle) * distance,
+			state.fixedY,
+			state.homePosition.Z + math.sin(angle) * distance
+		)
+
+		if (candidate - state.homePosition).Magnitude <= CONFIG.WanderRadius then
+			state.target = candidate
+			state.walking = true
+			state.model:SetAttribute("PalmVilleChickenIsWalking", true)
 			return
 		end
 	end
 
-	walking = false
-	model:SetAttribute("PalmVilleChickenIsWalking", false)
-	nextDecision = os.clock() + 2
+	state.walking = false
+	state.model:SetAttribute("PalmVilleChickenIsWalking", false)
+	state.nextDecision = os.clock() + 2
 end
 
-local heartbeat
-heartbeat = RunService.Heartbeat:Connect(function(dt)
-	if not model.Parent or not mesh.Parent then
-		heartbeat:Disconnect()
-		return
+local function updateChicken(state, dt, now)
+	local model = state.model
+	if not model.Parent or not state.mesh.Parent then
+		return false
 	end
 
-	dt = math.min(dt, 0.05)
-	local now = os.clock()
-
-	if walking then
+	if state.walking then
 		local difference = Vector3.new(
-			targetPosition.X - currentPosition.X,
+			state.target.X - state.position.X,
 			0,
-			targetPosition.Z - currentPosition.Z
+			state.target.Z - state.position.Z
 		)
 		local distance = difference.Magnitude
 
 		if distance <= 0.12 then
-			walking = false
+			state.walking = false
 			model:SetAttribute("PalmVilleChickenIsWalking", false)
-			nextDecision = now + rng:NextNumber(CONFIG.MinPause, CONFIG.MaxPause)
+			state.nextDecision = now + state.rng:NextNumber(CONFIG.MinPause, CONFIG.MaxPause)
 		else
-			currentDirection = difference.Unit
-			currentPosition += currentDirection * math.min(CONFIG.WalkSpeed * dt, distance)
+			state.direction = difference.Unit
+			state.position += state.direction * math.min(CONFIG.WalkSpeed * dt, distance)
 		end
-	elseif now >= nextDecision then
-		chooseTarget()
+	elseif now >= state.nextDecision then
+		chooseTarget(state)
 	end
 
-	-- Fixed Y prevents artificial hopping or bobbing.
-	currentPosition = Vector3.new(currentPosition.X, fixedY, currentPosition.Z)
+	state.position = Vector3.new(state.position.X, state.fixedY, state.position.Z)
 
-	local desiredDirection = Vector3.new(currentDirection.X, 0, currentDirection.Z)
+	local desiredDirection = Vector3.new(state.direction.X, 0, state.direction.Z)
 	if desiredDirection.Magnitude < 0.001 then
-		desiredDirection = homeForward
+		desiredDirection = state.homeForward
 	else
 		desiredDirection = desiredDirection.Unit
 	end
 
-	local crossY = homeForward:Cross(desiredDirection).Y
-	local dot = math.clamp(homeForward:Dot(desiredDirection), -1, 1)
+	local crossY = state.homeForward:Cross(desiredDirection).Y
+	local dot = math.clamp(state.homeForward:Dot(desiredDirection), -1, 1)
 	local yawDelta = math.atan2(crossY, dot) + math.rad(CONFIG.FaceYawOffset)
 	local yawRotation = CFrame.fromAxisAngle(Vector3.yAxis, yawDelta)
-	local targetPivot = CFrame.new(currentPosition) * yawRotation * homeRotation
+	local targetPivot = CFrame.new(state.position) * yawRotation * state.homeRotation
 
 	local alpha = math.clamp(dt * CONFIG.TurnSpeed, 0, 1)
 	model:PivotTo(model:GetPivot():Lerp(targetPivot, alpha))
+	return true
+end
+
+-- Register every imported chicken already in Workspace.
+for _, descendant in ipairs(Workspace:GetDescendants()) do
+	if descendant:IsA("Model") and MODEL_NAMES[descendant.Name] then
+		tryRegister(descendant)
+	end
+end
+
+-- Also register chickens duplicated or inserted while the server is running.
+Workspace.DescendantAdded:Connect(function(instance)
+	if instance:IsA("Model") and MODEL_NAMES[instance.Name] then
+		tryRegister(instance)
+	end
 end)
 
-print(string.format(
-	"[PalmVille Chicken] World movement ready for %s. Fixed-height wandering enabled; client bone animation is separate.",
-	model:GetFullName()
-))
+Workspace.ChildAdded:Connect(function(instance)
+	if instance:IsA("Model") and MODEL_NAMES[instance.Name] then
+		tryRegister(instance)
+	end
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+	dt = math.min(dt, 0.05)
+	local now = os.clock()
+
+	for model, state in pairs(states) do
+		if not updateChicken(state, dt, now) then
+			states[model] = nil
+		end
+	end
+end)
+
+print("[PalmVille Chicken] Multi-NPC controller ready. Every imported chicken clone gets independent wandering.")
