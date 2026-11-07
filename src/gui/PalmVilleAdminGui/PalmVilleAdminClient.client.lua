@@ -550,7 +550,7 @@ local function fitAnnouncement(entry)
 	local prefixWidth = TextService:GetTextSize(
 		plainPrefix,
 		fontSize,
-		Enum.Font.FredokaOne,
+		Enum.Font.GothamBold,
 		Vector2.new(10000, 10000)
 	).X + 4
 
@@ -564,19 +564,19 @@ local function fitAnnouncement(entry)
 		prefixWidth = TextService:GetTextSize(
 			plainPrefix,
 			fontSize,
-			Enum.Font.FredokaOne,
+			Enum.Font.GothamBold,
 			Vector2.new(10000, 10000)
 		).X + 4
 	end
 
-	local badgeSize = 26
+	local badgeSize = 24
 	local messageText = ": " .. tostring(data.text or ""):gsub("[\r\n]+", " ")
-	local messageX = prefixWidth + badgeSize + 16
+	local messageX = prefixWidth + badgeSize + 12
 	local messageAvailable = math.max(80, available - messageX)
 	local naturalWidth = TextService:GetTextSize(
 		messageText,
 		fontSize,
-		Enum.Font.FredokaOne,
+		Enum.Font.GothamBold,
 		Vector2.new(10000, 10000)
 	).X + 6
 	local messageWidth = math.min(messageAvailable, math.max(80, naturalWidth))
@@ -584,7 +584,7 @@ local function fitAnnouncement(entry)
 	local messageBounds = TextService:GetTextSize(
 		messageText,
 		fontSize,
-		Enum.Font.FredokaOne,
+		Enum.Font.GothamBold,
 		Vector2.new(messageWidth, 10000)
 	)
 	local contentHeight = math.max(fontSize + 12, messageBounds.Y + 12)
@@ -605,7 +605,7 @@ local function fitAnnouncement(entry)
 		escapeRichText(authorName)
 	)
 
-	entry.badge.Position = UDim2.fromOffset(prefixWidth + 3, previewOffset + math.floor((fontSize + 8 - badgeSize) / 2))
+	entry.badge.Position = UDim2.fromOffset(prefixWidth + 2, previewOffset + math.floor((fontSize + 8 - 34) / 2))
 	entry.message.Position = UDim2.fromOffset(messageX, previewOffset)
 	entry.message.Size = UDim2.fromOffset(messageWidth, math.max(fontSize + 10, messageBounds.Y + 12))
 	entry.message.TextSize = fontSize
@@ -656,7 +656,7 @@ local function showAnnouncement(data, preview)
 	local prefix = make("TextLabel", {
 		Name = "AnnouncementPrefix",
 		BackgroundTransparency = 1,
-		Font = Enum.Font.FredokaOne,
+		Font = Enum.Font.GothamBold,
 		TextSize = 32,
 		TextColor3 = C.text,
 		RichText = true,
@@ -668,35 +668,24 @@ local function showAnnouncement(data, preview)
 		ZIndex = 81,
 	}, container)
 
-	local badge = make("Frame", {
+	local badge = make("TextLabel", {
 		Name = "AnnouncementVerifiedBadge",
-		Size = UDim2.fromOffset(26, 26),
-		BackgroundColor3 = Color3.fromRGB(0, 149, 255),
+		Size = UDim2.fromOffset(24, 34),
+		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
+		Text = "☑️",
+		Font = Enum.Font.GothamBold,
+		TextSize = 22,
+		TextColor3 = C.text,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Center,
 		ZIndex = 81,
 	}, container)
-	addCorner(badge, 13)
-	make("Frame", {
-		Position = UDim2.fromOffset(6, 13),
-		Size = UDim2.fromOffset(7, 3),
-		Rotation = 45,
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		BorderSizePixel = 0,
-		ZIndex = 82,
-	}, badge)
-	make("Frame", {
-		Position = UDim2.fromOffset(10, 11),
-		Size = UDim2.fromOffset(12, 3),
-		Rotation = -45,
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		BorderSizePixel = 0,
-		ZIndex = 82,
-	}, badge)
 
 	local messageLabel = make("TextLabel", {
 		Name = "AnnouncementMessage",
 		BackgroundTransparency = 1,
-		Font = Enum.Font.FredokaOne,
+		Font = Enum.Font.GothamBold,
 		TextSize = 32,
 		TextColor3 = C.text,
 		TextStrokeColor3 = Color3.new(0, 0, 0),
@@ -712,7 +701,7 @@ local function showAnnouncement(data, preview)
 		Name = "PreviewLabel",
 		BackgroundTransparency = 1,
 		Text = "PREVIEW · ONLY YOU CAN SEE THIS",
-		Font = Enum.Font.FredokaOne,
+		Font = Enum.Font.GothamBold,
 		TextSize = 15,
 		TextColor3 = C.text,
 		TextStrokeTransparency = 0.3,
