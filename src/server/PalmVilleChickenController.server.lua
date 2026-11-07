@@ -19,6 +19,7 @@ local CONFIG = {
 	MaxPause = 4.5,
 	TurnSpeed = 4.5,
 	FaceYawOffset = 180,
+	RoosterFaceYawOffset = 0,
 }
 
 local states = {}
@@ -213,7 +214,8 @@ local function updateChicken(state, dt, now)
 
 	local crossY = state.homeForward:Cross(desiredDirection).Y
 	local dot = math.clamp(state.homeForward:Dot(desiredDirection), -1, 1)
-	local yawDelta = math.atan2(crossY, dot) + math.rad(CONFIG.FaceYawOffset)
+	local faceOffset = state.isStaticRooster and CONFIG.RoosterFaceYawOffset or CONFIG.FaceYawOffset
+	local yawDelta = math.atan2(crossY, dot) + math.rad(faceOffset)
 	local yawRotation = CFrame.fromAxisAngle(Vector3.yAxis, yawDelta)
 	local targetPivot = CFrame.new(state.position) * yawRotation * state.homeRotation
 
