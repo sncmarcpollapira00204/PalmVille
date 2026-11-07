@@ -2069,12 +2069,8 @@ end
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
 task.defer(fitPanel)
 
-launcher.Activated:Connect(function()
-	if authorized then
-		panelOpen = not panelOpen
-		applyPanel()
-	end
-end)
+-- The top-right launcher is intentionally disabled; /tx opens the menu.
+launcher.Visible = false
 closeButton.Activated:Connect(function()
 	panelOpen = false
 	applyPanel()
@@ -2233,7 +2229,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		role = data.role
 		permissions = type(data.permissions) == "table" and data.permissions or {}
 		authorized = true
-		launcher.Visible = true
+		launcher.Visible = false
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
 		profileRole.Text = role == "MASTER DEVELOPER" and "DEV" or displayRole(role)
@@ -2247,7 +2243,14 @@ remote.OnClientEvent:Connect(function(event, data)
 		if managerRole() then remote:FireServer("RequestStaff") end
 	elseif event == "AccessDenied" then
 		authorized = false
+		panelOpen = false
 		launcher.Visible = false
+		applyPanel()
+	elseif event == "OpenAdminMenu" then
+		if authorized then
+			panelOpen = true
+			applyPanel()
+		end
 	elseif event == "Notice" then
 		setStatus(tostring(data), true)
 	elseif event == "Snapshot" then
