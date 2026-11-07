@@ -1176,6 +1176,10 @@ local navIcons = {
 for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
 	local nav = button(sidebar, "", function()
+		if key == "STAFF" and role ~= "OWNER" and role ~= "MASTER DEVELOPER" then
+			setStatus("Admin Management is restricted to Owner and Developer.", true)
+			return
+		end
 		activeTab = key
 	end, {size = UDim2.new(1, -32, 0, 48), textSize = 15, radius = 10})
 	nav.Name = "Nav_" .. key
@@ -1243,7 +1247,7 @@ local function refreshNavigation()
 
 	for _, entry in ipairs(navOrder) do
 		local key, area = entry[1], entry[3]
-		local allowed = area == nil or (area == "MANAGER" and managerRole()) or (area ~= "MANAGER" and canAccess(area))
+		local allowed = area == "MANAGER" or area == nil or canAccess(area)
 		local nav = navButtons[key]
 		nav.Visible = allowed
 		local active = activeTab == key
@@ -1358,6 +1362,13 @@ local titleControl = abilityControl("Developer Role Title", adminTitleEnabled, f
 	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
 	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
 end)
+local nicknameCard = card(pages.OVERVIEW, "YOUR ADMIN NICKNAME", "Set the name displayed under your staff rank.")
+local ownNicknameInput = addField(nicknameCard, "NICKNAME", "Enter your display nickname", player:GetAttribute("PalmVilleAdminNickname") or "")
+button(nicknameCard, "SAVE NICKNAME", function()
+	local nickname = ownNicknameInput.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	if nickname == "" then setStatus("Enter a nickname first.", true); return end
+	sendAction("UpdateStaffNickname", {nickname = nickname})
+end, {primary = true, textSize = 14})
 local flyButton = flyControl.button
 local invisibleButton = invisibleControl.button
 local adminTitleButton = titleControl.button
@@ -1849,8 +1860,9 @@ end, {primary = true})
 local historyText = text(historyCard, "No history loaded.", 14, C.muted, 110)
 historyText.TextYAlignment = Enum.TextYAlignment.Top
 
-local staffCard = card(pages.STAFF, "STAFF MANAGEMENT", "Owner and Developer only. The server validates all role changes.")
-local staffUsername = addField(staffCard, "ROBLOX USERNAME", "Username to assign")
+local staffCard = card(pages.STAFF, "ADD ADMIN", "Choose the Roblox account, assign its role, and set its PalmVille nickname.")
+local staffUsername = addField(staffCard, "ROBLOX USERNAME", "Roblox username to add")
+local staffNickname = addField(staffCard, "NICKNAME", "Name shown in PalmVille")
 local staffRole = "ADMIN"
 local staffRoleRow = addRow(staffCard, 48)
 for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) do
@@ -1862,9 +1874,12 @@ for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) d
 	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
 end
 local staffActions = addRow(staffCard, 48)
-button(staffActions, "ASSIGN ROLE", function()
-	if staffUsername.Text:gsub("%s", "") == "" then setStatus("Enter a Roblox username.", true); return end
-	sendAction("AddStaff", {username = staffUsername.Text, role = staffRole})
+button(staffActions, "ADD ADMIN", function()
+	local username = staffUsername.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	local nickname = staffNickname.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	if username == "" then setStatus("Enter a Roblox username.", true); return end
+	if nickname == "" then setStatus("Enter a nickname for this admin.", true); return end
+	sendAction("AddStaff", {username = username, nickname = nickname, role = staffRole})
 end, {size = UDim2.new(0.5, -6, 0, 46), primary = true, textSize = 14})
 button(staffActions, "REMOVE SELECTED", function()
 	if not selectedStaffId then setStatus("Select a staff account first.", true); return end
@@ -1996,7 +2011,8 @@ local function renderStaff()
 		table.sort(staffRows, function(a, b) return tostring(a.role) < tostring(b.role) end)
 		for _, row in ipairs(staffRows) do
 			local name = tostring(row.username or row.name or row.userId or "Staff")
-			local item = button(staffList, string.format("%s  ·  %s  ·  %s", name, displayRole(row.role), row.online and "ONLINE" or "OFFLINE"), function(b)
+			local nickname = tostring(row.nickname or name)
+			local item = button(staffList, string.format("%s  ·  %s  ·  %s  ·  %s", nickname, displayRole(row.role), name, row.online and "ONLINE" or "OFFLINE"), function(b)
 				selectedStaffId = tonumber(row.userId)
 				selectedUserId = tonumber(row.userId)
 				selectedUsername = name
