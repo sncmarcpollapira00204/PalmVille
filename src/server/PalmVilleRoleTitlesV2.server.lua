@@ -73,14 +73,14 @@ local function createTitle(player, character)
 	label.Name = "RoleTag"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.FredokaOne
+	label.Font = Enum.Font.Cartoon
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextSize = 44
 	label.TextScaled = false
 	label.TextWrapped = false
 	label.TextStrokeColor3 = style.outline
-	label.TextStrokeTransparency = 0.12
+	label.TextStrokeTransparency = 0.02
 	label.TextXAlignment = Enum.TextXAlignment.Center
 	label.TextYAlignment = Enum.TextYAlignment.Center
 	label.Parent = billboard
@@ -88,8 +88,8 @@ local function createTitle(player, character)
 	local glow = Instance.new("UIStroke")
 	glow.Name = "RoleGlow"
 	glow.Color = style.color
-	glow.Thickness = 1.15
-	glow.Transparency = 0.48
+	glow.Thickness = 2.2
+	glow.Transparency = 0.16
 	glow.Parent = label
 
 	billboard.Parent = head
