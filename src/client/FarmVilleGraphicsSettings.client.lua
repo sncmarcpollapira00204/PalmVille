@@ -72,46 +72,52 @@ local VISIBILITY_TAGS = {
 local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
 
 local QUALITY_PROFILES = {
-	-- Lightweight preset: natural daylight, restrained atmosphere, no post-processing glow.
+	-- Lightweight neutral profile: clean daylight with restrained warm tones.
 	LOW = {
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2,
-		EnvironmentDiffuseScale = 0.3,
-		EnvironmentSpecularScale = 0.18,
-		ExposureCompensation = 0,
-		ShadowSoftness = 0.08,
-		Atmosphere = {Density = 0.22, Offset = 0.04, Color = Color3.fromRGB(201, 216, 226), Decay = Color3.fromRGB(112, 130, 143), Haze = 0.45, Glare = 0},
-		Color = {Brightness = 0, Contrast = 0.025, Saturation = -0.08, TintColor = Color3.fromRGB(246, 249, 252)},
+		Brightness = 1.95,
+		Ambient = Color3.fromRGB(104, 101, 94),
+		OutdoorAmbient = Color3.fromRGB(137, 134, 123),
+		EnvironmentDiffuseScale = 0.32,
+		EnvironmentSpecularScale = 0.16,
+		ExposureCompensation = -0.02,
+		ShadowSoftness = 0.1,
+		Atmosphere = {Density = 0.2, Offset = 0.03, Color = Color3.fromRGB(218, 211, 195), Decay = Color3.fromRGB(132, 126, 112), Haze = 0.38, Glare = 0},
+		Color = {Brightness = 0, Contrast = 0.045, Saturation = -0.025, TintColor = Color3.fromRGB(255, 249, 237)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
 		SunRays = {Intensity = 0, Spread = 0.8},
 		Clouds = false,
 	},
-	-- Recommended PalmVille look: calm, realistic, lightly cool daylight without a heavy cinematic filter.
+	-- Recommended PalmVille look: realistic neutral daylight, earthy warmth, soft cinematic depth.
 	MID = {
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2,
-		EnvironmentDiffuseScale = 0.55,
-		EnvironmentSpecularScale = 0.34,
-		ExposureCompensation = 0,
-		ShadowSoftness = 0.22,
-		Atmosphere = {Density = 0.24, Offset = 0.05, Color = Color3.fromRGB(202, 218, 228), Decay = Color3.fromRGB(112, 132, 146), Haze = 0.65, Glare = 0.025},
-		Color = {Brightness = 0, Contrast = 0.035, Saturation = -0.06, TintColor = Color3.fromRGB(247, 250, 253)},
-		Bloom = {Intensity = 0.035, Size = 16, Threshold = 1.8},
-		SunRays = {Intensity = 0.008, Spread = 0.8},
+		Brightness = 1.98,
+		Ambient = Color3.fromRGB(108, 103, 94),
+		OutdoorAmbient = Color3.fromRGB(145, 140, 126),
+		EnvironmentDiffuseScale = 0.58,
+		EnvironmentSpecularScale = 0.36,
+		ExposureCompensation = -0.015,
+		ShadowSoftness = 0.24,
+		Atmosphere = {Density = 0.225, Offset = 0.035, Color = Color3.fromRGB(224, 218, 204), Decay = Color3.fromRGB(133, 128, 115), Haze = 0.55, Glare = 0.018},
+		Color = {Brightness = 0.005, Contrast = 0.065, Saturation = -0.015, TintColor = Color3.fromRGB(255, 248, 234)},
+		Bloom = {Intensity = 0.025, Size = 16, Threshold = 1.9},
+		SunRays = {Intensity = 0.006, Spread = 0.8},
 		Clouds = true,
 	},
-	-- Higher visual quality, still using ShadowMap rather than the heavier Future renderer.
+	-- Higher detail without switching to the heavier Future lighting renderer.
 	HIGH = {
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2.02,
-		EnvironmentDiffuseScale = 0.65,
-		EnvironmentSpecularScale = 0.42,
-		ExposureCompensation = 0.01,
-		ShadowSoftness = 0.28,
-		Atmosphere = {Density = 0.26, Offset = 0.06, Color = Color3.fromRGB(205, 221, 232), Decay = Color3.fromRGB(116, 137, 151), Haze = 0.8, Glare = 0.04},
-		Color = {Brightness = 0.005, Contrast = 0.05, Saturation = -0.035, TintColor = Color3.fromRGB(249, 251, 253)},
-		Bloom = {Intensity = 0.06, Size = 18, Threshold = 1.75},
-		SunRays = {Intensity = 0.012, Spread = 0.82},
+		Brightness = 2,
+		Ambient = Color3.fromRGB(111, 106, 97),
+		OutdoorAmbient = Color3.fromRGB(151, 146, 132),
+		EnvironmentDiffuseScale = 0.68,
+		EnvironmentSpecularScale = 0.43,
+		ExposureCompensation = 0,
+		ShadowSoftness = 0.3,
+		Atmosphere = {Density = 0.24, Offset = 0.045, Color = Color3.fromRGB(228, 222, 208), Decay = Color3.fromRGB(139, 133, 119), Haze = 0.68, Glare = 0.025},
+		Color = {Brightness = 0.008, Contrast = 0.075, Saturation = 0, TintColor = Color3.fromRGB(255, 249, 237)},
+		Bloom = {Intensity = 0.045, Size = 18, Threshold = 1.85},
+		SunRays = {Intensity = 0.01, Spread = 0.82},
 		Clouds = true,
 	},
 }
@@ -268,11 +274,12 @@ end
 
 local function applyLightingProfile()
 	local profile = QUALITY_PROFILES[currentPreset]
-	local canUseFuture = currentPreset == "HIGH" and not isMobile
 	pcall(function()
-		Lighting.Technology = canUseFuture and profile.Technology or Enum.Technology.ShadowMap
+		Lighting.Technology = profile.Technology
 	end)
 	Lighting.Brightness = profile.Brightness
+	Lighting.Ambient = profile.Ambient
+	Lighting.OutdoorAmbient = profile.OutdoorAmbient
 	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale
 	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale
 	Lighting.ExposureCompensation = profile.ExposureCompensation
