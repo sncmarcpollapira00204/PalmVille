@@ -86,7 +86,7 @@ local openButton = make("TextButton", {
 	Size = UDim2.fromOffset(82, 76),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.08,
-	Text = "▣\nInventory",
+	Text = "Inventory",
 	TextColor3 = COLORS.text,
 	TextSize = 14,
 	Font = Enum.Font.GothamBold,
@@ -94,6 +94,18 @@ local openButton = make("TextButton", {
 }, gui)
 corner(openButton, 16)
 outline(openButton, COLORS.blue, 0.42, 1.3)
+make("ImageLabel", {
+	Name = "BagIcon",
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 8),
+	Size = UDim2.fromOffset(38, 38),
+	Image = "rbxassetid://113023659142897",
+	ScaleType = Enum.ScaleType.Fit,
+}, openButton)
+openButton.TextYAlignment = Enum.TextYAlignment.Bottom
+openButton.TextXAlignment = Enum.TextXAlignment.Center
+openButton.TextSize = 13
 
 local shade = make("TextButton", {
 	Name = "Backdrop",
