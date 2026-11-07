@@ -1309,30 +1309,30 @@ local function metric(parent, caption, initial, iconName)
 	local iconBox = make("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 22, 0.5, 0),
-		Size = UDim2.fromOffset(72, 72),
+		Size = UDim2.fromOffset(60, 60),
 		BackgroundColor3 = C.green,
 		BorderSizePixel = 0,
 	}, box)
 	addCorner(iconBox, 16)
-	local metricIcon = drawIcon(iconBox, iconName, 36, C.amber)
-	metricIcon.Position = UDim2.fromOffset(18, 18)
+	local metricIcon = drawIcon(iconBox, iconName, 30, C.amber)
+	metricIcon.Position = UDim2.fromOffset(15, 15)
 	make("Frame", {
-		Position = UDim2.new(0, 112, 0.18, 0),
+		Position = UDim2.new(0, 96, 0.18, 0),
 		Size = UDim2.new(0, 1, 0.64, 0),
 		BackgroundColor3 = C.line,
 		BorderSizePixel = 0,
 	}, box)
-	local small = text(box, caption, 18, C.muted, 26, true)
-	small.Position = UDim2.fromOffset(136, 30)
-	small.Size = UDim2.new(1, -158, 0, 26)
-	local value = text(box, initial or "—", 32, C.text, 42, true)
-	value.Position = UDim2.fromOffset(136, 62)
-	value.Size = UDim2.new(1, -158, 0, 42)
+	local small = text(box, caption, 15, C.muted, 22, true)
+	small.Position = UDim2.fromOffset(116, 20)
+	small.Size = UDim2.new(1, -132, 0, 22)
+	local value = text(box, initial or "—", 27, C.text, 34, true)
+	value.Position = UDim2.fromOffset(116, 49)
+	value.Size = UDim2.new(1, -132, 0, 34)
 	value.TextTruncate = Enum.TextTruncate.AtEnd
 	return value
 end
 
-local overviewMetricRow = addRow(pages.OVERVIEW, 148)
+local overviewMetricRow = addRow(pages.OVERVIEW, 116)
 local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
 local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
 
@@ -1716,6 +1716,9 @@ end
 playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 
 local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "megaphone")
+-- Fill the available announcement page so the panel has no exposed black strip below the form.
+announceCard.AutomaticSize = Enum.AutomaticSize.None
+announceCard.Size = UDim2.new(1, 0, 1, -22)
 text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
 	Size = UDim2.new(1, 0, 0, 156),
