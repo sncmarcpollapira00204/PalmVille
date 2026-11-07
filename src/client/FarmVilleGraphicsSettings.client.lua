@@ -83,8 +83,6 @@ local QUALITY_PROFILES = {
 		Color = {Brightness = 0.015, Contrast = 0.04, Saturation = 0.02, TintColor = Color3.fromRGB(255, 250, 238)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
 		SunRays = {Intensity = 0, Spread = 0.8},
-		DepthOfField = false,
-		Blur = false,
 		Clouds = false,
 	},
 	MID = {
@@ -98,8 +96,6 @@ local QUALITY_PROFILES = {
 		Color = {Brightness = 0.025, Contrast = 0.08, Saturation = 0.08, TintColor = Color3.fromRGB(255, 249, 235)},
 		Bloom = {Intensity = 0.12, Size = 18, Threshold = 1.35},
 		SunRays = {Intensity = 0.025, Spread = 0.8},
-		DepthOfField = false,
-		Blur = false,
 		Clouds = true,
 	},
 	HIGH = {
@@ -113,8 +109,6 @@ local QUALITY_PROFILES = {
 		Color = {Brightness = 0.025, Contrast = 0.12, Saturation = 0.12, TintColor = Color3.fromRGB(255, 248, 232)},
 		Bloom = {Intensity = 0.18, Size = 22, Threshold = 1.25},
 		SunRays = {Intensity = 0.045, Spread = 0.82},
-		DepthOfField = false,
-		Blur = false,
 		Clouds = true,
 	},
 }
@@ -319,12 +313,7 @@ local function applyLightingProfile()
 	color.Enabled = graphicsToggles.Effects
 	bloom.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
 	rays.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
-	for _, object in ipairs(Lighting:GetChildren()) do
-		if object:IsA("DepthOfFieldEffect") or object:IsA("BlurEffect") then
-			object.Enabled = false
 		end
-	end
-	end
 
 for _, object in ipairs(Lighting:GetDescendants()) do remember(object) end
 for _, object in ipairs(Workspace:GetDescendants()) do remember(object) end
