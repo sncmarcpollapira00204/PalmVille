@@ -277,6 +277,12 @@ Players.PlayerRemoving:Connect(function(player)
 		pendingByTarget[player] = nil
 		notify(pending.requester, "Piggyback request cancelled because the player left.")
 	end
+	for target, request in pairs(pendingByTarget) do
+		if request.requester == player then
+			pendingByTarget[target] = nil
+			notify(target, "Piggyback request cancelled because the player left.")
+		end
+	end
 	releaseCarry(player, "Piggyback ended because a player left.")
 	releaseIfCarried(player, "Piggyback ended because a player left.")
 	lastRequestAt[player] = nil
