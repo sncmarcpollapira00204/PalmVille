@@ -114,7 +114,7 @@ local function showNotification(category, message)
 	icon.Name = "Icon"
 	icon.BackgroundTransparency = 1
 	icon.Size = UDim2.fromScale(1, 1)
-	icon.Font = Enum.Font.GothamRounded
+	icon.Font = Enum.Font.Nunito
 	icon.Text = style.icon
 	icon.TextColor3 = style.accent
 	icon.TextSize = 19
@@ -125,7 +125,7 @@ local function showNotification(category, message)
 	title.BackgroundTransparency = 1
 	title.Position = UDim2.fromOffset(57, 12)
 	title.Size = UDim2.new(1, -68, 0, 20)
-	title.Font = Enum.Font.GothamRounded
+	title.Font = Enum.Font.Nunito
 	title.Text = category
 	title.TextColor3 = style.accent
 	title.TextSize = 13
@@ -137,7 +137,7 @@ local function showNotification(category, message)
 	body.BackgroundTransparency = 1
 	body.Position = UDim2.fromOffset(57, 37)
 	body.Size = UDim2.new(1, -72, 0, 34)
-	body.Font = Enum.Font.GothamRounded
+	body.Font = Enum.Font.Nunito
 	body.Text = message
 	body.TextColor3 = Color3.fromRGB(54, 58, 62)
 	body.TextSize = 14
