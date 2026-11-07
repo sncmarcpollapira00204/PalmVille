@@ -63,24 +63,24 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.new(7, 0, 2.1, 0)
-	billboard.StudsOffset = Vector3.new(0, 3.35, 0)
+	billboard.Size = UDim2.new(6.5, 0, 1.75, 0)
+	billboard.StudsOffset = Vector3.new(0, 2.85, 0)
 	billboard.MaxDistance = 125
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0
 	billboard.Enabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
 
-	-- Two-line overhead tag: rank above, player name below.
+	-- Rank line: slightly smaller, gently floating above the name.
 	local roleLabel = Instance.new("TextLabel")
 	roleLabel.Name = "RoleTag"
 	roleLabel.BackgroundTransparency = 1
-	roleLabel.Position = UDim2.fromScale(0, 0)
-	roleLabel.Size = UDim2.fromScale(1, 0.48)
+	roleLabel.Position = UDim2.fromScale(0, 0.02)
+	roleLabel.Size = UDim2.fromScale(1, 0.43)
 	roleLabel.Font = Enum.Font.Cartoon
 	roleLabel.Text = style.text
 	roleLabel.TextColor3 = style.color
 	roleLabel.TextSize = 27
-	roleLabel.TextScaled = false
+	roleLabel.TextScaled = true
 	roleLabel.TextWrapped = false
 	roleLabel.TextStrokeColor3 = style.outline
 	roleLabel.TextStrokeTransparency = 0
@@ -98,13 +98,13 @@ local function createTitle(player, character)
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "PlayerName"
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Position = UDim2.fromScale(0, 0.43)
-	nameLabel.Size = UDim2.fromScale(1, 0.57)
+	nameLabel.Position = UDim2.fromScale(0, 0.40)
+	nameLabel.Size = UDim2.fromScale(1, 0.60)
 	nameLabel.Font = Enum.Font.FredokaOne
 	nameLabel.Text = player.DisplayName
 	nameLabel.TextColor3 = Color3.fromRGB(255, 246, 224)
 	nameLabel.TextSize = 39
-	nameLabel.TextScaled = false
+	nameLabel.TextScaled = true
 	nameLabel.TextWrapped = false
 	nameLabel.TextStrokeColor3 = Color3.fromRGB(28, 22, 24)
 	nameLabel.TextStrokeTransparency = 0
@@ -125,6 +125,12 @@ local function createTitle(player, character)
 	glow.Thickness = 1.1
 	glow.Transparency = 0.5
 	glow.Parent = roleLabel
+
+	-- Gentle vertical float on the rank only; the player name stays steady.
+	local floatInfo = TweenInfo.new(1.15, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	TweenService:Create(roleLabel, floatInfo, {
+		Position = UDim2.fromScale(0, -0.015),
+	}):Play()
 
 	local pulseInfo = TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 	TweenService:Create(glow, pulseInfo, {
