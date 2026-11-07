@@ -76,8 +76,8 @@ local function showNotification(category, message)
 	local card = Instance.new("Frame")
 	card.Name = "Notification_" .. tostring(nextId)
 	card.Size = UDim2.new(1, 0, 0, 88)
-	card.BackgroundColor3 = Color3.fromRGB(255, 253, 248)
-	card.BackgroundTransparency = 0.02
+	card.BackgroundColor3 = Color3.fromRGB(34, 40, 52)
+	card.BackgroundTransparency = 0.06
 	card.BorderSizePixel = 0
 	card.ClipsDescendants = true
 	card.LayoutOrder = nextId
@@ -88,7 +88,7 @@ local function showNotification(category, message)
 	corner.Parent = card
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = style.accent
-	stroke.Transparency = 0.72
+	stroke.Transparency = 0.48
 	stroke.Thickness = 1
 	stroke.Parent = card
 
@@ -96,7 +96,7 @@ local function showNotification(category, message)
 	iconBubble.Name = "IconBubble"
 	iconBubble.Position = UDim2.fromOffset(15, 27)
 	iconBubble.Size = UDim2.fromOffset(36, 36)
-	iconBubble.BackgroundColor3 = style.tint
+	iconBubble.BackgroundColor3 = Color3.fromRGB(48, 59, 76)
 	iconBubble.BorderSizePixel = 0
 	iconBubble.Parent = card
 	local bubbleCorner = Instance.new("UICorner")
@@ -136,7 +136,7 @@ local function showNotification(category, message)
 	body.Size = UDim2.new(1, -78, 0, 34)
 	body.Font = Enum.Font.Nunito
 	body.Text = message
-	body.TextColor3 = Color3.fromRGB(54, 58, 62)
+	body.TextColor3 = Color3.fromRGB(245, 247, 250)
 	body.TextSize = 17
 	body.TextWrapped = true
 	body.TextTruncate = Enum.TextTruncate.AtEnd
@@ -154,7 +154,7 @@ local function showNotification(category, message)
 
 	TweenService:Create(card, TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 		Position = UDim2.fromOffset(0, 0),
-		BackgroundTransparency = 0.02,
+		BackgroundTransparency = 0.06,
 	}):Play()
 
 	task.delay(DISPLAY_TIME, function()
