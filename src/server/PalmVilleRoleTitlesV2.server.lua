@@ -74,14 +74,14 @@ local function createTitle(player, character)
 	label.Name = "RoleTag"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.FredokaOne
+	label.Font = Enum.Font.GothamBlack
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextSize = 44
 	label.TextScaled = false
 	label.TextWrapped = false
 	label.TextStrokeColor3 = style.outline
-	label.TextStrokeTransparency = 0.08
+	label.TextStrokeTransparency = 0
 	label.TextXAlignment = Enum.TextXAlignment.Center
 	label.TextYAlignment = Enum.TextYAlignment.Center
 	label.Parent = billboard
@@ -94,27 +94,14 @@ local function createTitle(player, character)
 	glow.Transparency = 0.12
 	glow.Parent = label
 
-	-- A glossy highlight sweep keeps the letters playful without adding a panel.
-	local gradient = Instance.new("UIGradient")
-	gradient.Name = "CandyHighlight"
-	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, style.color:Lerp(Color3.new(1, 1, 1), 0.18)),
-		ColorSequenceKeypoint.new(0.48, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, style.color:Lerp(Color3.new(1, 1, 1), 0.18)),
-	})
-	gradient.Rotation = 0
-	gradient.Parent = label
-
-	local pulseInfo = TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	-- Gentle neon pulse around crisp, readable lettering.
+	local pulseInfo = TweenInfo.new(1.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 	TweenService:Create(glow, pulseInfo, {
-		Thickness = 3.1,
-		Transparency = 0.32,
+		Thickness = 2.8,
+		Transparency = 0.24,
 	}):Play()
 	TweenService:Create(label, pulseInfo, {
-		TextStrokeTransparency = 0.22,
-	}):Play()
-	TweenService:Create(gradient, TweenInfo.new(3.2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {
-		Rotation = 360,
+		TextStrokeTransparency = 0.08,
 	}):Play()
 
 	billboard.Parent = head
