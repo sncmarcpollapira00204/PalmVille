@@ -7,6 +7,7 @@ local MODEL_NAMES = {
 	["PalmVilleChicken - Owned"] = true,
 	PalmVilleChicken = true,
 	fullpollo = true,
+	Cock = true,
 }
 
 local CONFIG = {
@@ -41,6 +42,11 @@ local function findChickenMesh(model)
 		return mesh
 	end
 
+	mesh = model:FindFirstChild("rooster_ground1", true)
+	if mesh and mesh:IsA("MeshPart") then
+		return mesh
+	end
+
 	return nil
 end
 
@@ -66,8 +72,9 @@ local function registerChicken(model)
 		return false
 	end
 
+	local isStaticRooster = model.Name == "Cock" and mesh.Name == "rooster_ground1"
 	local valid, missingBone = hasRequiredBones(mesh)
-	if not valid then
+	if not valid and not isStaticRooster then
 		registering[model] = nil
 		warn(string.format("[PalmVille Chicken] %s is missing bone %s.", model:GetFullName(), missingBone))
 		return false
@@ -109,6 +116,11 @@ local function registerChicken(model)
 		walking = false,
 		nextDecision = os.clock() + random:NextNumber(1, 4),
 		rng = Random.new(),
+		isStaticRooster = isStaticRooster,
+		animationPhase = random:NextNumber(0, math.pi * 2),
+		nextPeck = os.clock() + random:NextNumber(2, 5),
+		peckStarted = 0,
+		pecking = false,
 	}
 
 	states[model] = state
@@ -204,6 +216,32 @@ local function updateChicken(state, dt, now)
 	local yawDelta = math.atan2(crossY, dot) + math.rad(CONFIG.FaceYawOffset)
 	local yawRotation = CFrame.fromAxisAngle(Vector3.yAxis, yawDelta)
 	local targetPivot = CFrame.new(state.position) * yawRotation * state.homeRotation
+
+	if state.isStaticRooster then
+		if state.walking then
+			state.animationPhase += dt * 7.2
+		else
+			if not state.pecking and now >= state.nextPeck then
+				state.pecking = true
+				state.peckStarted = now
+			end
+			if state.pecking and now - state.peckStarted >= 0.62 then
+				state.pecking = false
+				state.nextPeck = now + state.rng:NextNumber(3, 7)
+			end
+		end
+
+		local bob = state.walking and math.abs(math.sin(state.animationPhase * 2)) * 0.055 or math.sin(now * 1.7) * 0.012
+		local roll = state.walking and math.sin(state.animationPhase) * math.rad(2.5) or 0
+		local peck = 0
+		if state.pecking then
+			local progress = math.clamp((now - state.peckStarted) / 0.62, 0, 1)
+			peck = math.sin(progress * math.pi) * math.rad(10)
+		end
+		targetPivot = targetPivot
+			* CFrame.new(0, bob, 0)
+			* CFrame.Angles(peck, 0, roll)
+	end
 
 	local alpha = math.clamp(dt * CONFIG.TurnSpeed, 0, 1)
 	model:PivotTo(model:GetPivot():Lerp(targetPivot, alpha))
