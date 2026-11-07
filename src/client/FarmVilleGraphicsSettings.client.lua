@@ -44,6 +44,7 @@ local graphicsToggles = {
 }
 local customizationMode = false
 local originals = {}
+local managedEffects = {}
 local cameraConnection
 local cameraDescendantConnection
 local activeDrag
@@ -78,7 +79,6 @@ local QUALITY_PROFILES = {
 		EnvironmentSpecularScale = 0.15,
 		ExposureCompensation = 0,
 		ShadowSoftness = 0,
-		ClockTime = 13.5,
 		Atmosphere = {Density = 0.24, Offset = 0.05, Color = Color3.fromRGB(199, 214, 220), Decay = Color3.fromRGB(106, 123, 136), Haze = 0.6, Glare = 0},
 		Color = {Brightness = 0.015, Contrast = 0.04, Saturation = 0.02, TintColor = Color3.fromRGB(255, 250, 238)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
@@ -94,7 +94,6 @@ local QUALITY_PROFILES = {
 		EnvironmentSpecularScale = 0.3,
 		ExposureCompensation = 0.02,
 		ShadowSoftness = 0.18,
-		ClockTime = 14,
 		Atmosphere = {Density = 0.28, Offset = 0.08, Color = Color3.fromRGB(199, 216, 226), Decay = Color3.fromRGB(111, 132, 145), Haze = 1, Glare = 0.08},
 		Color = {Brightness = 0.025, Contrast = 0.08, Saturation = 0.08, TintColor = Color3.fromRGB(255, 249, 235)},
 		Bloom = {Intensity = 0.12, Size = 18, Threshold = 1.35},
@@ -110,7 +109,6 @@ local QUALITY_PROFILES = {
 		EnvironmentSpecularScale = 0.45,
 		ExposureCompensation = 0.04,
 		ShadowSoftness = 0.28,
-		ClockTime = 14,
 		Atmosphere = {Density = 0.32, Offset = 0.1, Color = Color3.fromRGB(202, 220, 232), Decay = Color3.fromRGB(116, 139, 153), Haze = 1.4, Glare = 0.12},
 		Color = {Brightness = 0.025, Contrast = 0.12, Saturation = 0.12, TintColor = Color3.fromRGB(255, 248, 232)},
 		Bloom = {Intensity = 0.18, Size = 22, Threshold = 1.25},
@@ -181,7 +179,7 @@ local function hasVisibilityTag(object)
 end
 
 local function remember(object)
-	if originals[object] or not isSupportedGraphicsObject(object) then
+	if originals[object] or managedEffects[object] or not isSupportedGraphicsObject(object) then
 		return
 	end
 
@@ -215,7 +213,7 @@ local function forgetRemoved(object)
 end
 
 local function applyObject(object)
-	if not object.Parent then
+	if not object.Parent or managedEffects[object] then
 		return
 	end
 	remember(object)
@@ -223,6 +221,7 @@ local function applyObject(object)
 	if not saved then
 		return
 	end
+	local profile = QUALITY_PROFILES[currentPreset]
 
 	local hideObject = (graphicsToggles.HideBushes and hasTagAncestor(object, VISIBILITY_TAGS.HideBushes))
 		or (graphicsToggles.HideTrees and hasTagAncestor(object, VISIBILITY_TAGS.HideTrees))
@@ -237,13 +236,15 @@ local function applyObject(object)
 	if saved.LocalTransparencyModifier ~= nil then
 		object.LocalTransparencyModifier = hideObject and 1 or saved.LocalTransparencyModifier
 	end
-	if saved.Enabled ~= nil then
+	if object:IsA("Clouds") then
+		object.Enabled = profile.Clouds and graphicsToggles.Effects
+	elseif saved.Enabled ~= nil then
 		local disable = not graphicsToggles.Effects
 		if currentPreset == "LOW" then
 			disable = disable or object:IsA("ParticleEmitter") or object:IsA("Trail") or object:IsA("Beam")
 				or object:IsA("Fire") or object:IsA("Smoke") or object:IsA("Sparkles")
 		elseif currentPreset == "MID" then
-			disable = disable or object:IsA("DepthOfFieldEffect") or object:IsA("BlurEffect")
+			disable = disable or object:IsA("DepthOfFieldEffect")
 		end
 		if disable then
 			object.Enabled = false
@@ -252,7 +253,6 @@ local function applyObject(object)
 		end
 	end
 	if saved.Density ~= nil then
-		local profile = QUALITY_PROFILES[currentPreset]
 		local atmosphere = profile.Atmosphere
 		if graphicsToggles.Effects then
 			object.Density = atmosphere.Density
@@ -279,7 +279,6 @@ local function applyLightingProfile()
 	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale
 	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale
 	Lighting.ExposureCompensation = profile.ExposureCompensation
-	Lighting.ClockTime = profile.ClockTime
 	Lighting.GlobalShadows = graphicsToggles.Shadows
 	pcall(function()
 		Lighting.ShadowSoftness = graphicsToggles.Shadows and profile.ShadowSoftness or 0
@@ -288,14 +287,22 @@ local function applyLightingProfile()
 	local function ensureEffect(className, name)
 		local effect = Lighting:FindFirstChild(name)
 		if effect and not effect:IsA(className) then
-			effect:Destroy()
 			effect = nil
+		end
+		if not effect then
+			for _, candidate in ipairs(Lighting:GetChildren()) do
+				if candidate:IsA(className) then
+					effect = candidate
+					break
+				end
+			end
 		end
 		if not effect then
 			effect = Instance.new(className)
 			effect.Name = name
 			effect.Parent = Lighting
 		end
+		managedEffects[effect] = true
 		return effect
 	end
 
@@ -317,12 +324,7 @@ local function applyLightingProfile()
 			object.Enabled = false
 		end
 	end
-	for _, object in ipairs(Workspace:GetDescendants()) do
-		if object:IsA("Clouds") then
-			object.Enabled = profile.Clouds and graphicsToggles.Effects
-		end
 	end
-end
 
 for _, object in ipairs(Lighting:GetDescendants()) do remember(object) end
 for _, object in ipairs(Workspace:GetDescendants()) do remember(object) end
