@@ -2010,21 +2010,26 @@ local function renderStaff()
 	else
 		table.sort(staffRows, function(a, b) return tostring(a.role) < tostring(b.role) end)
 		for _, row in ipairs(staffRows) do
-			local name = tostring(row.username or row.name or row.userId or "Staff")
-			local nickname = tostring(row.nickname or name)
-			local item = button(staffList, string.format("%s  ·  %s  ·  %s  ·  %s", nickname, displayRole(row.role), name, row.online and "ONLINE" or "OFFLINE"), function(b)
+			local username = tostring(row.username or row.name or row.userId or "Staff")
+			local roleName = displayRole(row.role)
+			local statusName = row.online and "ONLINE" or "OFFLINE"
+			local item = button(staffList, string.format("%s  -  %s  -  %s", username, roleName, statusName), function(b)
 				selectedStaffId = tonumber(row.userId)
 				selectedUserId = tonumber(row.userId)
-				selectedUsername = name
+				selectedUsername = username
 				moderationTargetUserId = tonumber(row.userId)
-				moderationTargetUsername = name
-				moderationTargetButton.Text = name .. "  ·  @" .. name
-				selectedLabel.Text = "SELECTED  ·  " .. name
+				moderationTargetUsername = username
+				moderationTargetButton.Text = username .. "  ·  @" .. username
+				selectedLabel.Text = "SELECTED  ·  " .. username
 				updatePlayerDetails(row)
 				for _, other in ipairs(staffList:GetChildren()) do
 					if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 				end
 			end, {size = UDim2.new(1, 0, 0, 44), textSize = 14})
+			item.TextXAlignment = Enum.TextXAlignment.Left
+			item.TextWrapped = false
+			item.TextTruncate = Enum.TextTruncate.AtEnd
+			item.Text = "   " .. string.format("%s  -  %s  -  %s", username, roleName, statusName)
 			setButtonBackground(item, selectedStaffId == tonumber(row.userId) and C.green or C.surface)
 		end
 	end
