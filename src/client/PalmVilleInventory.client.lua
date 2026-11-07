@@ -119,11 +119,11 @@ local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.455),
-	Size = UDim2.new(0.94, 0, 0.86, 0),
+	Size = UDim2.fromOffset(980, 520),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.035,
 	Visible = false,
-	ClipsDescendants = false,
+	ClipsDescendants = true,
 }, gui)
 corner(panel, 24)
 outline(panel, COLORS.blue, 0.12, 1.6)
@@ -142,7 +142,6 @@ local headerLine = make("Frame", {
 	BackgroundTransparency = 0.72,
 	BorderSizePixel = 0,
 }, header)
-label(header, "▣", UDim2.fromOffset(42, 48), UDim2.fromOffset(25, 14), 31, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(78, 17), 26, COLORS.text, Enum.Font.GothamBold)
 label(header, "Your collected items and tools", UDim2.fromOffset(300, 20), UDim2.fromOffset(80, 49), 11, COLORS.muted)
 
@@ -204,7 +203,6 @@ local content = make("Frame", {
 }, panel)
 
 local categoryNames = {"All Items", "Tools", "Seeds", "Crops", "Product", "Misc"}
-local categoryIcons = {"▦", "⚒", "❧", "♧", "✿", "◇"}
 local selectedCategory = "All Items"
 local categoryButtons = {}
 local itemCards = {}
@@ -402,7 +400,7 @@ for index, category in ipairs(categoryNames) do
 		Size = UDim2.new(1, 0, 0, 48),
 		BackgroundColor3 = COLORS.panel2,
 		BackgroundTransparency = 1,
-		Text = categoryIcons[index] .. "   " .. category,
+		Text = category,
 		TextColor3 = category == selectedCategory and COLORS.text or COLORS.muted,
 		TextSize = 14,
 		Font = Enum.Font.FredokaOne,
@@ -494,9 +492,9 @@ local function setOpen(open)
 		search.Text = ""
 		refreshSavedItems()
 		renderItems()
-		panel.Size = UDim2.new(0.92, 0, 0.82, 0)
+		panel.Size = UDim2.fromOffset(940, 490)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0.94, 0, 0.86, 0),
+			Size = UDim2.fromOffset(980, 520),
 		}):Play()
 	end
 end
