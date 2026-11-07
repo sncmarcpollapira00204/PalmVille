@@ -59,3 +59,8 @@ The live player store is `PalmVille_PlayerData_v1`; Studio uses `PalmVille_Playe
 4. Review Rojo changes before accepting them.
 5. Stop Play before syncing.
 6. Test Admin, player data, seed inventory, chicken movement/animation, graphics settings, and underwater chests before publishing.
+
+
+## Rooster NPC
+
+`PalmVilleRoosterController.server.lua` automatically detects Workspace models named `Chicken - Loof`, `Rooster`, or `PalmVilleRooster`. Duplicate the complete model to create additional independent Roosters. It creates an AnimationController/Animator when needed, plays the published idle clip configured with the model attribute `PalmVilleIdleAnimationId`, and schedules positional rooster crow audio. The FBX's animation must be imported and published separately in Roblox Studio; set the resulting asset ID on the model attribute before the idle animation can play. The sound uses Creator Store asset 135218417 and may require experience permission depending on asset privacy.
