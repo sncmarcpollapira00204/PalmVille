@@ -73,7 +73,7 @@ local function createTitle(player, character)
 	label.Name = "RoleTag"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.FontFace = Font.fromId(12187367666, Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+	label.Font = Enum.Font.FredokaOne
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextSize = 44
