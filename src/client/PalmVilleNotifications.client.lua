@@ -5,14 +5,18 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local remote = ReplicatedStorage:WaitForChild("PalmVilleNotificationEvent")
 
--- Soft, cheerful colors inspired by PalmVille's cozy countryside look.
+-- One consistent dark PalmVille style; only the accent color changes by notification type.
 local COLORS = {
-	GENERAL = {accent = Color3.fromRGB(153, 160, 169), tint = Color3.fromRGB(239, 242, 244), icon = "✿"},
-	INFO = {accent = Color3.fromRGB(91, 166, 218), tint = Color3.fromRGB(226, 241, 250), icon = "♡"},
-	SUCCESS = {accent = Color3.fromRGB(91, 177, 137), tint = Color3.fromRGB(226, 244, 232), icon = "✓"},
-	ERROR = {accent = Color3.fromRGB(216, 112, 119), tint = Color3.fromRGB(250, 231, 231), icon = "!" },
-	WARNING = {accent = Color3.fromRGB(235, 190, 91), tint = Color3.fromRGB(67, 59, 43), icon = "⚠"},
+	GENERAL = {accent = Color3.fromRGB(190, 198, 211), icon = "✿"},
+	INFO = {accent = Color3.fromRGB(126, 190, 245), icon = "♡"},
+	SUCCESS = {accent = Color3.fromRGB(126, 211, 166), icon = "✓"},
+	ERROR = {accent = Color3.fromRGB(245, 137, 145), icon = "!"},
+	WARNING = {accent = Color3.fromRGB(245, 202, 112), icon = "⚠"},
 }
+local CARD_COLOR = Color3.fromRGB(29, 36, 49)
+local CHIP_COLOR = Color3.fromRGB(48, 58, 75)
+local ICON_BUBBLE_COLOR = Color3.fromRGB(48, 58, 75)
+local MESSAGE_COLOR = Color3.fromRGB(245, 247, 250)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "PalmVilleNotificationsGui"
@@ -76,7 +80,7 @@ local function showNotification(category, message)
 	local card = Instance.new("Frame")
 	card.Name = "Notification_" .. tostring(nextId)
 	card.Size = UDim2.new(1, 0, 0, 84)
-	card.BackgroundColor3 = Color3.fromRGB(29, 36, 49)
+	card.BackgroundColor3 = CARD_COLOR
 	card.BackgroundTransparency = 0.06
 	card.BorderSizePixel = 0
 	card.ClipsDescendants = true
@@ -96,7 +100,7 @@ local function showNotification(category, message)
 	iconBubble.Name = "IconBubble"
 	iconBubble.Position = UDim2.fromOffset(16, 24)
 	iconBubble.Size = UDim2.fromOffset(38, 38)
-	iconBubble.BackgroundColor3 = style.tint
+	iconBubble.BackgroundColor3 = ICON_BUBBLE_COLOR
 	iconBubble.BorderSizePixel = 0
 	iconBubble.Parent = card
 	local bubbleCorner = Instance.new("UICorner")
@@ -116,13 +120,13 @@ local function showNotification(category, message)
 	local title = Instance.new("TextLabel")
 	title.Name = "Category"
 	title.Position = UDim2.fromOffset(66, 10)
-	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or 82, 21)
-	title.BackgroundColor3 = style.tint
+	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or 82, 22)
+	title.BackgroundColor3 = CHIP_COLOR
 	title.BorderSizePixel = 0
 	title.Font = Enum.Font.Nunito
 	title.Text = category
 	title.TextColor3 = style.accent
-	title.TextSize = 11
+	title.TextSize = 12
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = card
 	local titleCorner = Instance.new("UICorner")
@@ -136,8 +140,8 @@ local function showNotification(category, message)
 	body.Size = UDim2.new(1, -82, 0, 40)
 	body.Font = Enum.Font.Nunito
 	body.Text = message
-	body.TextColor3 = Color3.fromRGB(245, 247, 250)
-	body.TextSize = 15
+	body.TextColor3 = MESSAGE_COLOR
+	body.TextSize = 16
 	body.TextWrapped = true
 	body.TextTruncate = Enum.TextTruncate.AtEnd
 	body.TextXAlignment = Enum.TextXAlignment.Left
