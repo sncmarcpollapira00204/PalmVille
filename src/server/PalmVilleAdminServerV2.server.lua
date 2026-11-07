@@ -1006,7 +1006,7 @@ end
 bindTextChannels(TextChatService:FindFirstChild("TextChannels"))
 TextChatService.ChildAdded:Connect(bindTextChannels)
 
-local function playerSnapshot()
+local function playerSnapshot(requester)
 	local roster = {}
 	local playerDataAdapter = SSS:FindFirstChild("PalmVilleAdminPlayerData")
 	for _, target in ipairs(Players:GetPlayers()) do
@@ -1039,6 +1039,34 @@ local function playerSnapshot()
 			progress = progress,
 			frozen = frozenStates[target.UserId] ~= nil,
 		})
+	end
+	-- Defensive fallback: the requesting Player instance is authoritative and must
+	-- remain selectable even if a transient Players:GetPlayers() roster read is empty.
+	if requester and requester:IsA("Player") then
+		local requesterFound = false
+		for _, entry in ipairs(roster) do
+			if entry.userId == requester.UserId then
+				requesterFound = true
+				break
+			end
+		end
+		if not requesterFound then
+			local humanoid = requester.Character and requester.Character:FindFirstChildOfClass("Humanoid")
+			local root = findCharacterPart(requester, "HumanoidRootPart")
+			local position = root and root.Position
+			table.insert(roster, {
+				userId = requester.UserId,
+				username = requester.Name,
+				displayName = requester.DisplayName,
+				role = getRoleById(requester.UserId) or "PLAYER",
+				health = humanoid and math.floor(humanoid.Health + 0.5) or 0,
+				maxHealth = humanoid and math.floor(humanoid.MaxHealth + 0.5) or 0,
+				position = position and string.format("%.1f, %.1f, %.1f", position.X, position.Y, position.Z) or "—",
+				progress = {},
+				frozen = frozenStates[requester.UserId] ~= nil,
+			})
+			warn(string.format("[PalmVille Admin] Requester %s was missing from Players:GetPlayers(); added requester fallback.", requester.Name))
+		end
 	end
 	table.sort(roster, function(a, b)
 		if a.role ~= "PLAYER" and b.role == "PLAYER" then return true end
@@ -1440,7 +1468,8 @@ remote.OnServerEvent:Connect(function(player, action, data)
 			warn(string.format("[PalmVille Admin] Snapshot denied: %s has no player-list permission.", player.Name))
 			return
 		end
-		local roster = playerSnapshot()
+		local roster = playerSnapshot(player)
+		print(string.format("[PalmVille Admin] Snapshot sent to %s: %d online player(s).", player.Name, #roster.players))
 		remote:FireClient(player, "Snapshot", roster)
 		return
 	elseif action == "RequestStaff" then
