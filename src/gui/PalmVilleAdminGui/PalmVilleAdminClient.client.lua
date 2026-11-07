@@ -1926,7 +1926,8 @@ local logFilterButton = button(logControls, "PLAYER: ALL PLAYERS", function()
 	end
 	renderLogs()
 end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
-local logSortButton = button(logControls, "SORT: NEWEST", function()
+local logSortButton
+logSortButton = button(logControls, "SORT: NEWEST", function()
 	sortLogsByPlayer = not sortLogsByPlayer
 	logSortButton.Text = sortLogsByPlayer and "SORT: PLAYER" or "SORT: NEWEST"
 	renderLogs()
