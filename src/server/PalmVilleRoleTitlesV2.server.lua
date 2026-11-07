@@ -101,7 +101,7 @@ local function createTitle(player, character)
 	nameLabel.Position = UDim2.fromScale(0, 0.40)
 	nameLabel.Size = UDim2.fromScale(1, 0.60)
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.Text = player.DisplayName
+	nameLabel.Text = player:GetAttribute("PalmVilleAdminNickname") ~= "" and (player:GetAttribute("PalmVilleAdminNickname") or player.DisplayName) or player.DisplayName
 	nameLabel.TextColor3 = Color3.fromRGB(255, 246, 224)
 	nameLabel.TextSize = 39
 	nameLabel.TextScaled = true
@@ -152,6 +152,16 @@ local function bindPlayer(player)
 	connected[player] = true
 	player.CharacterAdded:Connect(function(character)
 		task.spawn(createTitle, player, character)
+	end)
+	player:GetAttributeChangedSignal("PalmVilleAdminNickname"):Connect(function()
+		local character = player.Character
+		local head = character and character:FindFirstChild("Head")
+		local billboard = head and head:FindFirstChild(GUI_NAME)
+		local nameLabel = billboard and billboard:FindFirstChild("PlayerName")
+		if nameLabel and nameLabel:IsA("TextLabel") then
+			local nickname = player:GetAttribute("PalmVilleAdminNickname")
+			nameLabel.Text = type(nickname) == "string" and nickname ~= "" and nickname or player.DisplayName
+		end
 	end)
 	player:GetAttributeChangedSignal("PalmVilleAdminTitleVisible"):Connect(function()
 		local character = player.Character
