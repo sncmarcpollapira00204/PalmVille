@@ -171,6 +171,7 @@ local function register(model)
 	states[model] = {
 		model = model,
 		mesh = mesh,
+		collisionProbe = makeCollisionProbe(model),
 		position = pivot.Position,
 		homePosition = pivot.Position,
 		homeRotation = pivot.Rotation,
@@ -266,7 +267,14 @@ local function update(state, dt, now)
 			state.nextDecision = now + state.rng:NextNumber(CONFIG.MinPause, CONFIG.MaxPause)
 		else
 			state.direction = delta.Unit
-			state.position += state.direction * math.min(CONFIG.WalkSpeed * dt, distance)
+			local step = math.min(CONFIG.WalkSpeed * dt, distance)
+			if canMove(state, state.direction, step) then
+				state.position += state.direction * step
+			else
+				state.walking = false
+				model:SetAttribute("PalmVilleRoosterWalking", false)
+				state.nextDecision = now + state.rng:NextNumber(1.5, 3)
+			end
 		end
 	elseif now >= state.nextDecision then
 		chooseTarget(state, now)
