@@ -144,10 +144,39 @@ local function hasPermission(player, area)
 	return permissions ~= nil and permissions[area] == true
 end
 
-local function notify(player, message)
-	if player and player.Parent == Players then
-		remote:FireClient(player, "Notice", tostring(message))
+local notificationRemote = ReplicatedStorage:WaitForChild("PalmVilleNotificationEvent")
+
+local function notificationType(message)
+	local value = string.lower(tostring(message))
+	if value:find("failed", 1, true) or value:find("invalid", 1, true)
+		or value:find("not have access", 1, true) or value:find("not permitted", 1, true)
+		or value:find("could not", 1, true) or value:find("unavailable", 1, true)
+		or value:find("protected", 1, true) or value:find("error", 1, true) then
+		return "ERROR"
 	end
+	if value:find("expired", 1, true) or value:find("choose", 1, true)
+		or value:find("select", 1, true) or value:find("enter", 1, true)
+		or value:find("limit", 1, true) then
+		return "WARNING"
+	end
+	if value:find("sent", 1, true) or value:find("updated", 1, true)
+		or value:find("enabled", 1, true) or value:find("disabled", 1, true)
+		or value:find("completed", 1, true) or value:find("brought", 1, true)
+		or value:find("unbanned", 1, true) or value:find("removed", 1, true) then
+		return "SUCCESS"
+	end
+	return "INFO"
+end
+
+local function notify(player, message)
+	if not player or player.Parent ~= Players then return end
+	local text = tostring(message)
+	-- Announcement feedback remains in its existing announcement UI/status area.
+	if string.lower(text):find("announcement", 1, true) then
+		remote:FireClient(player, "Notice", text)
+		return
+	end
+	notificationRemote:FireClient(player, notificationType(text), text)
 end
 
 local function logActivity(actor, action, target, result, extra)
