@@ -46,6 +46,9 @@ local staffRows = {}
 local allPermissions = {}
 local logs = {}
 local history = {}
+local selectedLogUserIds = {}
+local sortLogsByPlayer = false
+local renderLogs
 local selectedUserId
 local selectedUsername
 local selectedStaffId
@@ -316,7 +319,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		enabled = not enabled
 		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
 		if track and knob then
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end
@@ -345,7 +348,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 	local knob = make("Frame", {
 		Name = "ToggleKnob",
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
+		Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
 		Size = UDim2.fromOffset(16, 16),
 		BackgroundColor3 = enabled and C.bg or C.text,
 		BorderSizePixel = 0,
@@ -356,7 +359,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		row = row,
 		set = function(value)
 			enabled = value == true
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end,
@@ -1051,12 +1054,21 @@ make("UIListLayout", {
 local modalCallback
 local modalPickerCallback
 local closeAdminModal
+local logFilterModalOpen = false
 
+local modalPickerRosterKey = nil
 local function renderModalPlayerPicker()
+	local roster = snapshot.players or {}
+	local keyParts = {}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rosterKey = table.concat(keyParts, "|")
+	if rosterKey == modalPickerRosterKey then return end
+	modalPickerRosterKey = rosterKey
 	for _, child in ipairs(modalPicker:GetChildren()) do
 		if child:IsA("GuiObject") then child:Destroy() end
 	end
-	local roster = snapshot.players or {}
 	if #roster == 0 then
 		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
 		empty.Position = UDim2.fromOffset(4, 4)
@@ -1074,6 +1086,7 @@ local function renderModalPlayerPicker()
 end
 
 closeAdminModal = function()
+	logFilterModalOpen = false
 	modalShade.Visible = false
 	modalCallback = nil
 	modalPickerCallback = nil
@@ -1588,12 +1601,15 @@ local function updatePlayerDetails(row)
 	end
 end
 
+local renderedPlayerRowsKey = nil
 local function renderPlayers()
-	for _, child in ipairs(playerRows:GetChildren()) do
-		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
-	end
 	local query = string.lower(playerSearch.Text or "")
 	local roster = snapshot.players or {}
+	local keyParts = {query}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rowsKey = table.concat(keyParts, "|")
 	local visibleCount = 0
 	local selectedStillOnline = false
 	local selectedRow
@@ -1612,6 +1628,13 @@ local function renderPlayers()
 		updatePlayerDetails(selectedRow)
 	end
 	playersScope.Text = string.format("This server · %d online", #roster)
+	-- Snapshot polling updates live stats every 1.5 seconds. Keep existing row
+	-- instances and avatar images when the roster/search identity has not changed.
+	if rowsKey == renderedPlayerRowsKey then return end
+	renderedPlayerRowsKey = rowsKey
+	for _, child in ipairs(playerRows:GetChildren()) do
+		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+	end
 	for _, row in ipairs(roster) do
 		local username = tostring(row.username or "")
 		local displayName = tostring(row.displayName or username)
@@ -1875,8 +1898,80 @@ button(toolsCard, "GIVE REGISTERED ITEM", function()
 	})
 end, {primary = true})
 
-local logsCard = card(pages.LOGS, "SERVER ACTIVITY", "Recent server-side administrative actions.")
+local logsCard = card(pages.LOGS, "PLAYER ACTIVITY & AUDIT LOG", "Server-recorded player sessions, currency, inventory, XP and staff actions.")
 button(logsCard, "REFRESH LOGS", function() remote:FireServer("RequestLogs") end, {primary = true})
+local logControls = make("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1}, logsCard)
+local logControlLayout = make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Padding = UDim.new(0, 8),
+}, logControls)
+local function collectLogPlayerChoices()
+	local byId = {}
+	for _, row in ipairs(logs) do
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local actorName = tostring(row.actor or "")
+		local targetName = tostring(row.target or "")
+		if actorId > 0 then byId[actorId] = actorName ~= "" and actorName or tostring(actorId) end
+		if targetId > 0 then byId[targetId] = targetName ~= "" and targetName or tostring(targetId) end
+	end
+	local choices = {}
+	for userId, name in pairs(byId) do table.insert(choices, {userId = userId, name = name}) end
+	table.sort(choices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+	return choices
+end
+
+local logFilterButton = button(logControls, "PLAYERS: ALL", function()
+	local choices = collectLogPlayerChoices()
+	logFilterModalOpen = true
+	local draft = {}
+	for userId, enabled in pairs(selectedLogUserIds) do if enabled then draft[userId] = true end end
+	local function drawChoices()
+		for _, child in ipairs(modalPicker:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+		if #choices == 0 then
+			local empty = text(modalPicker, "No players found in the current log history.", 14, C.muted, 36)
+			empty.Position = UDim2.fromOffset(4, 4)
+			return
+		end
+		for _, choice in ipairs(choices) do
+			local userId = choice.userId
+			local checked = draft[userId] == true
+			button(modalPicker, (checked and "✓   " or "□   ") .. choice.name .. "   ·   " .. tostring(userId), function()
+				draft[userId] = not draft[userId] or nil
+				drawChoices()
+			end, {size = UDim2.new(1, -6, 0, 42), textSize = 13})
+		end
+	end
+	modalTitle.Text = "FILTER LOGS BY PLAYERS"
+	modalDescription.Text = "Select one or more players. Leave all unchecked to show everyone."
+	modalReason.Visible = false
+	modalPicker.Visible = true
+	modalConfirmButton.Visible = true
+	modalConfirmButton.Text = "APPLY FILTER"
+	modalCancelButton.Visible = true
+	modalCancelButton.Text = "CANCEL"
+	modalCancelButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalConfirmButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
+	modalCard.Size = UDim2.fromOffset(500, 470)
+	modalPicker.Position = UDim2.fromOffset(24, 112)
+	modalPicker.Size = UDim2.new(1, -48, 0, 300)
+	drawChoices()
+	modalCallback = function()
+		selectedLogUserIds = draft
+		closeAdminModal()
+		renderLogs()
+	end
+	modalPickerCallback = nil
+	modalShade.Visible = true
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
+local logSortButton
+logSortButton = button(logControls, "SORT: NEWEST", function()
+	sortLogsByPlayer = not sortLogsByPlayer
+	logSortButton.Text = sortLogsByPlayer and "SORT: PLAYER" or "SORT: NEWEST"
+	renderLogs()
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
 local logList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, logsCard)
 vertical(logList, 5)
 
@@ -1919,26 +2014,53 @@ local function renderStaff()
 	end
 end
 
-local function renderLogs()
+renderLogs = function()
 	for _, child in ipairs(logList:GetChildren()) do
 		if child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
 	end
-	if #logs == 0 then
-		showPageStatus(logList, "No activity records received.")
+
+	local filtered = {}
+	local selectedCount = 0
+	for _, enabled in pairs(selectedLogUserIds) do if enabled then selectedCount += 1 end end
+	for _, row in ipairs(logs) do
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local matches = selectedCount == 0
+			or selectedLogUserIds[actorId] == true
+			or selectedLogUserIds[targetId] == true
+		if matches then table.insert(filtered, row) end
+	end
+	logFilterButton.Text = selectedCount == 0 and "PLAYERS: ALL" or ("PLAYERS: " .. tostring(selectedCount) .. " SELECTED")
+
+	table.sort(filtered, function(a, b)
+		if sortLogsByPlayer then
+			local aName = string.lower(tostring(a.target or a.actor or "SYSTEM"))
+			local bName = string.lower(tostring(b.target or b.actor or "SYSTEM"))
+			if aName ~= bName then return aName < bName end
+		end
+		return (tonumber(a.time) or 0) > (tonumber(b.time) or 0)
+	end)
+
+	if #filtered == 0 then
+		showPageStatus(logList, selectedCount > 0 and "No activity found for the selected players." or "No activity records received.")
 		return
 	end
-	for index = 1, math.min(#logs, 40) do
-		local row = logs[index]
-		local titleLine = tostring(row.action or row.event or "Admin action")
-		local detail = string.format("%s  ·  %s  ·  %s", tostring(row.actor or row.username or "Unknown"), tostring(row.target or "—"), tostring(row.result or row.status or "Recorded"))
-		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
+
+	for index = 1, math.min(#filtered, 40) do
+		local row = filtered[index]
+		local titleLine = tostring(row.action or row.event or "Player activity")
+		local playerName = tostring(row.target or row.actor or row.username or "Unknown")
+		local resultText = tostring(row.result or row.status or "Recorded")
+		local timestamp = os.date("%b %d  %H:%M", tonumber(row.time) or 0)
+		local detail = string.format("%s  ·  %s  ·  %s", playerName, resultText, timestamp)
+		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 66), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
 		addCorner(line, 11)
 		local titleLabel = text(line, titleLine, 15, C.text, 22, true)
-		titleLabel.Position = UDim2.fromOffset(14, 7)
+		titleLabel.Position = UDim2.fromOffset(14, 6)
 		titleLabel.Size = UDim2.new(1, -28, 0, 22)
-		local detailLabel = text(line, detail, 13, C.muted, 20)
-		detailLabel.Position = UDim2.fromOffset(14, 32)
-		detailLabel.Size = UDim2.new(1, -28, 0, 20)
+		local detailLabel = text(line, detail, 12, C.muted, 28)
+		detailLabel.Position = UDim2.fromOffset(14, 31)
+		detailLabel.Size = UDim2.new(1, -28, 0, 28)
 	end
 end
 
@@ -1974,12 +2096,8 @@ end
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
 task.defer(fitPanel)
 
-launcher.Activated:Connect(function()
-	if authorized then
-		panelOpen = not panelOpen
-		applyPanel()
-	end
-end)
+-- The top-right launcher is intentionally disabled; /tx opens the menu.
+launcher.Visible = false
 closeButton.Activated:Connect(function()
 	panelOpen = false
 	applyPanel()
@@ -2138,7 +2256,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		role = data.role
 		permissions = type(data.permissions) == "table" and data.permissions or {}
 		authorized = true
-		launcher.Visible = true
+		launcher.Visible = false
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
 		profileRole.Text = role == "MASTER DEVELOPER" and "DEV" or displayRole(role)
@@ -2152,14 +2270,21 @@ remote.OnClientEvent:Connect(function(event, data)
 		if managerRole() then remote:FireServer("RequestStaff") end
 	elseif event == "AccessDenied" then
 		authorized = false
+		panelOpen = false
 		launcher.Visible = false
+		applyPanel()
+	elseif event == "OpenAdminMenu" then
+		if authorized then
+			panelOpen = true
+			applyPanel()
+		end
 	elseif event == "Notice" then
 		setStatus(tostring(data), true)
 	elseif event == "Snapshot" then
 		if type(data) == "table" then
 			snapshot = data
 			updateMetrics()
-			if modalPicker.Visible then renderModalPlayerPicker() end
+			if modalPicker.Visible and not logFilterModalOpen then renderModalPlayerPicker() end
 			if activeTab == "PLAYERS" then renderPlayers() end
 			if managerRole() and activeTab == "STAFF" then remote:FireServer("RequestStaff") end
 		end

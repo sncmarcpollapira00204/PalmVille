@@ -2,6 +2,21 @@ local Economy = {}
 
 local MAX_MONEY = 2_000_000_000
 local profiles = {}
+local ServerScriptService = game:GetService("ServerScriptService")
+local auditEvent = ServerScriptService:FindFirstChild("PalmVilleAuditEvent")
+if not auditEvent then
+	auditEvent = Instance.new("BindableEvent")
+	auditEvent.Name = "PalmVilleAuditEvent"
+	auditEvent.Parent = ServerScriptService
+end
+
+local function emitAudit(player, action, amount, balance, reason)
+	auditEvent:Fire(action, player, {
+		amount = amount,
+		balance = balance,
+		reason = tostring(reason or action):sub(1, 80),
+	})
+end
 
 local function toInteger(value, minimum, maximum)
 	local number = tonumber(value)
@@ -120,6 +135,7 @@ function Economy.AddMoney(player, amount, reason)
 	end
 
 	updateValue(entry.moneyValue, nextBalance)
+	emitAudit(player, "Currency Earned", value, nextBalance, reason or "AddMoney")
 	return true, nextBalance
 end
 
@@ -149,6 +165,7 @@ function Economy.SpendMoney(player, amount, reason)
 	end
 
 	updateValue(entry.moneyValue, nextBalance)
+	emitAudit(player, "Currency Spent", -value, nextBalance, reason or "Purchase")
 	return true, nextBalance
 end
 
@@ -167,7 +184,9 @@ function Economy.SetMoney(player, amount, reason)
 	if type(entry.data.statistics) == "table" then
 		entry.data.statistics.lastMoneyReason = tostring(reason or "SetMoney"):sub(1, 40)
 	end
+	local previous = toInteger(entry.moneyValue.Value, 0, MAX_MONEY) or 0
 	updateValue(entry.moneyValue, value)
+	emitAudit(player, "Currency Adjusted", value - previous, value, reason or "SetMoney")
 	return true, value
 end
 
@@ -196,6 +215,7 @@ function Economy.AddXP(player, amount)
 	end
 
 	updateValue(entry.levelValue, data.level)
+	emitAudit(player, "XP Earned", value, data.xp, "Experience")
 	return true, {
 		level = data.level,
 		xp = data.xp,

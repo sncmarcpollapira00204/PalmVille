@@ -110,6 +110,26 @@ local function getRoleById(userId)
 	return entry and entry.role or nil
 end
 
+-- /tx is an open-only command. Closing is handled by the Admin UI X button.
+local adminOpenCommand = TextChatService:FindFirstChild("PalmVilleAdminOpenCommand")
+if not adminOpenCommand then
+	adminOpenCommand = Instance.new("TextChatCommand")
+	adminOpenCommand.Name = "PalmVilleAdminOpenCommand"
+	adminOpenCommand.PrimaryAlias = "/tx"
+	adminOpenCommand.AutocompleteVisible = true
+	adminOpenCommand.Enabled = true
+	adminOpenCommand.Parent = TextChatService
+end
+
+if adminOpenCommand:IsA("TextChatCommand") then
+	adminOpenCommand.Triggered:Connect(function(textSource)
+		if not textSource then return end
+		local player = Players:GetPlayerByUserId(textSource.UserId)
+		if not player or not getRoleById(player.UserId) then return end
+		remote:FireClient(player, "OpenAdminMenu")
+	end)
+end
+
 local function canManageStaff(player)
 	local role = getRoleById(player.UserId)
 	return role == "OWNER" or role == "MASTER DEVELOPER"
@@ -142,9 +162,13 @@ local function logActivity(actor, action, target, result, extra)
 		targetUserId = target and target.UserId or (extra and tonumber(extra.targetUserId)) or 0,
 		reason = extra and tostring(extra.reason or ""):sub(1, 180) or "",
 		result = tostring(result):sub(1, 120),
+		category = extra and tostring(extra.category or ""):sub(1, 32) or "",
+		amount = extra and tonumber(extra.amount) or nil,
+		balance = extra and tonumber(extra.balance) or nil,
+		itemCode = extra and tostring(extra.itemCode or ""):sub(1, 48) or "",
 	}
 	table.insert(memoryLogs, 1, entry)
-	while #memoryLogs > 100 do
+	while #memoryLogs > 1000 do
 		table.remove(memoryLogs)
 	end
 	table.insert(pendingActivity, entry)
@@ -161,7 +185,7 @@ local function logActivity(actor, action, target, result, extra)
 				logStore:UpdateAsync("recent", function(current)
 					local items = type(current) == "table" and current or {}
 					for index = #batch, 1, -1 do table.insert(items, 1, batch[index]) end
-					while #items > 100 do table.remove(items) end
+					while #items > 1000 do table.remove(items) end
 					return items
 				end)
 			end)
@@ -178,6 +202,35 @@ local function logActivity(actor, action, target, result, extra)
 		activityWorkerRunning = false
 	end)
 end
+
+local auditEvent = ServerScriptService:FindFirstChild("PalmVilleAuditEvent")
+if auditEvent and auditEvent:IsA("BindableEvent") then
+	auditEvent.Event:Connect(function(action, targetPlayer, details)
+		if typeof(targetPlayer) ~= "Instance" or not targetPlayer:IsA("Player") then return end
+		details = type(details) == "table" and details or {}
+		local amount = tonumber(details.amount)
+		local balance = tonumber(details.balance)
+		local result = details.reason or "Recorded"
+		if amount then
+			result = string.format("%s %s%d", tostring(result), amount >= 0 and "+" or "", amount)
+		end
+		if balance then result ..= string.format(" · Balance %d", balance) end
+		logActivity(nil, tostring(action or "Player Activity"), targetPlayer, result, {
+			reason = details.reason,
+			category = details.category or "Player Activity",
+			amount = amount,
+			balance = balance,
+			itemCode = details.itemCode,
+		})
+	end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+	logActivity(nil, "Player Joined", player, "Joined server", {category = "Session"})
+end)
+Players.PlayerRemoving:Connect(function(player)
+	logActivity(nil, "Player Left", player, "Left server", {category = "Session"})
+end)
 
 local function recordModeration(userId, entry)
 	task.spawn(function()
@@ -953,27 +1006,15 @@ end
 bindTextChannels(TextChatService:FindFirstChild("TextChannels"))
 TextChatService.ChildAdded:Connect(bindTextChannels)
 
-local function playerSnapshot()
+local function playerSnapshot(requester)
 	local roster = {}
-	local playerDataAdapter = SSS:FindFirstChild("PalmVilleAdminPlayerData")
 	for _, target in ipairs(Players:GetPlayers()) do
 		local humanoid = target.Character and target.Character:FindFirstChildOfClass("Humanoid")
 		local root = findCharacterPart(target, "HumanoidRootPart")
 		local position = root and root.Position
+		-- Keep roster generation non-yielding. Player data adapters may yield while
+		-- loading profile/DataStore state; a player picker must never wait on them.
 		local progress = {}
-		if playerDataAdapter and playerDataAdapter:IsA("BindableFunction") then
-			local ok, saved = pcall(function()
-				return playerDataAdapter:Invoke(target)
-			end)
-			if ok and type(saved) == "table" then
-				for _, key in ipairs({"money", "earnedToday", "level", "xp", "xpNeeded", "totalPlaytime"}) do
-					local value = tonumber(saved[key])
-					if value and value == value and value >= 0 and value < math.huge then
-						progress[key] = value
-					end
-				end
-			end
-		end
 		table.insert(roster, {
 			userId = target.UserId,
 			username = target.Name,
@@ -986,6 +1027,34 @@ local function playerSnapshot()
 			progress = progress,
 			frozen = frozenStates[target.UserId] ~= nil,
 		})
+	end
+	-- Defensive fallback: the requesting Player instance is authoritative and must
+	-- remain selectable even if a transient Players:GetPlayers() roster read is empty.
+	if requester and requester:IsA("Player") then
+		local requesterFound = false
+		for _, entry in ipairs(roster) do
+			if entry.userId == requester.UserId then
+				requesterFound = true
+				break
+			end
+		end
+		if not requesterFound then
+			local humanoid = requester.Character and requester.Character:FindFirstChildOfClass("Humanoid")
+			local root = findCharacterPart(requester, "HumanoidRootPart")
+			local position = root and root.Position
+			table.insert(roster, {
+				userId = requester.UserId,
+				username = requester.Name,
+				displayName = requester.DisplayName,
+				role = getRoleById(requester.UserId) or "PLAYER",
+				health = humanoid and math.floor(humanoid.Health + 0.5) or 0,
+				maxHealth = humanoid and math.floor(humanoid.MaxHealth + 0.5) or 0,
+				position = position and string.format("%.1f, %.1f, %.1f", position.X, position.Y, position.Z) or "—",
+				progress = {},
+				frozen = frozenStates[requester.UserId] ~= nil,
+			})
+			warn(string.format("[PalmVille Admin] Requester %s was missing from Players:GetPlayers(); added requester fallback.", requester.Name))
+		end
 	end
 	table.sort(roster, function(a, b)
 		if a.role ~= "PLAYER" and b.role == "PLAYER" then return true end
@@ -1078,7 +1147,19 @@ local function handleAction(player, data)
 			logActivity(player, action, nil, "Success")
 			return
 		end
-		if not target or not requireTarget() then return end
+		local actorRole = getRoleById(player.UserId)
+		local targetRole = target and getRoleById(target.UserId)
+		local headAdminMovementException = actorRole == "HEAD ADMIN"
+			and (targetRole == "OWNER" or targetRole == "MASTER DEVELOPER")
+		local movementAllowed = target and targetId and (
+			canAffect(player, targetId)
+			or ((action == "Bring" or action == "Teleport") and headAdminMovementException)
+		)
+		if not movementAllowed then
+			notify(player, "That player is protected or unavailable.")
+			logActivity(player, action, target, "Denied", {target = targetName, targetUserId = targetId})
+			return
+		end
 		if not player.Character or not target.Character then notify(player, "A character is not ready."); return end
 		if action == "Teleport" then
 			previousPositions[player.UserId] = player.Character:GetPivot()
@@ -1387,7 +1468,8 @@ remote.OnServerEvent:Connect(function(player, action, data)
 			warn(string.format("[PalmVille Admin] Snapshot denied: %s has no player-list permission.", player.Name))
 			return
 		end
-		local roster = playerSnapshot()
+		local roster = playerSnapshot(player)
+		print(string.format("[PalmVille Admin] Snapshot sent to %s: %d online player(s).", player.Name, #roster.players))
 		remote:FireClient(player, "Snapshot", roster)
 		return
 	elseif action == "RequestStaff" then

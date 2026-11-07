@@ -32,6 +32,7 @@ if playerGui:FindFirstChild("FarmVilleGraphicsUI") then
 	return
 end
 
+local isMobile = UserInputService.TouchEnabled
 local currentPreset = "MID"
 local presetModified = false
 local graphicsToggles = {
@@ -43,6 +44,7 @@ local graphicsToggles = {
 }
 local customizationMode = false
 local originals = {}
+local managedEffects = {}
 local cameraConnection
 local cameraDescendantConnection
 local activeDrag
@@ -61,6 +63,55 @@ local panelUserMoved = false
 local settingsRemote
 local micButton
 local micConnections = {}
+
+local VISIBILITY_TAGS = {
+	HideBushes = "GraphicsBush",
+	HideTrees = "GraphicsTree",
+	HideGrass = "GraphicsGrass",
+}
+local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
+
+local QUALITY_PROFILES = {
+	LOW = {
+		Technology = Enum.Technology.ShadowMap,
+		Brightness = 2,
+		EnvironmentDiffuseScale = 0.25,
+		EnvironmentSpecularScale = 0.15,
+		ExposureCompensation = 0,
+		ShadowSoftness = 0,
+		Atmosphere = {Density = 0.24, Offset = 0.05, Color = Color3.fromRGB(199, 214, 220), Decay = Color3.fromRGB(106, 123, 136), Haze = 0.6, Glare = 0},
+		Color = {Brightness = 0.015, Contrast = 0.04, Saturation = 0.02, TintColor = Color3.fromRGB(255, 250, 238)},
+		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
+		SunRays = {Intensity = 0, Spread = 0.8},
+		Clouds = false,
+	},
+	MID = {
+		Technology = Enum.Technology.ShadowMap,
+		Brightness = 2.1,
+		EnvironmentDiffuseScale = 0.45,
+		EnvironmentSpecularScale = 0.3,
+		ExposureCompensation = 0.02,
+		ShadowSoftness = 0.18,
+		Atmosphere = {Density = 0.28, Offset = 0.08, Color = Color3.fromRGB(199, 216, 226), Decay = Color3.fromRGB(111, 132, 145), Haze = 1, Glare = 0.08},
+		Color = {Brightness = 0.025, Contrast = 0.08, Saturation = 0.08, TintColor = Color3.fromRGB(255, 249, 235)},
+		Bloom = {Intensity = 0.12, Size = 18, Threshold = 1.35},
+		SunRays = {Intensity = 0.025, Spread = 0.8},
+		Clouds = true,
+	},
+	HIGH = {
+		Technology = Enum.Technology.Future,
+		Brightness = 2.15,
+		EnvironmentDiffuseScale = 0.65,
+		EnvironmentSpecularScale = 0.45,
+		ExposureCompensation = 0.04,
+		ShadowSoftness = 0.28,
+		Atmosphere = {Density = 0.32, Offset = 0.1, Color = Color3.fromRGB(202, 220, 232), Decay = Color3.fromRGB(116, 139, 153), Haze = 1.4, Glare = 0.12},
+		Color = {Brightness = 0.025, Contrast = 0.12, Saturation = 0.12, TintColor = Color3.fromRGB(255, 248, 232)},
+		Bloom = {Intensity = 0.18, Size = 22, Threshold = 1.25},
+		SunRays = {Intensity = 0.045, Spread = 0.82},
+		Clouds = true,
+	},
+}
 
 local function make(className, properties, parent)
 	local object = Instance.new(className)
@@ -101,13 +152,6 @@ local function isSupportedGraphicsObject(object)
 		or object:IsA("Atmosphere")
 end
 
-local VISIBILITY_TAGS = {
-	HideBushes = "GraphicsBush",
-	HideTrees = "GraphicsTree",
-	HideGrass = "GraphicsGrass",
-}
-local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
-
 local function hasTagAncestor(object, tag)
 	local current = object
 	while current and current ~= Workspace do
@@ -129,7 +173,7 @@ local function hasVisibilityTag(object)
 end
 
 local function remember(object)
-	if originals[object] or not isSupportedGraphicsObject(object) then
+	if originals[object] or managedEffects[object] or not isSupportedGraphicsObject(object) then
 		return
 	end
 
@@ -143,6 +187,9 @@ local function remember(object)
 		saved.Enabled = object.Enabled
 	elseif object:IsA("Atmosphere") then
 		saved.Density = object.Density
+		saved.Offset = object.Offset
+		saved.Color = object.Color
+		saved.Decay = object.Decay
 		saved.Haze = object.Haze
 		saved.Glare = object.Glare
 	end
@@ -160,7 +207,7 @@ local function forgetRemoved(object)
 end
 
 local function applyObject(object)
-	if not object.Parent then
+	if not object.Parent or managedEffects[object] then
 		return
 	end
 	remember(object)
@@ -168,6 +215,7 @@ local function applyObject(object)
 	if not saved then
 		return
 	end
+	local profile = QUALITY_PROFILES[currentPreset]
 
 	local hideObject = (graphicsToggles.HideBushes and hasTagAncestor(object, VISIBILITY_TAGS.HideBushes))
 		or (graphicsToggles.HideTrees and hasTagAncestor(object, VISIBILITY_TAGS.HideTrees))
@@ -182,13 +230,15 @@ local function applyObject(object)
 	if saved.LocalTransparencyModifier ~= nil then
 		object.LocalTransparencyModifier = hideObject and 1 or saved.LocalTransparencyModifier
 	end
-	if saved.Enabled ~= nil then
+	if object:IsA("Clouds") then
+		object.Enabled = profile.Clouds and graphicsToggles.Effects
+	elseif saved.Enabled ~= nil then
 		local disable = not graphicsToggles.Effects
-		if currentPreset == "MID" then
-			disable = disable
-				or object:IsA("BlurEffect")
-				or object:IsA("DepthOfFieldEffect")
-				or object:IsA("SunRaysEffect")
+		if currentPreset == "LOW" then
+			disable = disable or object:IsA("ParticleEmitter") or object:IsA("Trail") or object:IsA("Beam")
+				or object:IsA("Fire") or object:IsA("Smoke") or object:IsA("Sparkles")
+		elseif currentPreset == "MID" then
+			disable = disable or object:IsA("DepthOfFieldEffect")
 		end
 		if disable then
 			object.Enabled = false
@@ -197,10 +247,14 @@ local function applyObject(object)
 		end
 	end
 	if saved.Density ~= nil then
+		local atmosphere = profile.Atmosphere
 		if graphicsToggles.Effects then
-			object.Density = saved.Density
-			object.Haze = saved.Haze
-			object.Glare = saved.Glare
+			object.Density = atmosphere.Density
+			object.Offset = atmosphere.Offset
+			object.Color = atmosphere.Color
+			object.Decay = atmosphere.Decay
+			object.Haze = atmosphere.Haze
+			object.Glare = atmosphere.Glare
 		else
 			object.Density = 0
 			object.Haze = 0
@@ -209,28 +263,78 @@ local function applyObject(object)
 	end
 end
 
-for _, object in ipairs(Lighting:GetDescendants()) do
-	remember(object)
-end
-for _, object in ipairs(Workspace:GetDescendants()) do
-	remember(object)
+local function applyLightingProfile()
+	local profile = QUALITY_PROFILES[currentPreset]
+	local canUseFuture = currentPreset == "HIGH" and not isMobile
+	pcall(function()
+		Lighting.Technology = canUseFuture and profile.Technology or Enum.Technology.ShadowMap
+	end)
+	Lighting.Brightness = profile.Brightness
+	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale
+	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale
+	Lighting.ExposureCompensation = profile.ExposureCompensation
+	Lighting.GlobalShadows = graphicsToggles.Shadows
+	pcall(function()
+		Lighting.ShadowSoftness = graphicsToggles.Shadows and profile.ShadowSoftness or 0
+	end)
+
+	local function ensureEffect(className, name)
+		local effect = Lighting:FindFirstChild(name)
+		if effect and not effect:IsA(className) then
+			effect = nil
+		end
+		if not effect then
+			for _, candidate in ipairs(Lighting:GetChildren()) do
+				if candidate:IsA(className) then
+					effect = candidate
+					break
+				end
+			end
+		end
+		if not effect then
+			effect = Instance.new(className)
+			effect.Name = name
+			effect.Parent = Lighting
+		end
+		managedEffects[effect] = true
+		return effect
+	end
+
+	local atmosphere = ensureEffect("Atmosphere", "PalmVilleRealisticAtmosphere")
+	for property, value in pairs(profile.Atmosphere) do atmosphere[property] = value end
+	local color = ensureEffect("ColorCorrectionEffect", "PalmVilleRealisticColor")
+	for property, value in pairs(profile.Color) do color[property] = value end
+	local bloom = ensureEffect("BloomEffect", "PalmVilleRealisticBloom")
+	for property, value in pairs(profile.Bloom) do bloom[property] = value end
+	local rays = ensureEffect("SunRaysEffect", "PalmVilleRealisticSunRays")
+	for property, value in pairs(profile.SunRays) do rays[property] = value end
+
+	atmosphere.Enabled = graphicsToggles.Effects
+	color.Enabled = graphicsToggles.Effects
+	bloom.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
+	rays.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
 end
 
+for _, object in ipairs(Lighting:GetDescendants()) do remember(object) end
+for _, object in ipairs(Workspace:GetDescendants()) do remember(object) end
 local originalGlobalShadows = Lighting.GlobalShadows
 graphicsToggles.Shadows = originalGlobalShadows
 
 local function applyGraphicsSettings()
-	Lighting.GlobalShadows = graphicsToggles.Shadows
+	applyLightingProfile()
 	for object in pairs(originals) do
 		applyObject(object)
 	end
 end
 
 local function applyPreset(preset)
-	currentPreset = preset
+	currentPreset = QUALITY_PROFILES[preset] and preset or "MID"
+	if isMobile and currentPreset == "HIGH" then
+		currentPreset = "MID"
+	end
 	presetModified = false
-	graphicsToggles.Shadows = preset ~= "LOW" and originalGlobalShadows
-	graphicsToggles.Effects = preset ~= "LOW"
+	graphicsToggles.Shadows = currentPreset ~= "LOW" and originalGlobalShadows
+	graphicsToggles.Effects = currentPreset ~= "LOW"
 	applyGraphicsSettings()
 end
 
