@@ -14,12 +14,11 @@ local handled = setmetatable({}, {__mode = "k"})
 
 -- Overhead role tag only: no panel, card, frame, or extra nameplate UI.
 local styles = {
-	OWNER = {text = "★ OWNER", color = Color3.fromRGB(255, 211, 82), outline = Color3.fromRGB(86, 57, 8)},
-	["MASTER DEVELOPER"] = {text = "✦ MASTER DEVELOPER", color = Color3.fromRGB(105, 195, 255), outline = Color3.fromRGB(15, 48, 84)},
-	["HEAD ADMIN"] = {text = "◆ HEAD ADMIN", color = Color3.fromRGB(255, 123, 198), outline = Color3.fromRGB(91, 20, 62)},
-	ADMIN = {text = "⬟ ADMIN", color = Color3.fromRGB(112, 235, 151), outline = Color3.fromRGB(19, 77, 42)},
-	MODERATOR = {text = "◆ MODERATOR", color = Color3.fromRGB(218, 228, 240), outline = Color3.fromRGB(48, 57, 70)},
-	HELPER = {text = "✚ HELPER", color = Color3.fromRGB(255, 195, 139), outline = Color3.fromRGB(92, 56, 30)},
+	OWNER = {text = "OWNER", color = Color3.fromRGB(255, 211, 82), outline = Color3.fromRGB(86, 57, 8)},
+	["MASTER DEVELOPER"] = {text = "DEV", color = Color3.fromRGB(105, 195, 255), outline = Color3.fromRGB(15, 48, 84)},
+	["HEAD ADMIN"] = {text = "HEAD ADMIN", color = Color3.fromRGB(255, 123, 198), outline = Color3.fromRGB(91, 20, 62)},
+	ADMIN = {text = "ADMIN", color = Color3.fromRGB(112, 235, 151), outline = Color3.fromRGB(19, 77, 42)},
+	MODERATOR = {text = "MODERATOR", color = Color3.fromRGB(218, 228, 240), outline = Color3.fromRGB(48, 57, 70)},
 }
 
 local function getRole(player)
@@ -74,7 +73,7 @@ local function createTitle(player, character)
 	label.Name = "RoleTag"
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.GothamBlack
+	label.FontFace = Font.fromId(12187367666, Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
 	label.Text = style.text
 	label.TextColor3 = style.color
 	label.TextSize = 25
