@@ -148,7 +148,7 @@ local function logActivity(actor, action, target, result, extra)
 		itemCode = extra and tostring(extra.itemCode or ""):sub(1, 48) or "",
 	}
 	table.insert(memoryLogs, 1, entry)
-	while #memoryLogs > 100 do
+	while #memoryLogs > 1000 do
 		table.remove(memoryLogs)
 	end
 	table.insert(pendingActivity, entry)
@@ -165,7 +165,7 @@ local function logActivity(actor, action, target, result, extra)
 				logStore:UpdateAsync("recent", function(current)
 					local items = type(current) == "table" and current or {}
 					for index = #batch, 1, -1 do table.insert(items, 1, batch[index]) end
-					while #items > 100 do table.remove(items) end
+					while #items > 1000 do table.remove(items) end
 					return items
 				end)
 			end)
