@@ -46,6 +46,9 @@ local staffRows = {}
 local allPermissions = {}
 local logs = {}
 local history = {}
+local selectedLogUserId = nil
+local sortLogsByPlayer = false
+local renderLogs
 local selectedUserId
 local selectedUsername
 local selectedStaffId
@@ -1886,8 +1889,48 @@ button(toolsCard, "GIVE REGISTERED ITEM", function()
 	})
 end, {primary = true})
 
-local logsCard = card(pages.LOGS, "SERVER ACTIVITY", "Recent server-side administrative actions.")
+local logsCard = card(pages.LOGS, "PLAYER ACTIVITY & AUDIT LOG", "Server-recorded player sessions, currency, inventory, XP and staff actions.")
 button(logsCard, "REFRESH LOGS", function() remote:FireServer("RequestLogs") end, {primary = true})
+local logControls = make("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1}, logsCard)
+local logControlLayout = make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Padding = UDim.new(0, 8),
+}, logControls)
+local logFilterButton = button(logControls, "PLAYER: ALL PLAYERS", function()
+	local choices = {}
+	local seen = {}
+	for _, row in ipairs(logs) do
+		local userId = tonumber(row.targetUserId) or 0
+		local name = tostring(row.target or "")
+		if userId <= 0 then
+			userId = tonumber(row.actorUserId) or 0
+			name = tostring(row.actor or "")
+		end
+		if userId > 0 and not seen[userId] then
+			seen[userId] = true
+			table.insert(choices, {userId = userId, name = name ~= "" and name or tostring(userId)})
+		end
+	end
+	table.sort(choices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+	local currentIndex = 0
+	for index, choice in ipairs(choices) do
+		if choice.userId == selectedLogUserId then currentIndex = index end
+	end
+	if selectedLogUserId == nil then
+		selectedLogUserId = choices[1] and choices[1].userId or nil
+	elseif currentIndex >= #choices then
+		selectedLogUserId = nil
+	else
+		selectedLogUserId = choices[currentIndex + 1] and choices[currentIndex + 1].userId or nil
+	end
+	renderLogs()
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
+local logSortButton = button(logControls, "SORT: NEWEST", function()
+	sortLogsByPlayer = not sortLogsByPlayer
+	logSortButton.Text = sortLogsByPlayer and "SORT: PLAYER" or "SORT: NEWEST"
+	renderLogs()
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
 local logList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, logsCard)
 vertical(logList, 5)
 
@@ -1930,26 +1973,66 @@ local function renderStaff()
 	end
 end
 
-local function renderLogs()
+renderLogs = function()
 	for _, child in ipairs(logList:GetChildren()) do
 		if child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
 	end
-	if #logs == 0 then
-		showPageStatus(logList, "No activity records received.")
+
+	local filtered = {}
+	local playerChoices = {}
+	local seenPlayers = {}
+	for _, row in ipairs(logs) do
+		local userId = tonumber(row.targetUserId) or 0
+		local playerName = tostring(row.target or "")
+		if userId <= 0 then
+			userId = tonumber(row.actorUserId) or 0
+			playerName = tostring(row.actor or "")
+		end
+		if userId > 0 and not seenPlayers[userId] then
+			seenPlayers[userId] = true
+			table.insert(playerChoices, {userId = userId, name = playerName ~= "" and playerName or tostring(userId)})
+		end
+		if selectedLogUserId == nil or userId == selectedLogUserId then
+			table.insert(filtered, row)
+		end
+	end
+
+	table.sort(playerChoices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+	local selectedName = "ALL PLAYERS"
+	for _, choice in ipairs(playerChoices) do
+		if choice.userId == selectedLogUserId then selectedName = choice.name end
+	end
+	logFilterButton.Text = "PLAYER: " .. selectedName
+
+	table.sort(filtered, function(a, b)
+		if sortLogsByPlayer then
+			local aName = string.lower(tostring(a.target or a.actor or "SYSTEM"))
+			local bName = string.lower(tostring(b.target or b.actor or "SYSTEM"))
+			if aName ~= bName then return aName < bName end
+		end
+		return (tonumber(a.time) or 0) > (tonumber(b.time) or 0)
+	end)
+
+	if #filtered == 0 then
+		showPageStatus(logList, selectedLogUserId and "No activity found for this player." or "No activity records received.")
 		return
 	end
-	for index = 1, math.min(#logs, 40) do
-		local row = logs[index]
-		local titleLine = tostring(row.action or row.event or "Admin action")
-		local detail = string.format("%s  ·  %s  ·  %s", tostring(row.actor or row.username or "Unknown"), tostring(row.target or "—"), tostring(row.result or row.status or "Recorded"))
-		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
+
+	for index = 1, math.min(#filtered, 40) do
+		local row = filtered[index]
+		local titleLine = tostring(row.action or row.event or "Player activity")
+		local playerName = tostring(row.target or row.actor or row.username or "Unknown")
+		local resultText = tostring(row.result or row.status or "Recorded")
+		local timestamp = os.date("%b %d  %H:%M", tonumber(row.time) or 0)
+		local detail = string.format("%s  ·  %s  ·  %s", playerName, resultText, timestamp)
+		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 66), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
 		addCorner(line, 11)
 		local titleLabel = text(line, titleLine, 15, C.text, 22, true)
-		titleLabel.Position = UDim2.fromOffset(14, 7)
+		titleLabel.Position = UDim2.fromOffset(14, 6)
 		titleLabel.Size = UDim2.new(1, -28, 0, 22)
-		local detailLabel = text(line, detail, 13, C.muted, 20)
-		detailLabel.Position = UDim2.fromOffset(14, 32)
-		detailLabel.Size = UDim2.new(1, -28, 0, 20)
+		local detailLabel = text(line, detail, 12, C.muted, 28)
+		detailLabel.Position = UDim2.fromOffset(14, 31)
+		detailLabel.Size = UDim2.new(1, -28, 0, 28)
 	end
 end
 
