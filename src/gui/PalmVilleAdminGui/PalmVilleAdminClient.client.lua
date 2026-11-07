@@ -1065,6 +1065,7 @@ make("UIListLayout", {
 local modalCallback
 local modalPickerCallback
 local closeAdminModal
+local logFilterModalOpen = false
 
 local modalPickerRosterKey = nil
 local function renderModalPlayerPicker()
@@ -1096,6 +1097,7 @@ local function renderModalPlayerPicker()
 end
 
 closeAdminModal = function()
+	logFilterModalOpen = false
 	modalShade.Visible = false
 	modalCallback = nil
 	modalPickerCallback = nil
@@ -1933,6 +1935,7 @@ end
 
 local logFilterButton = button(logControls, "PLAYERS: ALL", function()
 	local choices = collectLogPlayerChoices()
+	logFilterModalOpen = true
 	local draft = {}
 	for userId, enabled in pairs(selectedLogUserIds) do if enabled then draft[userId] = true end end
 	local function drawChoices()
@@ -2050,7 +2053,7 @@ renderLogs = function()
 	end)
 
 	if #filtered == 0 then
-		showPageStatus(logList, selectedLogUserId and "No activity found for this player." or "No activity records received.")
+		showPageStatus(logList, selectedCount > 0 and "No activity found for the selected players." or "No activity records received.")
 		return
 	end
 
@@ -2292,7 +2295,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		if type(data) == "table" then
 			snapshot = data
 			updateMetrics()
-			if modalPicker.Visible then renderModalPlayerPicker() end
+			if modalPicker.Visible and not logFilterModalOpen then renderModalPlayerPicker() end
 			if activeTab == "PLAYERS" then renderPlayers() end
 			if managerRole() and activeTab == "STAFF" then remote:FireServer("RequestStaff") end
 		end
