@@ -46,7 +46,7 @@ local staffRows = {}
 local allPermissions = {}
 local logs = {}
 local history = {}
-local selectedLogUserId = nil
+local selectedLogUserIds = {}
 local sortLogsByPlayer = false
 local renderLogs
 local selectedUserId
@@ -1915,34 +1915,64 @@ local logControlLayout = make("UIListLayout", {
 	SortOrder = Enum.SortOrder.LayoutOrder,
 	Padding = UDim.new(0, 8),
 }, logControls)
-local logFilterButton = button(logControls, "PLAYER: ALL PLAYERS", function()
-	local choices = {}
-	local seen = {}
+local function collectLogPlayerChoices()
+	local byId = {}
 	for _, row in ipairs(logs) do
-		local userId = tonumber(row.targetUserId) or 0
-		local name = tostring(row.target or "")
-		if userId <= 0 then
-			userId = tonumber(row.actorUserId) or 0
-			name = tostring(row.actor or "")
-		end
-		if userId > 0 and not seen[userId] then
-			seen[userId] = true
-			table.insert(choices, {userId = userId, name = name ~= "" and name or tostring(userId)})
-		end
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local actorName = tostring(row.actor or "")
+		local targetName = tostring(row.target or "")
+		if actorId > 0 then byId[actorId] = actorName ~= "" and actorName or tostring(actorId) end
+		if targetId > 0 then byId[targetId] = targetName ~= "" and targetName or tostring(targetId) end
 	end
+	local choices = {}
+	for userId, name in pairs(byId) do table.insert(choices, {userId = userId, name = name}) end
 	table.sort(choices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
-	local currentIndex = 0
-	for index, choice in ipairs(choices) do
-		if choice.userId == selectedLogUserId then currentIndex = index end
+	return choices
+end
+
+local logFilterButton = button(logControls, "PLAYERS: ALL", function()
+	local choices = collectLogPlayerChoices()
+	local draft = {}
+	for userId, enabled in pairs(selectedLogUserIds) do if enabled then draft[userId] = true end end
+	local function drawChoices()
+		for _, child in ipairs(modalPicker:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+		if #choices == 0 then
+			local empty = text(modalPicker, "No players found in the current log history.", 14, C.muted, 36)
+			empty.Position = UDim2.fromOffset(4, 4)
+			return
+		end
+		for _, choice in ipairs(choices) do
+			local userId = choice.userId
+			local checked = draft[userId] == true
+			button(modalPicker, (checked and "✓   " or "□   ") .. choice.name .. "   ·   " .. tostring(userId), function()
+				draft[userId] = not draft[userId] or nil
+				drawChoices()
+			end, {size = UDim2.new(1, -6, 0, 42), textSize = 13})
+		end
 	end
-	if selectedLogUserId == nil then
-		selectedLogUserId = choices[1] and choices[1].userId or nil
-	elseif currentIndex >= #choices then
-		selectedLogUserId = nil
-	else
-		selectedLogUserId = choices[currentIndex + 1] and choices[currentIndex + 1].userId or nil
+	modalTitle.Text = "FILTER LOGS BY PLAYERS"
+	modalDescription.Text = "Select one or more players. Leave all unchecked to show everyone."
+	modalReason.Visible = false
+	modalPicker.Visible = true
+	modalConfirmButton.Visible = true
+	modalConfirmButton.Text = "APPLY FILTER"
+	modalCancelButton.Visible = true
+	modalCancelButton.Text = "CANCEL"
+	modalCancelButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalConfirmButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
+	modalCard.Size = UDim2.fromOffset(500, 470)
+	modalPicker.Position = UDim2.fromOffset(24, 112)
+	modalPicker.Size = UDim2.new(1, -48, 0, 300)
+	drawChoices()
+	modalCallback = function()
+		selectedLogUserIds = draft
+		closeAdminModal()
+		renderLogs()
 	end
-	renderLogs()
+	modalPickerCallback = nil
+	modalShade.Visible = true
 end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
 local logSortButton
 logSortButton = button(logControls, "SORT: NEWEST", function()
@@ -1998,30 +2028,17 @@ renderLogs = function()
 	end
 
 	local filtered = {}
-	local playerChoices = {}
-	local seenPlayers = {}
+	local selectedCount = 0
+	for _, enabled in pairs(selectedLogUserIds) do if enabled then selectedCount += 1 end end
 	for _, row in ipairs(logs) do
-		local userId = tonumber(row.targetUserId) or 0
-		local playerName = tostring(row.target or "")
-		if userId <= 0 then
-			userId = tonumber(row.actorUserId) or 0
-			playerName = tostring(row.actor or "")
-		end
-		if userId > 0 and not seenPlayers[userId] then
-			seenPlayers[userId] = true
-			table.insert(playerChoices, {userId = userId, name = playerName ~= "" and playerName or tostring(userId)})
-		end
-		if selectedLogUserId == nil or userId == selectedLogUserId then
-			table.insert(filtered, row)
-		end
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local matches = selectedCount == 0
+			or selectedLogUserIds[actorId] == true
+			or selectedLogUserIds[targetId] == true
+		if matches then table.insert(filtered, row) end
 	end
-
-	table.sort(playerChoices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
-	local selectedName = "ALL PLAYERS"
-	for _, choice in ipairs(playerChoices) do
-		if choice.userId == selectedLogUserId then selectedName = choice.name end
-	end
-	logFilterButton.Text = "PLAYER: " .. selectedName
+	logFilterButton.Text = selectedCount == 0 and "PLAYERS: ALL" or ("PLAYERS: " .. tostring(selectedCount) .. " SELECTED")
 
 	table.sort(filtered, function(a, b)
 		if sortLogsByPlayer then
