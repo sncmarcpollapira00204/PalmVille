@@ -18,14 +18,16 @@ Mapped containers use `$ignoreUnknownInstances: true` so manually managed Studio
 - `PalmVillePlayerData.server.lua` — persistent player data, session locking, autosave, and Admin player-data adapter.
 - `PalmVilleInventoryService.lua` — persistent seed-pack inventory and Tool restoration.
 - `PalmVilleItemRegistry.lua` — registered item templates, including the PalmVille seed packs.
-- `PalmVilleChickenController.server.lua` — server-authoritative wandering for supported chicken models.
+- `PalmVilleChickenController.server.lua` — server-authoritative wandering for the original chicken models.
+- `PalmVilleRoosterController.server.lua` — automatic Rooster discovery, wandering, and positional crow sounds for the imported Jungle Jim rig.
 - `PalmVilleRoleTitlesV2.server.lua` — role title billboards.
 - `FarmVilleGraphicsSettingsPersistence.server.lua` — graphics preferences.
 - `UnderwaterChestService.server.lua` — secure underwater chest interactions and rewards.
 
 ### Client
 - `PalmVilleAdminClient.client.lua` — Admin V2 interface.
-- `PalmVilleChickenAnimator.client.lua` — client-side chicken bone animation.
+- `PalmVilleChickenAnimator.client.lua` — client-side bone animation for the original chicken.
+- `PalmVilleRoosterAnimator.client.lua` — procedural idle, leg-cycle, head/peck, and body/tail motion for duplicated Rooster rigs.
 - `PalmVilleCashHUD.client.lua` — replicated Money display.
 - `FarmVilleGraphicsSettings.client.lua` — graphics settings UI.
 - `UnderwaterCameraAtmosphere.client.lua` — underwater camera atmosphere.
@@ -38,6 +40,7 @@ Mapped containers use `$ignoreUnknownInstances: true` so manually managed Studio
 - Player data requires `PalmVilleEconomy` and `PalmVilleInventoryService`.
 - Role titles use the Admin role resolver.
 - Chicken animator listens for the tag and attributes created by the chicken controller.
+- Rooster animator listens for the tag and attributes created by the Rooster controller.
 - Graphics settings client pairs with the server persistence script.
 - Underwater chest feedback pairs with the server chest service.
 
