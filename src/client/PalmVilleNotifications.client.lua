@@ -5,14 +5,11 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local remote = ReplicatedStorage:WaitForChild("PalmVilleNotificationEvent")
 
--- One consistent dark PalmVille style; only the accent color changes by notification type.
-local COLORS = {
-	GENERAL = {accent = Color3.fromRGB(190, 198, 211), icon = "✿"},
-	INFO = {accent = Color3.fromRGB(126, 190, 245), icon = "♡"},
-	SUCCESS = {accent = Color3.fromRGB(126, 211, 166), icon = "✓"},
-	ERROR = {accent = Color3.fromRGB(245, 137, 145), icon = "!"},
-	WARNING = {accent = Color3.fromRGB(245, 202, 112), icon = "⚠"},
-}
+-- All notification types share one blue PalmVille design.
+-- WARNING is the only type with a distinct amber accent and warning icon.
+local STANDARD_STYLE = {accent = Color3.fromRGB(126, 190, 245), icon = "♡"}
+local WARNING_STYLE = {accent = Color3.fromRGB(245, 202, 112), icon = "⚠"}
+local CATEGORIES = {GENERAL = true, INFO = true, SUCCESS = true, ERROR = true, WARNING = true}
 local CARD_COLOR = Color3.fromRGB(29, 36, 49)
 local CHIP_COLOR = Color3.fromRGB(48, 58, 75)
 local ICON_BUBBLE_COLOR = Color3.fromRGB(48, 58, 75)
@@ -71,12 +68,12 @@ end
 
 local function showNotification(category, message)
 	category = string.upper(tostring(category or "GENERAL"))
-	if not COLORS[category] then category = "GENERAL" end
+	if not CATEGORIES[category] then category = "GENERAL" end
 	message = tostring(message or "")
 	if message == "" then return end
 
 	nextId += 1
-	local style = COLORS[category]
+	local style = category == "WARNING" and WARNING_STYLE or STANDARD_STYLE
 	local card = Instance.new("Frame")
 	card.Name = "Notification_" .. tostring(nextId)
 	card.Size = UDim2.new(1, 0, 0, 84)
@@ -120,7 +117,7 @@ local function showNotification(category, message)
 	local title = Instance.new("TextLabel")
 	title.Name = "Category"
 	title.Position = UDim2.fromOffset(66, 10)
-	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or 82, 22)
+	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or (category == "SUCCESS" and 78 or 82), 22)
 	title.BackgroundColor3 = CHIP_COLOR
 	title.BorderSizePixel = 0
 	title.Font = Enum.Font.Nunito
