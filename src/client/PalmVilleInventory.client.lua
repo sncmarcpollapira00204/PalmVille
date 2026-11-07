@@ -329,13 +329,16 @@ local function renderItems()
 		table.insert(displayItems, item)
 	end
 	for _, tool in ipairs(tools) do
-		table.insert(displayItems, {
-			name = tool.Name:gsub("%s+x%d+$", ""),
-			amount = math.max(1, math.floor(tonumber(tool:GetAttribute("StackCount")) or 1)),
-			category = "Tools",
-			icon = getItemIcon(tool),
-			tool = tool,
-		})
+		-- Seed packs are already represented by the saved profile snapshot; don't show them twice.
+		if tool:GetAttribute("PalmVilleSeedPack") ~= true then
+			table.insert(displayItems, {
+				name = tool.Name:gsub("%s+x%d+$", ""),
+				amount = math.max(1, math.floor(tonumber(tool:GetAttribute("StackCount")) or 1)),
+				category = "Tools",
+				icon = getItemIcon(tool),
+				tool = tool,
+			})
+		end
 	end
 	currentItems = displayItems
 	capacity.Text = tostring(#displayItems) .. " / 50"
