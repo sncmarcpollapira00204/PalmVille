@@ -1,24 +1,44 @@
-# Source audit — 2026-11-04
+# PalmVille source audit and cleanup record
 
-## Inventory
+## Current managed source
 
-The submitted XML place contains 65 Script, LocalScript, and ModuleScript instances. Thirteen current/legacy PalmVille scripts are mapped into the managed source tree; two dated admin GUI backups are archived; third-party/free-model and map-attached scripts remain outside the managed source tree. See `script-inventory.csv` for exact hierarchy and source sizes.
+The current Rojo-managed source tree contains:
+- 5 client scripts
+- 1 Admin GUI LocalScript and its metadata
+- 9 server scripts/modules, including the Admin, player data, economy, inventory, item registry, chicken, role title, graphics preference, and underwater chest systems
 
-## Legacy duplicates and existing safety state
+The exact live mapping is defined in `default.project.json`. Files under `src/server`, `src/client`, and `src/gui/PalmVilleAdminGui` are mapped into Roblox Studio.
 
-1. `StarterGui/PalmVilleAdminGui/AdminClient` and `PalmVilleAdminClient` are both present under the same ScreenGui and each constructs an `AdminLauncher` and admin panel. In the uploaded place, `AdminClient.Disabled` is already `true`; keep `PalmVilleAdminClient` as the active interface.
-2. `ServerScriptService/RoleTitleSystem` and `PalmVilleRoleTitlesV2` both create `FarmVilleRoleTitle` BillboardGuis. The legacy static table assigns UserId `11199335797` the title `ALIPIN`, while V2 recognizes that ID as `MASTER DEVELOPER` and renders `DEV`. In the uploaded place, `RoleTitleSystem.Disabled` is already `true`; keep V2 enabled.
-3. `ServerScriptService/PalmVilleAdminServer` and `PalmVilleAdminServerV2` both listen to `ReplicatedStorage/PalmVilleAdminRemote`. The legacy script has its own owner-only access path and raw announcement broadcast; V2 handles the current `Action` request envelope, server-side role permissions, and filtered announcements. In the uploaded place, `PalmVilleAdminServer.Disabled` is already `true`; keep V2 enabled.
-4. `ServerScriptService/PalmVilleCode` contains only a 135-byte placeholder and the existing project mapped `src/server/init.server.lua` into that single Script instance. That mapping does not put `PalmVilleItemRegistry` at the `ServerScriptService` root where V2 requires it. The new project maps real server files directly under `ServerScriptService`; the place copy disables the no-op placeholder.
+## Dependency review
 
-## Kept dependencies
+The following dependencies were checked and retained:
+- Admin server → item registry and inventory service.
+- Inventory service → economy and item registry.
+- Player data → economy and inventory service.
+- Role titles → Admin role resolver.
+- Chicken animator → chicken controller's CollectionService tag and model attributes.
+- Graphics settings UI → graphics settings persistence.
+- Underwater chest feedback → underwater chest service.
+- Cash HUD → replicated leaderstats Money value.
 
-- `PalmVilleAdminServerV2` provides `PalmVilleGetAdminRole` and `PalmVilleAdminRoleChanged` used by V2 role titles, Analytics, and Players.
-- `PalmVilleItemRegistry` requires `ServerStorage/PalmVilleAdminItems/RICE_SEED`, which exists in the supplied place. The model/tool remains in Studio and is not recreated by this code import.
-- `FarmVilleGraphicsSettings` pairs with `FarmVilleGraphicsSettingsPersistence`.
+Some server/client scripts are entry points and communicate through Roblox services, attributes, CollectionService tags, and RemoteEvents instead of `require`. They are not considered unused merely because no other source file requires them.
 
-## Gaps and not changed
+## Cleanup completed
 
-- `PalmVillePlayersServer` has an optional `PalmVilleAdminPlayerData` BindableFunction integration for money, earnedToday, level, XP, and playtime. That BindableFunction is not present in the uploaded place, so player progress metrics remain unavailable until connected to the actual economy/progression system.
-- The uploaded XML does not include a `Players.MaxPlayers` value. The six-player cap must be verified in the experience/place settings; this import does not set it.
-- No terrain, Workspace models, spawn location, tool assets, or player data were changed.
+- Removed five archived Admin client backup files from the active branch.
+- Removed two archived pre-merge Players/Analytics server backup files. Their consolidated implementation remains in `PalmVilleAdminServerV2.server.lua`.
+- Removed experimental Rooster branches from the chicken controller and animator because neither imported Rooster asset was successfully validated in Studio.
+- Kept the original working chicken controller and client bone animator.
+- Refreshed project and server documentation to describe the current managed source and dependencies.
+
+Deleted files remain recoverable from Git history if a rollback is ever needed.
+
+## Not deleted
+
+- Active systems and their required modules.
+- `audit/script-inventory.csv`: this is a historical inventory of the uploaded Studio place from 2026-11-04, not a current list of Rojo-managed files.
+- Manually managed Workspace/map assets and third-party scripts. The Rojo project intentionally preserves unmanaged Studio instances through `$ignoreUnknownInstances: true`.
+
+## Studio validation still required
+
+The source cleanup is committed, but it has not been validated in a live Roblox Studio Play Test. After pulling and syncing, test Admin, player data, seed inventory, chicken movement/animation, graphics settings, and underwater chests before publishing.
