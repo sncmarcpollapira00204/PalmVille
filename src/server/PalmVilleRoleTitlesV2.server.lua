@@ -15,11 +15,11 @@ local handled = setmetatable({}, {__mode = "k"})
 
 -- Overhead role tag only: no panel, card, frame, or extra nameplate UI.
 local styles = {
-	OWNER = {text = "OWNER", color = Color3.fromRGB(255, 211, 82), outline = Color3.fromRGB(86, 57, 8)},
-	["MASTER DEVELOPER"] = {text = "DEV", color = Color3.fromRGB(105, 195, 255), outline = Color3.fromRGB(15, 48, 84)},
-	["HEAD ADMIN"] = {text = "HEAD ADMIN", color = Color3.fromRGB(255, 123, 198), outline = Color3.fromRGB(91, 20, 62)},
-	ADMIN = {text = "ADMIN", color = Color3.fromRGB(112, 235, 151), outline = Color3.fromRGB(19, 77, 42)},
-	MODERATOR = {text = "MODERATOR", color = Color3.fromRGB(218, 228, 240), outline = Color3.fromRGB(48, 57, 70)},
+	OWNER = {text = "OWNER", color = Color3.fromRGB(255, 181, 67), outline = Color3.fromRGB(35, 24, 18)},
+	["MASTER DEVELOPER"] = {text = "DEVELOPER", color = Color3.fromRGB(255, 181, 67), outline = Color3.fromRGB(35, 24, 18)},
+	["HEAD ADMIN"] = {text = "HEAD ADMIN", color = Color3.fromRGB(255, 181, 67), outline = Color3.fromRGB(35, 24, 18)},
+	ADMIN = {text = "ADMIN", color = Color3.fromRGB(255, 181, 67), outline = Color3.fromRGB(35, 24, 18)},
+	MODERATOR = {text = "MODERATOR", color = Color3.fromRGB(255, 181, 67), outline = Color3.fromRGB(35, 24, 18)},
 }
 
 local function getRole(player)
@@ -63,47 +63,74 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.new(5.5, 0, 1.4, 0)
-	billboard.StudsOffset = Vector3.new(0, 3.15, 0)
+	billboard.Size = UDim2.new(7, 0, 2.1, 0)
+	billboard.StudsOffset = Vector3.new(0, 3.35, 0)
 	billboard.MaxDistance = 125
 	billboard.AlwaysOnTop = false
 	billboard.LightInfluence = 0
 	billboard.Enabled = player:GetAttribute("PalmVilleAdminTitleVisible") ~= false
 
-	local label = Instance.new("TextLabel")
-	label.Name = "RoleTag"
-	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.GothamBlack
-	label.Text = style.text
-	label.TextColor3 = style.color
-	label.TextSize = 44
-	label.TextScaled = false
-	label.TextWrapped = false
-	label.TextStrokeColor3 = style.outline
-	label.TextStrokeTransparency = 0
-	label.TextXAlignment = Enum.TextXAlignment.Center
-	label.TextYAlignment = Enum.TextYAlignment.Center
-	label.Parent = billboard
+	-- Two-line overhead tag: rank above, player name below.
+	local roleLabel = Instance.new("TextLabel")
+	roleLabel.Name = "RoleTag"
+	roleLabel.BackgroundTransparency = 1
+	roleLabel.Position = UDim2.fromScale(0, 0)
+	roleLabel.Size = UDim2.fromScale(1, 0.48)
+	roleLabel.Font = Enum.Font.Cartoon
+	roleLabel.Text = style.text
+	roleLabel.TextColor3 = style.color
+	roleLabel.TextSize = 27
+	roleLabel.TextScaled = false
+	roleLabel.TextWrapped = false
+	roleLabel.TextStrokeColor3 = style.outline
+	roleLabel.TextStrokeTransparency = 0
+	roleLabel.TextXAlignment = Enum.TextXAlignment.Center
+	roleLabel.TextYAlignment = Enum.TextYAlignment.Center
+	roleLabel.Parent = billboard
 
-	-- Soft role-colored outline with a gentle neon pulse.
+	local roleOutline = Instance.new("UIStroke")
+	roleOutline.Name = "DarkLetterOutline"
+	roleOutline.Color = style.outline
+	roleOutline.Thickness = 1.2
+	roleOutline.Transparency = 0.05
+	roleOutline.Parent = roleLabel
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Name = "PlayerName"
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Position = UDim2.fromScale(0, 0.43)
+	nameLabel.Size = UDim2.fromScale(1, 0.57)
+	nameLabel.Font = Enum.Font.FredokaOne
+	nameLabel.Text = player.DisplayName
+	nameLabel.TextColor3 = Color3.fromRGB(255, 246, 224)
+	nameLabel.TextSize = 39
+	nameLabel.TextScaled = false
+	nameLabel.TextWrapped = false
+	nameLabel.TextStrokeColor3 = Color3.fromRGB(28, 22, 24)
+	nameLabel.TextStrokeTransparency = 0
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	nameLabel.TextYAlignment = Enum.TextYAlignment.Center
+	nameLabel.Parent = billboard
+
+	local nameOutline = Instance.new("UIStroke")
+	nameOutline.Name = "DarkLetterOutline"
+	nameOutline.Color = Color3.fromRGB(28, 22, 24)
+	nameOutline.Thickness = 1.6
+	nameOutline.Transparency = 0.04
+	nameOutline.Parent = nameLabel
+
 	local glow = Instance.new("UIStroke")
-	glow.Name = "RoleGlow"
+	glow.Name = "SoftRoleGlow"
 	glow.Color = style.color
-	glow.Thickness = 2.2
-	glow.Transparency = 0.12
-	glow.Parent = label
+	glow.Thickness = 1.1
+	glow.Transparency = 0.5
+	glow.Parent = roleLabel
 
-	-- Gentle neon pulse around crisp, readable lettering.
-	local pulseInfo = TweenInfo.new(1.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	local pulseInfo = TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 	TweenService:Create(glow, pulseInfo, {
-		Thickness = 2.8,
-		Transparency = 0.24,
+		Thickness = 1.7,
+		Transparency = 0.68,
 	}):Play()
-	TweenService:Create(label, pulseInfo, {
-		TextStrokeTransparency = 0.08,
-	}):Play()
-
 	billboard.Parent = head
 end
 
