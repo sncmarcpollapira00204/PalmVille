@@ -2,48 +2,60 @@
 
 This repository manages project-owned scripts while leaving the hand-built world, Terrain, models, meshes, unions, and other manually managed Studio instances intact.
 
-## What Rojo manages
+## Rojo mapping
 
 - `src/server` → `ServerScriptService`
 - `src/client` → `StarterPlayer/StarterPlayerScripts`
-- `src/gui/PalmVilleAdminGui` → `StarterGui/PalmVilleAdminGui` (`ScreenGui`)
+- `src/gui/PalmVilleAdminGui` → `StarterGui/PalmVilleAdminGui`
 
-Each mapped container uses `$ignoreUnknownInstances: true`. Unmanaged Studio objects are intentionally preserved; do not change these flags without reviewing the full place hierarchy.
+Mapped containers use `$ignoreUnknownInstances: true` so manually managed Studio objects are preserved.
 
-## Admin architecture
+## Active systems
 
-The Admin system now has one main client LocalScript and one main server Script:
+### Server
+- `PalmVilleAdminServerV2.server.lua` — authoritative Admin roles, permissions, moderation, announcements, logs, tools, player directory, and analytics.
+- `PalmVilleEconomy.lua` — server-side player profile and currency API.
+- `PalmVillePlayerData.server.lua` — persistent player data, session locking, autosave, and Admin player-data adapter.
+- `PalmVilleInventoryService.lua` — persistent seed-pack inventory and Tool restoration.
+- `PalmVilleItemRegistry.lua` — registered item templates, including the PalmVille seed packs.
+- `PalmVilleChickenController.server.lua` — server-authoritative wandering for supported chicken models.
+- `PalmVilleRoleTitlesV2.server.lua` — role title billboards.
+- `FarmVilleGraphicsSettingsPersistence.server.lua` — graphics preferences.
+- `UnderwaterChestService.server.lua` — secure underwater chest interactions and rewards.
 
-- `src/gui/PalmVilleAdminGui/PalmVilleAdminClient.client.lua` — the complete Admin V2 interface: Overview, Players, Announcements, Moderation, Staff & Roles, Tools, and Logs.
-- `src/server/PalmVilleAdminServerV2.server.lua` — the authoritative server backend: role verification, permissions, admin actions, moderation, announcements, logs, cross-server Players directory, and overview analytics.
-- `src/server/PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
-- `src/server/PalmVilleRoleTitlesV2.server.lua` — role title billboards using the Admin role resolver.
+### Client
+- `PalmVilleAdminClient.client.lua` — Admin V2 interface.
+- `PalmVilleChickenAnimator.client.lua` — client-side chicken bone animation.
+- `PalmVilleCashHUD.client.lua` — replicated Money display.
+- `FarmVilleGraphicsSettings.client.lua` — graphics settings UI.
+- `UnderwaterCameraAtmosphere.client.lua` — underwater camera atmosphere.
+- `UnderwaterChestFeedback.client.lua` — chest reward feedback.
 
-The former standalone `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in `PalmVilleAdminServerV2`. Their data-store names and RemoteFunction endpoints are retained. Their old standalone Script files are removed from the active source tree and from the clean full-place test artifact.
+## Important dependencies
 
-The former 120 KB Admin client is archived under `archive/admin-client-backups/`. The former Players and Analytics server files are archived under `archive/merged-server-backups/`. Archive files are not mapped into Roblox Studio.
+- Admin server requires `PalmVilleItemRegistry` and `PalmVilleInventoryService`.
+- Inventory service requires `PalmVilleEconomy` and `PalmVilleItemRegistry`.
+- Player data requires `PalmVilleEconomy` and `PalmVilleInventoryService`.
+- Role titles use the Admin role resolver.
+- Chicken animator listens for the tag and attributes created by the chicken controller.
+- Graphics settings client pairs with the server persistence script.
+- Underwater chest feedback pairs with the server chest service.
 
-## Other active server systems
+Do not delete a mapped script based only on its lack of a visible `require`: some scripts are entry points and communicate through Roblox services, attributes, tags, or RemoteEvents.
 
-- `FarmVilleGraphicsSettingsPersistence.server.lua` — graphics preferences; separate from Admin.
-- `PalmVilleRoleTitlesV2.server.lua` — role title display.
-- `PalmVilleItemRegistry.lua` — required item templates for Give Item.
+## Chicken model requirements
 
-Keep `ServerStorage/PalmVilleAdminItems/RICE_SEED`; the item registry requires this Tool template. The optional `PalmVilleAdminPlayerData` BindableFunction can provide money, earned-today, level, XP, and playtime to the cross-server player directory. It is not present in the current place, so those values remain unavailable rather than fabricated.
+The active chicken controller recognizes `PalmVilleChicken - Owned`, `PalmVilleChicken`, and `fullpollo`. The model must contain a skinned MeshPart named `pollo` with the original `CHICKEN_-` bone names. Duplicate the complete model, not the mesh or individual bones.
 
-## Legacy scripts
+## Data and safety
 
-The old `ServerScriptService/PalmVilleAdminServer`, `RoleTitleSystem`, and `PalmVilleCode` entries are retired disabled placeholders. They are not part of the active Rojo source. Keep them disabled if they remain in a Studio copy; the validated full-place builder removes them only when their `Disabled = true` state is confirmed.
+The live player store is `PalmVille_PlayerData_v1`; Studio uses `PalmVille_PlayerData_Test_v1`. Keep the six-player cap configured in the Roblox experience settings. This source cleanup does not alter place geometry, player data, or experience settings.
 
-The duplicate `StarterGui/PalmVilleAdminGui/AdminClient` placeholder is removed from the managed source tree. Rojo should remove that mapped child on sync. The active client is `PalmVilleAdminClient`.
+## Safe sync
 
-## Safe sync process
-
-1. Save a backup of the current place before syncing.
-2. In the local PalmVille repository, run `git pull --ff-only origin feature/admin-menu-redesign`.
-3. Keep `rojo serve default.project.json` running and connect Studio to `localhost:34872`.
-4. Review the Rojo changes. Expect the Admin client/server source updates and deletion of the mapped standalone Players/Analytics scripts and duplicate `AdminClient`. Do not accept unrelated map or Workspace changes.
-5. Stop Play before accepting changes, then Play-test access, Overview, Players, Announcements, Moderation, Staff & Roles, Tools, and Logs.
-6. Do not publish until the Studio test is successful.
-
-The workflow does not change the place geometry or six-player cap. Verify the six-player limit in the Roblox experience/place settings.
+1. Save a backup of the current place.
+2. Pull `feature/admin-menu-redesign`.
+3. Run `rojo serve default.project.json` and connect Studio to `localhost:34872`.
+4. Review Rojo changes before accepting them.
+5. Stop Play before syncing.
+6. Test Admin, player data, seed inventory, chicken movement/animation, graphics settings, and underwater chests before publishing.
