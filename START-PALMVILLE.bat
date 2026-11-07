@@ -53,7 +53,25 @@ if errorlevel 1 (
 )
 
 echo.
-echo [2/2] Starting Rojo on the PalmVille project...
+echo [2/2] Checking Rojo port 34872...
+netstat -ano -p tcp | findstr /R /C:":34872 .*LISTENING" >nul
+if not errorlevel 1 (
+    echo.
+    echo [OK] Port 34872 is already in use.
+    echo A Rojo server may already be running.
+    echo Do NOT start another Rojo instance.
+    echo.
+    echo In Roblox Studio, connect the Rojo plugin to:
+    echo 127.0.0.1:34872
+    echo.
+    echo If Studio cannot connect, close the old Rojo terminal
+    echo and run this launcher again.
+    echo.
+    pause
+    exit /b 0
+)
+
+echo [OK] Port is free. Starting Rojo...
 echo Keep this window open while using Rojo in Roblox Studio.
 echo Press Ctrl+C in this window to stop Rojo.
 echo.
