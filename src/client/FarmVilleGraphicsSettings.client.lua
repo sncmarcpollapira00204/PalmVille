@@ -313,7 +313,7 @@ local function applyLightingProfile()
 	color.Enabled = graphicsToggles.Effects
 	bloom.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
 	rays.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
-		end
+end
 
 for _, object in ipairs(Lighting:GetDescendants()) do remember(object) end
 for _, object in ipairs(Workspace:GetDescendants()) do remember(object) end
