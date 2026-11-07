@@ -1066,11 +1066,19 @@ local modalCallback
 local modalPickerCallback
 local closeAdminModal
 
+local modalPickerRosterKey = nil
 local function renderModalPlayerPicker()
+	local roster = snapshot.players or {}
+	local keyParts = {}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rosterKey = table.concat(keyParts, "|")
+	if rosterKey == modalPickerRosterKey then return end
+	modalPickerRosterKey = rosterKey
 	for _, child in ipairs(modalPicker:GetChildren()) do
 		if child:IsA("GuiObject") then child:Destroy() end
 	end
-	local roster = snapshot.players or {}
 	if #roster == 0 then
 		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
 		empty.Position = UDim2.fromOffset(4, 4)
@@ -1602,12 +1610,15 @@ local function updatePlayerDetails(row)
 	end
 end
 
+local renderedPlayerRowsKey = nil
 local function renderPlayers()
-	for _, child in ipairs(playerRows:GetChildren()) do
-		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
-	end
 	local query = string.lower(playerSearch.Text or "")
 	local roster = snapshot.players or {}
+	local keyParts = {query}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rowsKey = table.concat(keyParts, "|")
 	local visibleCount = 0
 	local selectedStillOnline = false
 	local selectedRow
@@ -1626,6 +1637,13 @@ local function renderPlayers()
 		updatePlayerDetails(selectedRow)
 	end
 	playersScope.Text = string.format("This server · %d online", #roster)
+	-- Snapshot polling updates live stats every 1.5 seconds. Keep existing row
+	-- instances and avatar images when the roster/search identity has not changed.
+	if rowsKey == renderedPlayerRowsKey then return end
+	renderedPlayerRowsKey = rowsKey
+	for _, child in ipairs(playerRows:GetChildren()) do
+		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+	end
 	for _, row in ipairs(roster) do
 		local username = tostring(row.username or "")
 		local displayName = tostring(row.displayName or username)
