@@ -6,6 +6,13 @@ local ItemRegistry = require(ServerScriptService:WaitForChild("PalmVilleItemRegi
 
 local InventoryService = {}
 local MAX_STACK = 999
+local ServerScriptService = game:GetService("ServerScriptService")
+local auditEvent = ServerScriptService:FindFirstChild("PalmVilleAuditEvent")
+if not auditEvent then
+	auditEvent = Instance.new("BindableEvent")
+	auditEvent.Name = "PalmVilleAuditEvent"
+	auditEvent.Parent = ServerScriptService
+end
 
 local function getSeedFolder(profile)
 	profile.inventory = type(profile.inventory) == "table" and profile.inventory or {}
@@ -69,6 +76,12 @@ function InventoryService.GiveSeedPacks(player, code, amount)
 
 	seedPacks[code] = current + addAmount
 	InventoryService.SyncPlayer(player)
+	auditEvent:Fire("Inventory Received", player, {
+		itemCode = code,
+		amount = addAmount,
+		balance = seedPacks[code],
+		reason = item.displayName,
+	})
 	return true, seedPacks[code]
 end
 
