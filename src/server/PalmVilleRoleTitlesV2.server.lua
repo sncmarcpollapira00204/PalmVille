@@ -62,7 +62,7 @@ local function createTitle(player, character)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = GUI_NAME
 	billboard.Adornee = head
-	billboard.Size = UDim2.fromOffset(300, 42)
+	billboard.Size = UDim2.new(4.5, 0, 0.8, 0)
 	billboard.StudsOffset = Vector3.new(0, 3.15, 0)
 	billboard.MaxDistance = 125
 	billboard.AlwaysOnTop = false
@@ -76,9 +76,13 @@ local function createTitle(player, character)
 	label.FontFace = Font.fromId(12187367666, Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
 	label.Text = style.text
 	label.TextColor3 = style.color
-	label.TextSize = 25
-	label.TextScaled = false
+	label.TextSize = 24
+	label.TextScaled = true
 	label.TextWrapped = false
+	local textConstraint = Instance.new("UITextSizeConstraint")
+	textConstraint.MinTextSize = 14
+	textConstraint.MaxTextSize = 24
+	textConstraint.Parent = label
 	label.TextStrokeColor3 = style.outline
 	label.TextStrokeTransparency = 0.12
 	label.TextXAlignment = Enum.TextXAlignment.Center
