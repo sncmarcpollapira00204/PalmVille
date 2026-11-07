@@ -98,8 +98,8 @@ make("ImageLabel", {
 	Name = "BagIcon",
 	BackgroundTransparency = 1,
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 8),
-	Size = UDim2.fromOffset(40, 40),
+	Position = UDim2.new(0.5, 0, 0, 3),
+	Size = UDim2.fromOffset(54, 54),
 	Image = "rbxassetid://113023659142897",
 	ScaleType = Enum.ScaleType.Fit,
 }, openButton)
