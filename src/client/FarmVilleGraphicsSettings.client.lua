@@ -104,20 +104,21 @@ local QUALITY_PROFILES = {
 		SunRays = {Intensity = 0.008, Spread = 0.8},
 		Clouds = true,
 	},
-	-- Higher visual quality with the same lightweight renderer and a little more atmospheric depth.
+	-- HD preset: sharper contrast, richer reflections and more detailed atmospheric depth.
+	-- Still uses ShadowMap to avoid the heavier Future renderer.
 	HIGH = {
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2,
-		Ambient = Color3.fromRGB(103, 116, 134),
-		OutdoorAmbient = Color3.fromRGB(145, 164, 185),
-		EnvironmentDiffuseScale = 0.68,
-		EnvironmentSpecularScale = 0.43,
-		ExposureCompensation = 0,
-		ShadowSoftness = 0.3,
-		Atmosphere = {Density = 0.34, Offset = 0.035, Color = Color3.fromRGB(188, 211, 234), Decay = Color3.fromRGB(99, 121, 150), Haze = 1.35, Glare = 0.035},
-		Color = {Brightness = 0.008, Contrast = 0.075, Saturation = 0, TintColor = Color3.fromRGB(242, 248, 255)},
-		Bloom = {Intensity = 0.045, Size = 18, Threshold = 1.85},
-		SunRays = {Intensity = 0.012, Spread = 0.82},
+		Brightness = 2.02,
+		Ambient = Color3.fromRGB(96, 108, 127),
+		OutdoorAmbient = Color3.fromRGB(151, 169, 190),
+		EnvironmentDiffuseScale = 0.82,
+		EnvironmentSpecularScale = 0.72,
+		ExposureCompensation = 0.015,
+		ShadowSoftness = 0.18,
+		Atmosphere = {Density = 0.32, Offset = 0.025, Color = Color3.fromRGB(184, 207, 233), Decay = Color3.fromRGB(88, 111, 143), Haze = 1.25, Glare = 0.045},
+		Color = {Brightness = 0.008, Contrast = 0.09, Saturation = 0.025, TintColor = Color3.fromRGB(239, 246, 255)},
+		Bloom = {Intensity = 0.05, Size = 18, Threshold = 1.8},
+		SunRays = {Intensity = 0.014, Spread = 0.84},
 		Clouds = true,
 	},
 }
@@ -339,9 +340,7 @@ end
 
 local function applyPreset(preset)
 	currentPreset = QUALITY_PROFILES[preset] and preset or "MID"
-	if isMobile and currentPreset == "HIGH" then
-		currentPreset = "MID"
-	end
+	-- HIGH remains selectable on mobile; users can lower it if performance drops.
 	presetModified = false
 	graphicsToggles.Shadows = currentPreset ~= "LOW" and originalGlobalShadows
 	graphicsToggles.Effects = currentPreset ~= "LOW"
