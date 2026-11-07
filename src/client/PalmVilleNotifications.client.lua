@@ -26,7 +26,7 @@ local stack = Instance.new("Frame")
 stack.Name = "NotificationStack"
 stack.AnchorPoint = Vector2.new(1, 1)
 stack.Position = UDim2.new(1, -24, 1, -24)
-stack.Size = UDim2.new(0, 330, 1, -40)
+stack.Size = UDim2.new(0, 320, 1, -40)
 stack.BackgroundTransparency = 1
 stack.Parent = gui
 
@@ -40,7 +40,7 @@ layout.Parent = stack
 
 local active = {}
 local nextId = 0
-local MAX_VISIBLE = 4
+local MAX_VISIBLE = 3
 local DISPLAY_TIME = 4.5
 
 local function removeCard(card)
@@ -75,8 +75,8 @@ local function showNotification(category, message)
 	local style = COLORS[category]
 	local card = Instance.new("Frame")
 	card.Name = "Notification_" .. tostring(nextId)
-	card.Size = UDim2.new(1, 0, 0, 82)
-	card.BackgroundColor3 = Color3.fromRGB(255, 251, 242)
+	card.Size = UDim2.new(1, 0, 0, 88)
+	card.BackgroundColor3 = Color3.fromRGB(255, 253, 248)
 	card.BackgroundTransparency = 0.02
 	card.BorderSizePixel = 0
 	card.ClipsDescendants = true
@@ -84,25 +84,18 @@ local function showNotification(category, message)
 	card.Parent = stack
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 17)
+	corner.CornerRadius = UDim.new(0, 16)
 	corner.Parent = card
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(226, 218, 202)
-	stroke.Transparency = 0.18
-	stroke.Thickness = 1.2
+	stroke.Color = style.accent
+	stroke.Transparency = 0.72
+	stroke.Thickness = 1
 	stroke.Parent = card
-
-	local accent = Instance.new("Frame")
-	accent.Name = "Accent"
-	accent.Size = UDim2.new(0, 6, 1, 0)
-	accent.BackgroundColor3 = style.accent
-	accent.BorderSizePixel = 0
-	accent.Parent = card
 
 	local iconBubble = Instance.new("Frame")
 	iconBubble.Name = "IconBubble"
-	iconBubble.Position = UDim2.fromOffset(13, 14)
-	iconBubble.Size = UDim2.fromOffset(34, 34)
+	iconBubble.Position = UDim2.fromOffset(15, 27)
+	iconBubble.Size = UDim2.fromOffset(36, 36)
 	iconBubble.BackgroundColor3 = style.tint
 	iconBubble.BorderSizePixel = 0
 	iconBubble.Parent = card
@@ -117,30 +110,34 @@ local function showNotification(category, message)
 	icon.Font = Enum.Font.Nunito
 	icon.Text = style.icon
 	icon.TextColor3 = style.accent
-	icon.TextSize = 19
+	icon.TextSize = 20
 	icon.Parent = iconBubble
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Category"
-	title.BackgroundTransparency = 1
-	title.Position = UDim2.fromOffset(57, 12)
-	title.Size = UDim2.new(1, -68, 0, 20)
+	title.Position = UDim2.fromOffset(62, 12)
+	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or 76, 22)
+	title.BackgroundColor3 = style.tint
+	title.BorderSizePixel = 0
 	title.Font = Enum.Font.Nunito
 	title.Text = category
 	title.TextColor3 = style.accent
-	title.TextSize = 13
-	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextSize = 12
+	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = card
+	local titleCorner = Instance.new("UICorner")
+	titleCorner.CornerRadius = UDim.new(1, 0)
+	titleCorner.Parent = title
 
 	local body = Instance.new("TextLabel")
 	body.Name = "Message"
 	body.BackgroundTransparency = 1
-	body.Position = UDim2.fromOffset(57, 37)
-	body.Size = UDim2.new(1, -72, 0, 34)
+	body.Position = UDim2.fromOffset(62, 42)
+	body.Size = UDim2.new(1, -78, 0, 34)
 	body.Font = Enum.Font.Nunito
 	body.Text = message
 	body.TextColor3 = Color3.fromRGB(54, 58, 62)
-	body.TextSize = 14
+	body.TextSize = 17
 	body.TextWrapped = true
 	body.TextTruncate = Enum.TextTruncate.AtEnd
 	body.TextXAlignment = Enum.TextXAlignment.Left
