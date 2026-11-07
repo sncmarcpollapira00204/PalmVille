@@ -319,7 +319,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		enabled = not enabled
 		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
 		if track and knob then
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end
@@ -348,7 +348,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 	local knob = make("Frame", {
 		Name = "ToggleKnob",
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
+		Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
 		Size = UDim2.fromOffset(16, 16),
 		BackgroundColor3 = enabled and C.bg or C.text,
 		BorderSizePixel = 0,
@@ -359,7 +359,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		row = row,
 		set = function(value)
 			enabled = value == true
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end,
