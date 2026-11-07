@@ -1,172 +1,164 @@
+local RunService = game:GetService("RunService")
 local CollectionService = game:GetService("CollectionService")
 local Workspace = game:GetService("Workspace")
 
 local TAG = "PalmVilleRooster"
-local CROW_SOUND_ID = "rbxassetid://135218417"
-local DEFAULT_IDLE_ANIMATION_ID = ""
-
-local CONFIG = {
-	MinCrowDelay = 45,
-	MaxCrowDelay = 85,
-	CrowVolume = 0.55,
-	CrowRollOffMinDistance = 8,
-	CrowRollOffMaxDistance = 75,
-	AnimationFadeTime = 0.25,
+local MODEL_NAMES = {
+	["Chicken - Loof"] = true,
+	["Chicken Rooster idle by Jungle Jim (animated)"] = true,
+	["Chicken Rooster idle by Jungle Jim (animated)(1)"] = true,
+	Rooster = true,
+	PalmVilleRooster = true,
 }
 
-local active = {}
+local CONFIG = {
+	WalkSpeed = 1.15,
+	WanderRadius = 8,
+	MinWalkDistance = 2.5,
+	MaxWalkDistance = 5.5,
+	MinPause = 3,
+	MaxPause = 7,
+	TurnSpeed = 3.5,
+	CrowSoundId = "rbxassetid://135218417",
+	FirstCrowMin = 18,
+	FirstCrowMax = 35,
+	CrowMin = 55,
+	CrowMax = 105,
+	CrowVolume = 0.65,
+	CrowDistance = 85,
+}
+
+local states = {}
 local registering = setmetatable({}, {__mode = "k"})
 
-local function isRoosterModel(instance)
-	if not instance:IsA("Model") then
-		return false
+local function findRigMesh(model)
+	local bestMesh
+	local bestBoneCount = 0
+
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("MeshPart") then
+			local count = 0
+			for _, child in ipairs(descendant:GetDescendants()) do
+				if child:IsA("Bone") then
+					count += 1
+				end
+			end
+			if count > bestBoneCount then
+				bestMesh = descendant
+				bestBoneCount = count
+			end
+		end
 	end
 
-	if CollectionService:HasTag(instance, TAG) then
-		return true
+	if bestBoneCount >= 6 then
+		return bestMesh, bestBoneCount
 	end
-
-	local name = string.lower(instance.Name)
-	return name == "chicken - loof"
-		or name == "rooster"
-		or name == "palmvillerooster"
-		or string.find(name, "chicken rooster", 1, true) ~= nil
+	return nil, bestBoneCount
 end
 
-local function findSoundParent(model)
+local function findSoundParent(model, mesh)
+	if mesh then
+		return mesh
+	end
 	if model.PrimaryPart then
 		return model.PrimaryPart
 	end
-
 	for _, item in ipairs(model:GetDescendants()) do
-		if item:IsA("MeshPart") or item:IsA("BasePart") then
+		if item:IsA("BasePart") then
 			return item
 		end
 	end
-
 	return nil
 end
 
-local function getAnimator(model)
-	local controller = model:FindFirstChildWhichIsA("AnimationController", true)
-	local humanoid = model:FindFirstChildWhichIsA("Humanoid", true)
-	local animator
-
-	if humanoid then
-		animator = humanoid:FindFirstChildOfClass("Animator")
-		if not animator then
-			animator = Instance.new("Animator")
-			animator.Parent = humanoid
-		end
-		return animator
-	end
-
-	if not controller then
-		controller = Instance.new("AnimationController")
-		controller.Name = "PalmVilleRoosterAnimationController"
-		controller.Parent = model
-	end
-
-	animator = controller:FindFirstChildOfClass("Animator")
-	if not animator then
-		animator = Instance.new("Animator")
-		animator.Parent = controller
-	end
-
-	return animator
-end
-
-local function getAnimationId(model)
-	local id = model:GetAttribute("PalmVilleIdleAnimationId")
-	if typeof(id) == "string" and id ~= "" then
-		return id
-	end
-	return DEFAULT_IDLE_ANIMATION_ID
-end
-
-local function startIdleAnimation(model, state)
-	local animationId = getAnimationId(model)
-	if animationId == "" then
-		warn("[PalmVille Rooster] Set the PalmVilleIdleAnimationId attribute on " .. model:GetFullName() .. " after publishing the FBX idle clip.")
-		return
-	end
-
-	if not string.find(animationId, "rbxassetid://", 1, true) then
-		animationId = "rbxassetid://" .. animationId
-	end
-
-	local animator = getAnimator(model)
-	local animation = Instance.new("Animation")
-	animation.Name = "PalmVilleRoosterIdle"
-	animation.AnimationId = animationId
-	animation.Parent = model
-
-	local ok, trackOrError = pcall(function()
-		return animator:LoadAnimation(animation)
-	end)
-
-	if not ok then
-		warn("[PalmVille Rooster] Failed to load idle animation for " .. model.Name .. ": " .. tostring(trackOrError))
-		animation:Destroy()
-		return
-	end
-
-	local track = trackOrError
-	track.Looped = true
-	track.Priority = Enum.AnimationPriority.Idle
-	track:Play(CONFIG.AnimationFadeTime)
-	state.animation = animation
-	state.track = track
-end
-
-local function setupCrowSound(model, state)
-	local parent = findSoundParent(model)
-	if not parent then
-		warn("[PalmVille Rooster] No BasePart found for positional crow sound: " .. model:GetFullName())
-		return
-	end
-
+local function addCrowSound(parent)
 	local sound = parent:FindFirstChild("PalmVilleRoosterCrow")
-	if not sound then
-		sound = Instance.new("Sound")
-		sound.Name = "PalmVilleRoosterCrow"
-		sound.SoundId = CROW_SOUND_ID
-		sound.Volume = CONFIG.CrowVolume
-		sound.RollOffMode = Enum.RollOffMode.InverseTapered
-		sound.RollOffMinDistance = CONFIG.CrowRollOffMinDistance
-		sound.RollOffMaxDistance = CONFIG.CrowRollOffMaxDistance
-		sound.Parent = parent
+	if sound and sound:IsA("Sound") then
+		return sound
 	end
 
-	state.crowSound = sound
+	sound = Instance.new("Sound")
+	sound.Name = "PalmVilleRoosterCrow"
+	sound.SoundId = CONFIG.CrowSoundId
+	sound.Volume = CONFIG.CrowVolume
+	sound.RollOffMode = Enum.RollOffMode.InverseTapered
+	sound.RollOffMinDistance = 12
+	sound.RollOffMaxDistance = CONFIG.CrowDistance
+	sound.EmitterSize = 8
+	sound.Parent = parent
+	return sound
 end
 
 local function register(model)
-	if active[model] or registering[model] or not model:IsDescendantOf(Workspace) then
-		return
+	if states[model] or registering[model] or not model:IsDescendantOf(Workspace) then
+		return false
 	end
-
 	registering[model] = true
-	local hasMesh = findSoundParent(model) ~= nil
-	if not hasMesh then
+
+	local mesh, boneCount = findRigMesh(model)
+	if not mesh then
 		registering[model] = nil
-		return
+		return false
 	end
 
-	local state = {
-		random = Random.new(),
-		nextCrow = os.clock() + Random.new():NextNumber(CONFIG.MinCrowDelay, CONFIG.MaxCrowDelay),
-	}
-	active[model] = state
-	registering[model] = nil
-	CollectionService:AddTag(model, TAG)
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = false
+		end
+	end
 
-	startIdleAnimation(model, state)
-	setupCrowSound(model, state)
+	local pivot = model:GetPivot()
+	local look = pivot.LookVector
+	local forward = Vector3.new(look.X, 0, look.Z)
+	if forward.Magnitude < 0.001 then
+		forward = Vector3.new(0, 0, -1)
+	else
+		forward = forward.Unit
+	end
+
+	local rng = Random.new()
+	local soundParent = findSoundParent(model, mesh)
+	local now = os.clock()
+
+	states[model] = {
+		model = model,
+		mesh = mesh,
+		position = pivot.Position,
+		homePosition = pivot.Position,
+		homeRotation = pivot.Rotation,
+		homeForward = forward,
+		direction = forward,
+		target = pivot.Position,
+		walking = false,
+		nextDecision = now + rng:NextNumber(2, 5),
+		nextCrow = now + rng:NextNumber(CONFIG.FirstCrowMin, CONFIG.FirstCrowMax),
+		rng = rng,
+		sound = soundParent and addCrowSound(soundParent) or nil,
+	}
+
+	registering[model] = nil
+	model:SetAttribute("PalmVilleRoosterReady", true)
+	model:SetAttribute("PalmVilleRoosterWalking", false)
+	model:SetAttribute("PalmVilleRoosterBoneCount", boneCount)
+	CollectionService:AddTag(model, TAG)
+	return true
+end
+
+local function isRooster(model)
+	if not model:IsA("Model") then
+		return false
+	end
+	if CollectionService:HasTag(model, TAG) then
+		return true
+	end
+	return MODEL_NAMES[model.Name] == true
 end
 
 local function tryRegister(model)
-	if not isRoosterModel(model) or active[model] or registering[model] then
+	if not isRooster(model) or states[model] or registering[model] then
 		return
 	end
 
@@ -175,50 +167,112 @@ local function tryRegister(model)
 			if not model.Parent then
 				return
 			end
-			register(model)
-			if active[model] then
+			if register(model) then
 				return
 			end
 			task.wait(0.25)
 		end
+		if model.Parent then
+			warn("[PalmVille Rooster] Could not find a skinned MeshPart with bones in " .. model:GetFullName())
+		end
 	end)
 end
 
+local function chooseTarget(state, now)
+	for _ = 1, 12 do
+		local angle = state.rng:NextNumber(0, math.pi * 2)
+		local distance = state.rng:NextNumber(CONFIG.MinWalkDistance, CONFIG.MaxWalkDistance)
+		local candidate = Vector3.new(
+			state.homePosition.X + math.cos(angle) * distance,
+			state.position.Y,
+			state.homePosition.Z + math.sin(angle) * distance
+		)
+
+		if (candidate - state.homePosition).Magnitude <= CONFIG.WanderRadius then
+			state.target = candidate
+			state.walking = true
+			state.model:SetAttribute("PalmVilleRoosterWalking", true)
+			return
+		end
+	end
+
+	state.walking = false
+	state.model:SetAttribute("PalmVilleRoosterWalking", false)
+	state.nextDecision = now + 2
+end
+
+local function update(state, dt, now)
+	local model = state.model
+	if not model.Parent or not state.mesh.Parent then
+		return false
+	end
+
+	if state.walking then
+		local delta = Vector3.new(
+			state.target.X - state.position.X,
+			0,
+			state.target.Z - state.position.Z
+		)
+		local distance = delta.Magnitude
+
+		if distance <= 0.12 then
+			state.walking = false
+			model:SetAttribute("PalmVilleRoosterWalking", false)
+			state.nextDecision = now + state.rng:NextNumber(CONFIG.MinPause, CONFIG.MaxPause)
+		else
+			state.direction = delta.Unit
+			state.position += state.direction * math.min(CONFIG.WalkSpeed * dt, distance)
+		end
+	elseif now >= state.nextDecision then
+		chooseTarget(state, now)
+	end
+
+	if state.sound and now >= state.nextCrow then
+		if state.sound.Parent and not state.sound.IsPlaying then
+			state.sound:Play()
+		end
+		state.nextCrow = now + state.rng:NextNumber(CONFIG.CrowMin, CONFIG.CrowMax)
+	end
+
+	local desired = Vector3.new(state.direction.X, 0, state.direction.Z)
+	if desired.Magnitude < 0.001 then
+		desired = state.homeForward
+	else
+		desired = desired.Unit
+	end
+
+	local crossY = state.homeForward:Cross(desired).Y
+	local dot = math.clamp(state.homeForward:Dot(desired), -1, 1)
+	local yaw = math.atan2(crossY, dot)
+	local targetPivot = CFrame.new(state.position)
+		* CFrame.fromAxisAngle(Vector3.yAxis, yaw)
+		* state.homeRotation
+
+	model:PivotTo(model:GetPivot():Lerp(targetPivot, math.clamp(dt * CONFIG.TurnSpeed, 0, 1)))
+	return true
+end
+
 for _, item in ipairs(Workspace:GetDescendants()) do
-	if item:IsA("Model") and isRoosterModel(item) then
+	if item:IsA("Model") and isRooster(item) then
 		tryRegister(item)
 	end
 end
 
 Workspace.DescendantAdded:Connect(function(item)
-	if item:IsA("Model") then
+	if item:IsA("Model") and isRooster(item) then
 		tryRegister(item)
 	end
 end)
 
 CollectionService:GetInstanceAddedSignal(TAG):Connect(tryRegister)
 
-task.spawn(function()
-	while true do
-		task.wait(1)
+RunService.Heartbeat:Connect(function(dt)
+	dt = math.min(dt, 0.05)
+	local now = os.clock()
 
-		local now = os.clock()
-		for model, state in pairs(active) do
-			if not model.Parent then
-				if state.track then
-					state.track:Stop(0)
-					state.track:Destroy()
-				end
-				if state.animation then
-					state.animation:Destroy()
-				end
-				active[model] = nil
-			elseif state.crowSound and now >= state.nextCrow then
-				if not state.crowSound.IsPlaying then
-					state.crowSound:Play()
-				end
-				state.nextCrow = now + state.random:NextNumber(CONFIG.MinCrowDelay, CONFIG.MaxCrowDelay)
-			end
+	for model, state in pairs(states) do
+		if not update(state, dt, now) then
+			states[model] = nil
 		end
 	end
 end)
