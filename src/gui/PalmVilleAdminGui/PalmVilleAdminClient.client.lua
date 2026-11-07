@@ -1362,8 +1362,8 @@ local titleControl = abilityControl("Developer Role Title", adminTitleEnabled, f
 	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
 	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
 end)
-local nicknameCard = card(pages.OVERVIEW, "YOUR ADMIN NICKNAME", "Set the name displayed under your staff rank.")
-local ownNicknameInput = addField(nicknameCard, "NICKNAME", "Enter your display nickname", player:GetAttribute("PalmVilleAdminNickname") or "")
+local nicknameCard = card(pages.OVERVIEW, "OVERHEAD NAME (BELOW YOUR ROLE)", "Change only the name shown on the second line beneath your Owner, Developer, or Head Admin title.")
+local ownNicknameInput = addField(nicknameCard, "BOTTOM-LINE NICKNAME", "Enter the name shown below your role", player:GetAttribute("PalmVilleAdminNickname") or player.DisplayName)
 button(nicknameCard, "SAVE NICKNAME", function()
 	local nickname = ownNicknameInput.Text:gsub("^%s+", ""):gsub("%s+$", "")
 	if nickname == "" then setStatus("Enter a nickname first.", true); return end
