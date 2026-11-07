@@ -72,52 +72,52 @@ local VISIBILITY_TAGS = {
 local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
 
 local QUALITY_PROFILES = {
-	-- Lightweight neutral profile: clean daylight with restrained warm tones.
+	-- Lightweight cool daylight with a restrained blue atmosphere.
 	LOW = {
 		Technology = Enum.Technology.ShadowMap,
 		Brightness = 1.95,
-		Ambient = Color3.fromRGB(104, 101, 94),
-		OutdoorAmbient = Color3.fromRGB(137, 134, 123),
+		Ambient = Color3.fromRGB(99, 109, 124),
+		OutdoorAmbient = Color3.fromRGB(132, 148, 166),
 		EnvironmentDiffuseScale = 0.32,
 		EnvironmentSpecularScale = 0.16,
 		ExposureCompensation = -0.02,
 		ShadowSoftness = 0.1,
-		Atmosphere = {Density = 0.2, Offset = 0.03, Color = Color3.fromRGB(218, 211, 195), Decay = Color3.fromRGB(132, 126, 112), Haze = 0.38, Glare = 0},
-		Color = {Brightness = 0, Contrast = 0.045, Saturation = -0.025, TintColor = Color3.fromRGB(255, 249, 237)},
+		Atmosphere = {Density = 0.25, Offset = 0.03, Color = Color3.fromRGB(190, 211, 232), Decay = Color3.fromRGB(105, 126, 151), Haze = 0.8, Glare = 0.015},
+		Color = {Brightness = 0, Contrast = 0.045, Saturation = -0.025, TintColor = Color3.fromRGB(237, 245, 255)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
 		SunRays = {Intensity = 0, Spread = 0.8},
 		Clouds = false,
 	},
-	-- Recommended PalmVille look: realistic neutral daylight, earthy warmth, soft cinematic depth.
+	-- Recommended PalmVille look: cinematic blue haze, realistic depth, soft natural daylight.
 	MID = {
 		Technology = Enum.Technology.ShadowMap,
 		Brightness = 1.98,
-		Ambient = Color3.fromRGB(108, 103, 94),
-		OutdoorAmbient = Color3.fromRGB(145, 140, 126),
+		Ambient = Color3.fromRGB(101, 113, 130),
+		OutdoorAmbient = Color3.fromRGB(139, 157, 177),
 		EnvironmentDiffuseScale = 0.58,
 		EnvironmentSpecularScale = 0.36,
 		ExposureCompensation = -0.015,
 		ShadowSoftness = 0.24,
-		Atmosphere = {Density = 0.225, Offset = 0.035, Color = Color3.fromRGB(224, 218, 204), Decay = Color3.fromRGB(133, 128, 115), Haze = 0.55, Glare = 0.018},
-		Color = {Brightness = 0.005, Contrast = 0.065, Saturation = -0.015, TintColor = Color3.fromRGB(255, 248, 234)},
+		Atmosphere = {Density = 0.31, Offset = 0.025, Color = Color3.fromRGB(184, 207, 231), Decay = Color3.fromRGB(96, 119, 148), Haze = 1.15, Glare = 0.025},
+		Color = {Brightness = 0.005, Contrast = 0.065, Saturation = -0.015, TintColor = Color3.fromRGB(239, 246, 255)},
 		Bloom = {Intensity = 0.025, Size = 16, Threshold = 1.9},
-		SunRays = {Intensity = 0.006, Spread = 0.8},
+		SunRays = {Intensity = 0.008, Spread = 0.8},
 		Clouds = true,
 	},
-	-- Higher detail without switching to the heavier Future lighting renderer.
+	-- Higher visual quality with the same lightweight renderer and a little more atmospheric depth.
 	HIGH = {
 		Technology = Enum.Technology.ShadowMap,
 		Brightness = 2,
-		Ambient = Color3.fromRGB(111, 106, 97),
-		OutdoorAmbient = Color3.fromRGB(151, 146, 132),
+		Ambient = Color3.fromRGB(103, 116, 134),
+		OutdoorAmbient = Color3.fromRGB(145, 164, 185),
 		EnvironmentDiffuseScale = 0.68,
 		EnvironmentSpecularScale = 0.43,
 		ExposureCompensation = 0,
 		ShadowSoftness = 0.3,
-		Atmosphere = {Density = 0.24, Offset = 0.045, Color = Color3.fromRGB(228, 222, 208), Decay = Color3.fromRGB(139, 133, 119), Haze = 0.68, Glare = 0.025},
-		Color = {Brightness = 0.008, Contrast = 0.075, Saturation = 0, TintColor = Color3.fromRGB(255, 249, 237)},
+		Atmosphere = {Density = 0.34, Offset = 0.035, Color = Color3.fromRGB(188, 211, 234), Decay = Color3.fromRGB(99, 121, 150), Haze = 1.35, Glare = 0.035},
+		Color = {Brightness = 0.008, Contrast = 0.075, Saturation = 0, TintColor = Color3.fromRGB(242, 248, 255)},
 		Bloom = {Intensity = 0.045, Size = 18, Threshold = 1.85},
-		SunRays = {Intensity = 0.01, Spread = 0.82},
+		SunRays = {Intensity = 0.012, Spread = 0.82},
 		Clouds = true,
 	},
 }
