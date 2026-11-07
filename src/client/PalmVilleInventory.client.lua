@@ -71,8 +71,8 @@ local function updateScale()
 	local camera = workspace.CurrentCamera
 	if not camera then return end
 	local viewport = camera.ViewportSize
-	local factor = math.min(viewport.X / 920, viewport.Y / 600, 1)
-	scale.Scale = math.clamp(factor, 0.4, 1)
+	local factor = math.min(viewport.X / 980, viewport.Y / 610, 1)
+	scale.Scale = math.clamp(factor, 0.32, 1)
 end
 updateScale()
 if workspace.CurrentCamera then
@@ -82,11 +82,11 @@ end
 local openButton = make("TextButton", {
 	Name = "OpenInventory",
 	AnchorPoint = Vector2.new(0, 0.5),
-	Position = UDim2.new(0, 22, 0.5, 5),
-	Size = UDim2.fromOffset(82, 76),
+	Position = UDim2.new(0, 18, 0.5, 5),
+	Size = UDim2.fromOffset(84, 88),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.08,
-	Text = "Inventory",
+	Text = "",
 	TextColor3 = COLORS.text,
 	TextSize = 14,
 	Font = Enum.Font.GothamBold,
@@ -99,13 +99,11 @@ make("ImageLabel", {
 	BackgroundTransparency = 1,
 	AnchorPoint = Vector2.new(0.5, 0),
 	Position = UDim2.new(0.5, 0, 0, 8),
-	Size = UDim2.fromOffset(38, 38),
+	Size = UDim2.fromOffset(40, 40),
 	Image = "rbxassetid://113023659142897",
 	ScaleType = Enum.ScaleType.Fit,
 }, openButton)
-openButton.TextYAlignment = Enum.TextYAlignment.Bottom
-openButton.TextXAlignment = Enum.TextXAlignment.Center
-openButton.TextSize = 13
+label(openButton, "Inventory", UDim2.new(1, -6, 0, 22), UDim2.new(0, 3, 1, -25), 12, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 
 local shade = make("TextButton", {
 	Name = "Backdrop",
@@ -120,8 +118,8 @@ local shade = make("TextButton", {
 local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(875, 510),
+	Position = UDim2.fromScale(0.5, 0.455),
+	Size = UDim2.new(0, 980, 0, 520),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.035,
 	Visible = false,
@@ -132,7 +130,7 @@ outline(panel, COLORS.blue, 0.12, 1.6)
 
 local header = make("Frame", {
 	Name = "Header",
-	Size = UDim2.new(1, 0, 0, 78),
+	Size = UDim2.new(1, 0, 0, 72),
 	BackgroundColor3 = Color3.fromRGB(21, 38, 56),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
@@ -182,8 +180,8 @@ outline(close, COLORS.stroke, 0.45, 1)
 
 local sidebar = make("Frame", {
 	Name = "Categories",
-	Position = UDim2.fromOffset(0, 79),
-	Size = UDim2.new(0, 205, 1, -80),
+	Position = UDim2.fromOffset(0, 73),
+	Size = UDim2.new(0, 190, 1, -74),
 	BackgroundColor3 = Color3.fromRGB(16, 28, 42),
 	BackgroundTransparency = 0.18,
 	BorderSizePixel = 0,
@@ -200,8 +198,8 @@ local sideLayout = make("UIListLayout", {
 
 local content = make("Frame", {
 	Name = "ItemsArea",
-	Position = UDim2.fromOffset(205, 79),
-	Size = UDim2.new(1, -205, 1, -80),
+	Position = UDim2.fromOffset(190, 73),
+	Size = UDim2.new(1, -190, 1, -74),
 	BackgroundTransparency = 1,
 }, panel)
 
@@ -217,8 +215,8 @@ local HOTBAR_SLOTS = 5
 
 local gridScroll = make("ScrollingFrame", {
 	Name = "ItemGrid",
-	Position = UDim2.fromOffset(16, 15),
-	Size = UDim2.new(1, -32, 1, -76),
+	Position = UDim2.fromOffset(18, 14),
+	Size = UDim2.new(1, -36, 1, -82),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 	ScrollBarThickness = 5,
@@ -226,7 +224,7 @@ local gridScroll = make("ScrollingFrame", {
 	CanvasSize = UDim2.fromOffset(0, 0),
 }, content)
 local grid = make("UIGridLayout", {
-	CellSize = UDim2.fromOffset(105, 112),
+	CellSize = UDim2.fromOffset(112, 116),
 	CellPadding = UDim2.fromOffset(12, 12),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, gridScroll)
@@ -235,8 +233,8 @@ grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 local footer = make("Frame", {
-	Position = UDim2.new(0, 16, 1, -52),
-	Size = UDim2.new(1, -32, 0, 36),
+	Position = UDim2.new(0, 18, 1, -50),
+	Size = UDim2.new(1, -36, 0, 34),
 	BackgroundTransparency = 1,
 }, content)
 label(footer, "Select an item to equip it to your hotbar", UDim2.new(1, -140, 1, 0), UDim2.fromOffset(2, 0), 11, COLORS.muted)
@@ -406,8 +404,8 @@ outline(categoryButtons[selectedCategory], COLORS.blue, 0.25, 1.2)
 local hotbar = make("Frame", {
 	Name = "CustomHotbar",
 	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -28),
-	Size = UDim2.fromOffset(HOTBAR_SLOTS * 76 + (HOTBAR_SLOTS - 1) * 9, 82),
+	Position = UDim2.new(0.5, 0, 1, -10),
+	Size = UDim2.fromOffset(HOTBAR_SLOTS * 70 + (HOTBAR_SLOTS - 1) * 8, 74),
 	BackgroundTransparency = 1,
 }, gui)
 
@@ -461,9 +459,9 @@ local function setOpen(open)
 	if open then
 		search.Text = ""
 		renderItems()
-		panel.Size = UDim2.fromOffset(840, 480)
+		panel.Size = UDim2.fromOffset(940, 490)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(875, 510),
+			Size = UDim2.fromOffset(980, 520),
 		}):Play()
 	end
 end
