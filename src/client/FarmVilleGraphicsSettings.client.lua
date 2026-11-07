@@ -33,7 +33,7 @@ if playerGui:FindFirstChild("FarmVilleGraphicsUI") then
 end
 
 local isMobile = UserInputService.TouchEnabled
-local currentPreset = isMobile and "MID" or "HIGH"
+local currentPreset = "MID"
 local presetModified = false
 local graphicsToggles = {
 	HideBushes = false,
@@ -337,7 +337,10 @@ local function applyGraphicsSettings()
 end
 
 local function applyPreset(preset)
-	currentPreset = QUALITY_PROFILES[preset] and preset or (isMobile and "MID" or "HIGH")
+	currentPreset = QUALITY_PROFILES[preset] and preset or "MID"
+	if isMobile and currentPreset == "HIGH" then
+		currentPreset = "MID"
+	end
 	presetModified = false
 	graphicsToggles.Shadows = currentPreset ~= "LOW" and originalGlobalShadows
 	graphicsToggles.Effects = currentPreset ~= "LOW"
