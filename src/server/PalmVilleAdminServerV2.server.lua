@@ -142,6 +142,10 @@ local function logActivity(actor, action, target, result, extra)
 		targetUserId = target and target.UserId or (extra and tonumber(extra.targetUserId)) or 0,
 		reason = extra and tostring(extra.reason or ""):sub(1, 180) or "",
 		result = tostring(result):sub(1, 120),
+		category = extra and tostring(extra.category or ""):sub(1, 32) or "",
+		amount = extra and tonumber(extra.amount) or nil,
+		balance = extra and tonumber(extra.balance) or nil,
+		itemCode = extra and tostring(extra.itemCode or ""):sub(1, 48) or "",
 	}
 	table.insert(memoryLogs, 1, entry)
 	while #memoryLogs > 100 do
@@ -178,6 +182,35 @@ local function logActivity(actor, action, target, result, extra)
 		activityWorkerRunning = false
 	end)
 end
+
+local auditEvent = ServerScriptService:FindFirstChild("PalmVilleAuditEvent")
+if auditEvent and auditEvent:IsA("BindableEvent") then
+	auditEvent.Event:Connect(function(action, targetPlayer, details)
+		if typeof(targetPlayer) ~= "Instance" or not targetPlayer:IsA("Player") then return end
+		details = type(details) == "table" and details or {}
+		local amount = tonumber(details.amount)
+		local balance = tonumber(details.balance)
+		local result = details.reason or "Recorded"
+		if amount then
+			result = string.format("%s %s%d", tostring(result), amount >= 0 and "+" or "", amount)
+		end
+		if balance then result ..= string.format(" · Balance %d", balance) end
+		logActivity(nil, tostring(action or "Player Activity"), targetPlayer, result, {
+			reason = details.reason,
+			category = details.category or "Player Activity",
+			amount = amount,
+			balance = balance,
+			itemCode = details.itemCode,
+		})
+	end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+	logActivity(nil, "Player Joined", player, "Joined server", {category = "Session"})
+end)
+Players.PlayerRemoving:Connect(function(player)
+	logActivity(nil, "Player Left", player, "Left server", {category = "Session"})
+end)
 
 local function recordModeration(userId, entry)
 	task.spawn(function()
