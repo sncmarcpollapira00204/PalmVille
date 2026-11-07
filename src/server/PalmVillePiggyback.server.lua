@@ -20,9 +20,20 @@ local carriedBy = {}
 local carryRecords = {}
 local lastRequestAt = {}
 
+local notificationRemote = ReplicatedStorage:WaitForChild("PalmVilleNotificationEvent")
+
 local function notify(player, message)
 	if player and player.Parent == Players then
-		remote:FireClient(player, "Notice", message)
+		local text = tostring(message)
+		local lowered = string.lower(text)
+		local category = "INFO"
+		if lowered:find("ended", 1, true) or lowered:find("carrying", 1, true) then
+			category = "SUCCESS"
+		elseif lowered:find("no available", 1, true) or lowered:find("too far", 1, true)
+			or lowered:find("expired", 1, true) or lowered:find("already", 1, true) then
+			category = "WARNING"
+		end
+		notificationRemote:FireClient(player, category, text)
 	end
 end
 
