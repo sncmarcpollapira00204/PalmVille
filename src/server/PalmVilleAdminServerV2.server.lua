@@ -99,7 +99,7 @@ local function copyTable(input)
 end
 
 for id, entry in pairs(BOOTSTRAP) do
-	staff[id] = {role = entry.role, name = entry.name}
+	staff[id] = {role = entry.role, name = entry.name, nickname = entry.nickname or entry.name}
 end
 for role, values in pairs(DEFAULT_PERMISSIONS) do
 	rolePermissions[role] = copyTable(values)
@@ -256,7 +256,7 @@ local function loadPersistentData()
 			if type(id) == "string" and type(entry) == "table" and ASSIGNABLE[entry.role] then
 				local userId = tonumber(id)
 				if userId and userId > 0 and not BOOTSTRAP[id] then
-					staff[id] = {role = entry.role, name = tostring(entry.name or id):sub(1, 20)}
+					staff[id] = {role = entry.role, name = tostring(entry.name or id):sub(1, 20), nickname = tostring(entry.nickname or entry.name or id):sub(1, 24)}
 				end
 			end
 		end
@@ -290,12 +290,14 @@ local function applyOnlineRole(userId)
 	local player = Players:GetPlayerByUserId(tonumber(userId))
 	if player then
 		player:SetAttribute("PalmVilleAdminRole", getRoleById(userId) or "")
+		local entry = staff[tostring(userId)]
+		player:SetAttribute("PalmVilleAdminNickname", entry and entry.nickname or "")
 		notifyRoleChanged(userId)
 	end
 end
 
-local function publishStaffChange(userId, role, name)
-	local payload = {kind = "Staff", jobId = game.JobId, userId = tonumber(userId), role = role or "NONE", name = name or ""}
+local function publishStaffChange(userId, role, name, nickname)
+	local payload = {kind = "Staff", jobId = game.JobId, userId = tonumber(userId), role = role or "NONE", name = name or "", nickname = nickname or name or ""}
 	task.spawn(function()
 		pcall(function() MessagingService:PublishAsync("PalmVilleAdminSync_v2", payload) end)
 	end)
@@ -308,7 +310,7 @@ local function publishPermissionChange(role, area, enabled)
 	end)
 end
 
-local function saveStaffChange(userId, role, name)
+local function saveStaffChange(userId, role, name, nickname)
 	local id = tostring(userId)
 	if BOOTSTRAP[id] then
 		return false, "The original PalmVille roles are protected."
@@ -324,7 +326,7 @@ local function saveStaffChange(userId, role, name)
 			return staffStore:UpdateAsync("staff", function(current)
 				local nextStaff = type(current) == "table" and current or {}
 				if role then
-					nextStaff[id] = {role = role, name = tostring(name or id):sub(1, 20)}
+					nextStaff[id] = {role = role, name = tostring(name or id):sub(1, 20), nickname = tostring(nickname or name or id):sub(1, 24)}
 				else
 					nextStaff[id] = nil
 				end
@@ -350,7 +352,7 @@ local function saveStaffChange(userId, role, name)
 		-- Explicit session-only fallback for Studio when API Services are unavailable or failing.
 		result = copyTable(staff)
 		if role then
-			result[id] = {role = role, name = tostring(name or id):sub(1, 20)}
+			result[id] = {role = role, name = tostring(name or id):sub(1, 20), nickname = tostring(nickname or name or id):sub(1, 24)}
 		else
 			result[id] = nil
 		end
@@ -365,7 +367,7 @@ local function saveStaffChange(userId, role, name)
 	end
 	applyOnlineRole(userId)
 	if not RunService:IsStudio() then
-		publishStaffChange(userId, role, name)
+		publishStaffChange(userId, role, name, nickname)
 	end
 	return true
 end
@@ -419,7 +421,7 @@ else
 					local id = userId and tostring(userId)
 					if not userId or userId < 1 or BOOTSTRAP[id] then return end
 					if ASSIGNABLE[payload.role] then
-						staff[id] = {role = payload.role, name = tostring(payload.name or id):sub(1, 20)}
+						staff[id] = {role = payload.role, name = tostring(payload.name or id):sub(1, 20), nickname = tostring(payload.nickname or payload.name or id):sub(1, 24)}
 					else
 						staff[id] = nil
 					end
@@ -1086,7 +1088,8 @@ local function getStaffRows()
 			local online = onlinePlayer(userId)
 			table.insert(rows, {
 				userId = userId,
-				username = online and online.Name or tostring(entry.name or id),
+				username = tostring(entry.name or (online and online.Name) or id),
+				nickname = tostring(entry.nickname or entry.name or id),
 				role = entry.role,
 				online = online ~= nil,
 			})
@@ -1386,6 +1389,24 @@ local function handleAction(player, data)
 		return
 	end
 
+	if action == "UpdateStaffNickname" then
+		local currentRole = getRoleById(player.UserId)
+		if not currentRole then return end
+		local nickname = tostring(data.nickname or ""):match("^%s*(.-)%s*$")
+		if #nickname < 1 or #nickname > 24 or nickname:find("[%c]") then
+			notify(player, "Nickname must be 1–24 characters.")
+			return
+		end
+		local entry = staff[tostring(player.UserId)]
+		if not entry then return end
+		local success, message = saveStaffChange(player.UserId, entry.role, entry.name, nickname)
+		if not success then notify(player, message); return end
+		player:SetAttribute("PalmVilleAdminNickname", nickname)
+		notify(player, "Your admin nickname has been updated.")
+		logActivity(player, "Update staff nickname", player, "Success", {nickname = nickname})
+		return
+	end
+
 	if action == "AddStaff" or action == "RemoveStaff" then
 		if not canManageStaff(player) then
 			notify(player, "Only Owner and Developer can manage staff.")
@@ -1396,12 +1417,14 @@ local function handleAction(player, data)
 		if action == "AddStaff" then
 			resolvedId, username = resolveUsername(data.username)
 			local newRole = tostring(data.role or "")
+			local nickname = tostring(data.nickname or ""):match("^%s*(.-)%s*$")
 			if not resolvedId or not ASSIGNABLE[newRole] then notify(player, "Username or role is not valid."); return end
-			local success, message = saveStaffChange(resolvedId, newRole, username)
+			if #nickname < 1 or #nickname > 24 or nickname:find("[%c]") then notify(player, "Nickname must be 1–24 characters."); return end
+			local success, message = saveStaffChange(resolvedId, newRole, username, nickname)
 			if not success then notify(player, message); logActivity(player, "Add staff", nil, message, {target = username, targetUserId = resolvedId}); return end
 			local online = onlinePlayer(resolvedId)
 			logActivity(player, "Assign " .. newRole, online, "Success", {target = username, targetUserId = resolvedId})
-			notify(player, username .. " is now " .. newRole .. ".")
+			notify(player, nickname .. " (" .. username .. ") is now " .. newRole .. ".")
 		else
 			resolvedId = tonumber(data.targetUserId)
 			local existing = resolvedId and staff[tostring(resolvedId)]
@@ -1535,6 +1558,8 @@ local function onPlayerAdded(player)
 	joinTimes[player.UserId] = os.time()
 	local assignedRole = getRoleById(player.UserId)
 	player:SetAttribute("PalmVilleAdminRole", assignedRole or "")
+	local staffEntry = staff[tostring(player.UserId)]
+	player:SetAttribute("PalmVilleAdminNickname", staffEntry and staffEntry.nickname or "")
 	if assignedRole and player:GetAttribute("PalmVilleAdminTitleVisible") == nil then
 		player:SetAttribute("PalmVilleAdminTitleVisible", true)
 	end
