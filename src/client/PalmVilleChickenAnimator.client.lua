@@ -148,7 +148,7 @@ local function animateChicken(state, dt, now)
 	setHinge(state, "CHICKEN_-L-Thigh", CONFIG.ThighSwing * leftWave)
 	setHinge(state, "CHICKEN_-R-Thigh", CONFIG.ThighSwing * rightWave)
 	setHinge(state, "CHICKEN_-L-Calf", -CONFIG.KneeBend * (walking and math.max(0, math.sin(phase + 0.45)) or 0))
-	setHinge(state, "CHICKEN_-R-Calf", -CONFIG.KneeBend * (walking and math.max(0, math.sin(phase + math.pi + 0.45)) or 0)
+	setHinge(state, "CHICKEN_-R-Calf", -CONFIG.KneeBend * (walking and math.max(0, math.sin(phase + math.pi + 0.45)) or 0))
 
 	local walkWing = walking and math.sin(phase * 2) * CONFIG.WingSwing or 0
 	local idleWing = math.sin(now * 1.7 + state.phase * 0.015) * math.rad(0.7)
