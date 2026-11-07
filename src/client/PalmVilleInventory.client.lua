@@ -50,7 +50,7 @@ local function label(parent, text, size, position, fontSize, color, font, alignm
 		Text = text,
 		Size = size,
 		Position = position,
-		Font = font or Enum.Font.GothamMedium,
+		Font = font or Enum.Font.FredokaOne,
 		TextSize = fontSize or 14,
 		TextColor3 = color or COLORS.text,
 		TextXAlignment = alignment or Enum.TextXAlignment.Left,
@@ -83,7 +83,7 @@ local openButton = make("TextButton", {
 	Name = "OpenInventory",
 	AnchorPoint = Vector2.new(0, 0.5),
 	Position = UDim2.new(0, 18, 0.5, 5),
-	Size = UDim2.fromOffset(84, 88),
+	Size = UDim2.fromOffset(96, 100),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.08,
 	Text = "",
@@ -98,12 +98,12 @@ make("ImageLabel", {
 	Name = "BagIcon",
 	BackgroundTransparency = 1,
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 3),
-	Size = UDim2.fromOffset(54, 54),
+	Position = UDim2.new(0.5, 0, 0, -1),
+	Size = UDim2.fromOffset(68, 68),
 	Image = "rbxassetid://113023659142897",
 	ScaleType = Enum.ScaleType.Fit,
 }, openButton)
-label(openButton, "Inventory", UDim2.new(1, -6, 0, 22), UDim2.new(0, 3, 1, -25), 12, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+label(openButton, "Inventory", UDim2.new(1, -6, 0, 22), UDim2.new(0, 3, 1, -24), 13, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
 
 local shade = make("TextButton", {
 	Name = "Backdrop",
@@ -119,11 +119,11 @@ local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.455),
-	Size = UDim2.new(0, 980, 0, 520),
+	Size = UDim2.new(0.94, 0, 0.86, 0),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.035,
 	Visible = false,
-	ClipsDescendants = true,
+	ClipsDescendants = false,
 }, gui)
 corner(panel, 24)
 outline(panel, COLORS.blue, 0.12, 1.6)
@@ -156,7 +156,7 @@ local search = make("TextBox", {
 	BackgroundColor3 = COLORS.slot,
 	TextColor3 = COLORS.text,
 	PlaceholderColor3 = COLORS.muted,
-	Font = Enum.Font.Gotham,
+	Font = Enum.Font.FredokaOne,
 	TextSize = 14,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
@@ -203,8 +203,8 @@ local content = make("Frame", {
 	BackgroundTransparency = 1,
 }, panel)
 
-local categoryNames = {"All Items", "Seeds", "Crops", "Tools", "Materials", "Consumables", "Misc"}
-local categoryIcons = {"▦", "❧", "♧", "⚒", "⬡", "♜", "□"}
+local categoryNames = {"All Items", "Tools", "Seeds", "Crops", "Product", "Misc"}
+local categoryIcons = {"▦", "⚒", "❧", "♧", "✿", "◇"}
 local selectedCategory = "All Items"
 local categoryButtons = {}
 local itemCards = {}
@@ -255,6 +255,21 @@ local function getTools()
 	end
 	table.sort(result, function(a, b) return a.Name:lower() < b.Name:lower() end)
 	return result
+end
+
+local inventoryRemote = game:GetService("ReplicatedStorage"):WaitForChild("PalmVilleGetInventory", 10)
+local savedItems = {}
+local inventoryLoaded = false
+
+local function refreshSavedItems()
+	if not inventoryRemote or not inventoryRemote:IsA("RemoteFunction") then return end
+	local ok, snapshot = pcall(function()
+		return inventoryRemote:InvokeServer()
+	end)
+	if ok and type(snapshot) == "table" and snapshot.loaded ~= false then
+		savedItems = type(snapshot.items) == "table" and snapshot.items or {}
+		inventoryLoaded = true
+	end
 end
 
 local function getCategory(tool)
@@ -309,18 +324,32 @@ end
 local function renderItems()
 	clearCards()
 	local tools = getTools()
-	currentItems = tools
-	capacity.Text = tostring(#tools) .. " / 50"
+	local displayItems = {}
+	for _, item in ipairs(savedItems) do
+		table.insert(displayItems, item)
+	end
+	for _, tool in ipairs(tools) do
+		table.insert(displayItems, {
+			name = tool.Name:gsub("%s+x%d+$", ""),
+			amount = math.max(1, math.floor(tonumber(tool:GetAttribute("StackCount")) or 1)),
+			category = "Tools",
+			icon = getItemIcon(tool),
+			tool = tool,
+		})
+	end
+	currentItems = displayItems
+	capacity.Text = tostring(#displayItems) .. " / 50"
 	local query = search.Text:lower()
 	local shown = 0
-	for _, tool in ipairs(tools) do
-		local category = getCategory(tool)
+	for _, item in ipairs(displayItems) do
+		local category = item.category or "Misc"
+		local name = tostring(item.name or "Item")
 		local matchesCategory = selectedCategory == "All Items" or category == selectedCategory
-		local matchesSearch = query == "" or tool.Name:lower():find(query, 1, true) ~= nil
+		local matchesSearch = query == "" or name:lower():find(query, 1, true) ~= nil
 		if matchesCategory and matchesSearch then
 			shown += 1
 			local card = make("TextButton", {
-				Name = "Item_" .. tool.Name,
+				Name = "Item_" .. name:gsub("%W", ""),
 				Text = "",
 				BackgroundColor3 = COLORS.slot,
 				AutoButtonColor = false,
@@ -328,36 +357,38 @@ local function renderItems()
 			}, gridScroll)
 			corner(card, 17)
 			outline(card, COLORS.stroke, 0.42, 1)
-			local icon = getItemIcon(tool)
-			if icon then
+			if item.icon and item.icon ~= "" then
 				make("ImageLabel", {
 					Name = "ItemIcon",
 					BackgroundTransparency = 1,
-					Position = UDim2.fromOffset(15, 8),
-					Size = UDim2.fromOffset(75, 72),
-					Image = icon,
+					AnchorPoint = Vector2.new(0.5, 0),
+					Position = UDim2.new(0.5, 0, 0, 7),
+					Size = UDim2.fromOffset(76, 70),
+					Image = item.icon,
 					ScaleType = Enum.ScaleType.Fit,
 				}, card)
 			else
-				label(card, category == "Seeds" and "❧" or (category == "Tools" and "⚒" or "◇"),
-					UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 5), 38, COLORS.muted, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+				local glyph = category == "Seeds" and "❧" or (category == "Tools" and "⚒" or (category == "Crops" and "♧" or "✿"))
+				label(card, glyph, UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 5), 38, COLORS.muted, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
 			end
-			label(card, tool.Name, UDim2.new(1, -12, 0, 24), UDim2.new(0, 6, 1, -27), 10, COLORS.text, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
-			local amount = math.max(1, math.floor(tonumber(tool:GetAttribute("StackCount")) or 1))
-			label(card, "x" .. tostring(amount), UDim2.fromOffset(35, 22), UDim2.new(1, -41, 1, -49), 13, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
-			if tool.Parent == player.Character then
+			label(card, name, UDim2.new(1, -12, 0, 24), UDim2.new(0, 6, 1, -27), 11, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
+			label(card, "x" .. tostring(item.amount or 1), UDim2.fromOffset(42, 22), UDim2.new(1, -47, 0, 4), 13, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Right)
+			if item.tool and item.tool.Parent == player.Character then
 				local equippedStroke = card:FindFirstChildOfClass("UIStroke")
 				if equippedStroke then equippedStroke.Color = COLORS.blue equippedStroke.Thickness = 2 end
 			end
 			card.Activated:Connect(function()
-				equipTool(tool)
-				renderItems()
+				if item.tool then
+					equipTool(item.tool)
+					refreshHotbar()
+				end
 			end)
 			table.insert(itemCards, card)
 		end
 	end
 	if shown == 0 then
-		local empty = label(gridScroll, "No items found", UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 18), 15, COLORS.muted, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
+		local message = inventoryLoaded and "Your inventory is empty" or "Loading saved inventory..."
+		local empty = label(gridScroll, message, UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 18), 16, COLORS.muted, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
 		table.insert(itemCards, empty)
 	end
 end
@@ -371,7 +402,7 @@ for index, category in ipairs(categoryNames) do
 		Text = categoryIcons[index] .. "   " .. category,
 		TextColor3 = category == selectedCategory and COLORS.text or COLORS.muted,
 		TextSize = 14,
-		Font = Enum.Font.GothamMedium,
+		Font = Enum.Font.FredokaOne,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		AutoButtonColor = false,
 		LayoutOrder = index,
@@ -458,10 +489,11 @@ local function setOpen(open)
 	openButton.Visible = not open
 	if open then
 		search.Text = ""
+		refreshSavedItems()
 		renderItems()
-		panel.Size = UDim2.fromOffset(940, 490)
+		panel.Size = UDim2.new(0.92, 0, 0.82, 0)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(980, 520),
+			Size = UDim2.new(0.94, 0, 0.86, 0),
 		}):Play()
 	end
 end
@@ -485,6 +517,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 local function refresh()
+	refreshSavedItems()
 	renderItems()
 	refreshHotbar()
 end
