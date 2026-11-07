@@ -27,7 +27,7 @@ local stack = Instance.new("Frame")
 stack.Name = "NotificationStack"
 stack.AnchorPoint = Vector2.new(1, 1)
 stack.Position = UDim2.new(1, -24, 1, -24)
-stack.Size = UDim2.new(0, 350, 1, -40)
+stack.Size = UDim2.new(0, 320, 1, -40)
 stack.BackgroundTransparency = 1
 stack.Parent = gui
 
@@ -76,7 +76,7 @@ local function showNotification(category, message)
 	local style = category == "WARNING" and WARNING_STYLE or STANDARD_STYLE
 	local card = Instance.new("Frame")
 	card.Name = "Notification_" .. tostring(nextId)
-	card.Size = UDim2.new(1, 0, 0, 84)
+	card.Size = UDim2.new(1, 0, 0, 78)
 	card.BackgroundColor3 = CARD_COLOR
 	card.BackgroundTransparency = 0.06
 	card.BorderSizePixel = 0
@@ -95,8 +95,8 @@ local function showNotification(category, message)
 
 	local iconBubble = Instance.new("Frame")
 	iconBubble.Name = "IconBubble"
-	iconBubble.Position = UDim2.fromOffset(16, 24)
-	iconBubble.Size = UDim2.fromOffset(38, 38)
+	iconBubble.Position = UDim2.fromOffset(14, 22)
+	iconBubble.Size = UDim2.fromOffset(34, 34)
 	iconBubble.BackgroundColor3 = ICON_BUBBLE_COLOR
 	iconBubble.BorderSizePixel = 0
 	iconBubble.Parent = card
@@ -111,19 +111,19 @@ local function showNotification(category, message)
 	icon.Font = Enum.Font.Nunito
 	icon.Text = style.icon
 	icon.TextColor3 = style.accent
-	icon.TextSize = 20
+	icon.TextSize = 18
 	icon.Parent = iconBubble
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Category"
-	title.Position = UDim2.fromOffset(66, 10)
-	title.Size = UDim2.fromOffset(category == "GENERAL" and 86 or (category == "SUCCESS" and 78 or 82), 22)
+	title.Position = UDim2.fromOffset(58, 9)
+	title.Size = UDim2.fromOffset(category == "GENERAL" and 82 or (category == "SUCCESS" and 74 or 78), 20)
 	title.BackgroundColor3 = CHIP_COLOR
 	title.BorderSizePixel = 0
 	title.Font = Enum.Font.Nunito
 	title.Text = category
 	title.TextColor3 = style.accent
-	title.TextSize = 12
+	title.TextSize = 11
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = card
 	local titleCorner = Instance.new("UICorner")
@@ -133,12 +133,12 @@ local function showNotification(category, message)
 	local body = Instance.new("TextLabel")
 	body.Name = "Message"
 	body.BackgroundTransparency = 1
-	body.Position = UDim2.fromOffset(66, 35)
-	body.Size = UDim2.new(1, -82, 0, 40)
+	body.Position = UDim2.fromOffset(58, 32)
+	body.Size = UDim2.new(1, -72, 0, 38)
 	body.Font = Enum.Font.Nunito
 	body.Text = message
 	body.TextColor3 = MESSAGE_COLOR
-	body.TextSize = 16
+	body.TextSize = 15
 	body.TextWrapped = true
 	body.TextTruncate = Enum.TextTruncate.AtEnd
 	body.TextXAlignment = Enum.TextXAlignment.Left
