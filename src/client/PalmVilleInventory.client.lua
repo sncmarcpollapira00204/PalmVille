@@ -71,8 +71,8 @@ local function updateScale()
 	local camera = workspace.CurrentCamera
 	if not camera then return end
 	local viewport = camera.ViewportSize
-	local factor = math.min(viewport.X / 1120, viewport.Y / 720, 1)
-	scale.Scale = math.clamp(factor, 0.62, 1)
+	local factor = math.min(viewport.X / 920, viewport.Y / 600, 1)
+	scale.Scale = math.clamp(factor, 0.4, 1)
 end
 updateScale()
 if workspace.CurrentCamera then
