@@ -40,6 +40,10 @@ local function findMesh(model)
 	if mesh and mesh:IsA("MeshPart") then
 		return mesh
 	end
+	mesh = model:FindFirstChild("rooster_ground1", true)
+	if mesh and mesh:IsA("MeshPart") then
+		return mesh
+	end
 	return nil
 end
 
@@ -62,6 +66,10 @@ local function registerChicken(model)
 
 	local mesh = findMesh(model)
 	if not mesh then return false end
+
+	if model.Name == "Cock" and mesh.Name == "rooster_ground1" then
+		return true
+	end
 
 	local bones = {}
 	for _, name in ipairs(BONE_NAMES) do
