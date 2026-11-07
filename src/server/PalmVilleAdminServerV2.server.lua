@@ -110,6 +110,26 @@ local function getRoleById(userId)
 	return entry and entry.role or nil
 end
 
+-- /tx is an open-only command. Closing is handled by the Admin UI X button.
+local adminOpenCommand = TextChatService:FindFirstChild("PalmVilleAdminOpenCommand")
+if not adminOpenCommand then
+	adminOpenCommand = Instance.new("TextChatCommand")
+	adminOpenCommand.Name = "PalmVilleAdminOpenCommand"
+	adminOpenCommand.PrimaryAlias = "/tx"
+	adminOpenCommand.AutocompleteVisible = true
+	adminOpenCommand.Enabled = true
+	adminOpenCommand.Parent = TextChatService
+end
+
+if adminOpenCommand:IsA("TextChatCommand") then
+	adminOpenCommand.Triggered:Connect(function(textSource)
+		if not textSource then return end
+		local player = Players:GetPlayerByUserId(textSource.UserId)
+		if not player or not getRoleById(player.UserId) then return end
+		remote:FireClient(player, "OpenAdminMenu")
+	end)
+end
+
 local function canManageStaff(player)
 	local role = getRoleById(player.UserId)
 	return role == "OWNER" or role == "MASTER DEVELOPER"
