@@ -1,60 +1,54 @@
-# PalmVille server scripts
+# PalmVille server systems
 
-The Admin backend is consolidated into one server Script:
+## Active server scripts and modules
 
-- `PalmVilleAdminServerV2.server.lua` — authoritative Admin roles and permissions, remote access/actions, moderation, announcements, logs, tools, cross-server Players directory, and overview analytics.
-- `PalmVilleEconomy.lua` — server-only ModuleScript API for player profiles and Money: `RegisterProfile`, `IsLoaded`, `GetProfile`, `GetMoney`, `AddMoney`, `SpendMoney`, `SetMoney`, `AddXP`, and `UnregisterProfile`. Other server scripts should use this module instead of creating or changing their own wallet.
-- `PalmVillePlayerData.server.lua` — loads and saves one persistent player profile per UserId using `PalmVille_PlayerData_v1`; Studio uses the separate `PalmVille_PlayerData_Test_v1` store. Includes session locking, 60-second autosave, save/release on leave and shutdown, `leaderstats.Money`, `leaderstats.Level`, and the Admin player-data adapter. New profiles start with ₱500; change `STARTING_MONEY` in this script to adjust it.
-- `PalmVilleItemRegistry.lua` — ModuleScript required by the Admin server for registered item templates.
+- `PalmVilleAdminServerV2.server.lua` — authoritative Admin roles, permissions, moderation, announcements, logs, tools, player directory, and overview analytics.
+- `PalmVilleEconomy.lua` — server-side profile and currency API. Gameplay systems must use this module rather than creating another wallet.
+- `PalmVillePlayerData.server.lua` — persistent player profiles, session locking, autosave, and Admin player-data adapter.
+- `PalmVilleInventoryService.lua` — persistent seed-pack inventory and equipped Tool restoration.
+- `PalmVilleItemRegistry.lua` — registered admin items and the 15 PalmVille seed-pack Tool templates.
+- `PalmVilleChickenController.server.lua` — server-authoritative wandering for supported imported chicken models.
 - `PalmVilleRoleTitlesV2.server.lua` — role title billboards driven by the Admin role resolver.
-- `FarmVilleGraphicsSettingsPersistence.server.lua` — separate non-Admin graphics preferences service.
-- `UnderwaterChestService.server.lua` — detects each outer `Chest` model or part inside `Workspace.Underwater Chest`, adds an E/tap ProximityPrompt, validates distance and one-claim-per-player-per-chest rules on the server, and credits rewards through `PalmVilleEconomy.AddMoney`.
-- `src/client/UnderwaterChestFeedback.client.lua` — displays chest reward, jackpot, empty-roll, and wallet-loading notifications.
+- `FarmVilleGraphicsSettingsPersistence.server.lua` — graphics preference persistence.
+- `UnderwaterChestService.server.lua` — server-validated chest interactions and rewards.
 
-The former `PalmVillePlayersServer` and `PalmVilleAnalyticsServer` implementations are embedded in the Admin server and archived under `archive/merged-server-backups/`. Their existing DataStore names and RemoteFunction endpoints are retained. Their old standalone Scripts must not be restored.
+## Active client scripts
 
-The old duplicate `AdminClient` placeholder is removed. The active Admin interface is `PalmVilleAdminClient.client.lua` under `src/gui/PalmVilleAdminGui`.
+- `PalmVilleChickenAnimator.client.lua` — client-side bone animation for supported chicken models.
+- `PalmVilleCashHUD.client.lua` — replicated Money display.
+- `FarmVilleGraphicsSettings.client.lua` — graphics settings UI.
+- `UnderwaterCameraAtmosphere.client.lua` — underwater camera atmosphere.
+- `UnderwaterChestFeedback.client.lua` — chest reward feedback.
+- `PalmVilleAdminClient.client.lua` — Admin V2 interface under `StarterGui/PalmVilleAdminGui`.
+
+## Required dependencies
+
+- Admin server requires `PalmVilleItemRegistry` and `PalmVilleInventoryService`.
+- Inventory service requires `PalmVilleEconomy` and `PalmVilleItemRegistry`.
+- Player data requires `PalmVilleEconomy` and `PalmVilleInventoryService`.
+- Role titles use the Admin role resolver from the Admin server.
+- Chicken animator listens for the tag and attributes created by the chicken controller.
+- Graphics settings client pairs with the server persistence script.
+- Underwater chest feedback pairs with the server chest service.
+
+These entry-point scripts may not contain a `require` call because they communicate through Roblox services, attributes, CollectionService tags, or RemoteEvents. Do not remove them without testing their paired system.
 
 ## Player data and currency
 
-The player profile is stored under the stable key `Player_<UserId>` in one DataStore record. The initial schema contains Money, Level, XP, seeds, inventory, farm plots, and statistics so later farming systems can extend the same profile instead of creating competing databases.
+The profile is stored in `PalmVille_PlayerData_v1`; Studio uses `PalmVille_PlayerData_Test_v1`. Server scripts should require `ServerScriptService.PalmVilleEconomy` and use `AddMoney`, `SpendMoney`, or `AddXP`. Do not accept client-submitted balance changes or create a second Money value.
 
-Server scripts should require `ServerScriptService.PalmVilleEconomy` and call `AddMoney(player, amount, reason)` or `SpendMoney(player, amount, reason)`. Do not accept client-submitted balance changes. The module returns failure while the player profile is not loaded.
+New profiles start with ₱500. Change `STARTING_MONEY` in `PalmVillePlayerData.server.lua` to adjust it. Enable Studio API access only when testing DataStores in a published experience.
 
-Studio uses `PalmVille_PlayerData_Test_v1`; published servers use `PalmVille_PlayerData_v1`. The Admin role, permission, log, and moderation stores also receive a `_StudioTest` suffix in Studio. The analytics and announcement systems already use separate Studio test stores; graphics-settings persistence is disabled in Studio. This prevents Studio testing from writing to the live profile or Admin stores.
+## Seed pack inventory
 
-Enable **Game Settings → Security → Enable Studio Access to API Services** after publishing the experience. A load failure is fail-closed: the player is not given a fresh unsaved profile that could overwrite existing progress.
+The item registry creates the seed-pack Tool templates in ServerStorage. The inventory service stores counts in the existing player profile under `inventory.seedPacks`, then restores Tools to the Backpack after data load and respawn. Seed item grants are routed through the Admin server and validated against the registry.
 
-### Economy API example
+## Chicken model requirements
 
-```lua
-local ServerScriptService = game:GetService("ServerScriptService")
-local Economy = require(ServerScriptService:WaitForChild("PalmVilleEconomy"))
+The controller recognizes `PalmVilleChicken - Owned`, `PalmVilleChicken`, and `fullpollo`. Each complete model must contain a skinned MeshPart named `pollo` and the required original `CHICKEN_-` bone names. Duplicate the complete model, not the mesh or individual bones. The controller handles wandering and smooth turning; the client animator handles legs, knees, wings, neck/peck, and tail.
 
--- Reward a player from trusted server-side gameplay logic.
-local ok, newBalance = Economy.AddMoney(player, 100, "Harvest")
+The experimental static/rigged Rooster integration was removed because the imported Rooster asset did not successfully load and was not ready for use. It can be added later after a model passes Studio import and rig validation.
 
--- Charge for a seed or shop item; check success before delivering the item.
-local purchased, balanceOrReason = Economy.SpendMoney(player, 75, "SeedShop")
-if not purchased then
-	warn(balanceOrReason)
-	return
-end
-```
+## Studio sync safety
 
-Do not create a second Money value or let a LocalScript submit a balance. The replicated `leaderstats.Money` is for display; the server Economy module is the authority.
-The lower-left cash display is a standalone LocalScript at `src/client/PalmVilleCashHUD.client.lua`. It reads the replicated `leaderstats.Money` value after `PalmVilleDataLoaded` becomes true, formats it as Philippine pesos, and moves higher on touch devices to avoid the default mobile joystick. Its coin ImageLabel and amount text have transparent backgrounds. Set `COIN_IMAGE_ID` to the uploaded Roblox image asset ID for the supplied transparent coin PNG.
-
-## Imported chicken NPC
-
-After importing the supplied FBX into Workspace, keep the top-level Model named `PalmVilleChicken - Owned` (the controller also recognizes `PalmVilleChicken` and `fullpollo`). The skinned MeshPart must remain named `pollo`, and its imported Bone hierarchy must retain the names `CHICKEN_-L-Thigh`, `CHICKEN_-L-Calf`, `CHICKEN_-R-Thigh`, `CHICKEN_-R-Calf`, `CHICKEN_-Spine`, `CHICKEN_-L-Clavicle`, `CHICKEN_-Neck`, `CHICKEN_-R-Clavicle`, and `CHICKEN_-Tail`.
-
-- `PalmVilleChickenController.server.lua` discovers every matching imported chicken model in Workspace, including duplicates named `PalmVilleChicken - Owned`. Each model receives an independent anchored movement state, smooth turning, and replicated `PalmVilleChickenIsWalking` attribute. New models inserted during runtime are registered automatically. It keeps each hen at its imported Y height and does not use a Humanoid or jump behavior.
-- `src/client/PalmVilleChickenAnimator.client.lua` listens for the server's `PalmVilleChickenNPC` CollectionService tag and animates every tagged chicken independently on each client (legs, knees, wings, neck/peck, and tail). This separation is intentional: Roblox `Bone.Transform` is not replicated, so a server script must not animate it directly.
-- Duplicate the full `PalmVilleChicken - Owned` Model, not the `pollo` MeshPart or individual bones. Keep the model name, the `pollo` MeshPart, and all imported Bone names unchanged. Place each copy a few studs apart so the chickens do not start overlapped.
-
-Keep the imported Bone names and the `pollo` MeshPart unchanged. The controller preserves the FBX model's original pitch/roll and adjusts only world yaw while turning, so it does not force the imported chicken onto its back. The client gait converts the chicken's world side-to-side axis into each thigh/calf bone's local space, so the legs swing forward/back instead of rolling inward toward the center; thigh and knee angles are moderate. Remove/disable old scripts that also move this imported chicken. The imported FBX faces along the opposite of its model `LookVector`, so `FaceYawOffset = 180` is set in the server controller. Keep this offset unless a different re-export of the model changes its forward axis.
-
-The chicken animator uses the imported `CHICKEN_-Neck` bone for visible head bob while walking, subtle idle look-around, and a down/up peck cycle. The neck pitch/yaw axes are derived from that bone's imported bind-pose world frame.
-
-The role-title BillboardGui now uses world-scale dimensions (`UDim2.fromScale(2.8, 0.7)`) instead of fixed pixel offsets. With `TextScaled` and a 14–32px text constraint, labels naturally appear larger when the camera is close and smaller farther away. Keep the transparent text/shadow and role color styles unchanged.
+Save a place backup before syncing. Run `git pull --ff-only origin feature/admin-menu-redesign`, start `rojo serve default.project.json`, connect Studio to `localhost:34872`, and review the diff before accepting. Stop Play before syncing. Test Admin, player data, seed inventory, chicken movement/animation, graphics settings, and underwater chests before publishing.
