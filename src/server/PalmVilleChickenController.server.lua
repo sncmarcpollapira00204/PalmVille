@@ -142,6 +142,7 @@ local function registerChicken(model)
 	local state = {
 		model = model,
 		mesh = mesh,
+		collisionProbe = makeCollisionProbe(model),
 		homePosition = homePosition,
 		homeRotation = homePivot.Rotation,
 		homeForward = homeForward,
@@ -223,7 +224,14 @@ local function updateChicken(state, dt, now)
 			state.nextDecision = now + state.rng:NextNumber(CONFIG.MinPause, CONFIG.MaxPause)
 		else
 			state.direction = difference.Unit
-			state.position += state.direction * math.min(CONFIG.WalkSpeed * dt, distance)
+			local step = math.min(CONFIG.WalkSpeed * dt, distance)
+			if canMove(state, state.direction, step) then
+				state.position += state.direction * step
+			else
+				state.walking = false
+				model:SetAttribute("PalmVilleChickenIsWalking", false)
+				state.nextDecision = now + state.rng:NextNumber(1.5, 3)
+			end
 		end
 	elseif now >= state.nextDecision then
 		chooseTarget(state)
