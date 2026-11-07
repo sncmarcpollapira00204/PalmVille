@@ -97,9 +97,9 @@ outline(openButton, COLORS.blue, 0.42, 1.3)
 make("ImageLabel", {
 	Name = "BagIcon",
 	BackgroundTransparency = 1,
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, -1),
-	Size = UDim2.fromOffset(68, 68),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(0.5, 0, 0.43, 0),
+	Size = UDim2.fromOffset(70, 70),
 	Image = "rbxassetid://113023659142897",
 	ScaleType = Enum.ScaleType.Fit,
 }, openButton)
