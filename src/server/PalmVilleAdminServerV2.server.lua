@@ -1008,25 +1008,13 @@ TextChatService.ChildAdded:Connect(bindTextChannels)
 
 local function playerSnapshot(requester)
 	local roster = {}
-	local playerDataAdapter = SSS:FindFirstChild("PalmVilleAdminPlayerData")
 	for _, target in ipairs(Players:GetPlayers()) do
 		local humanoid = target.Character and target.Character:FindFirstChildOfClass("Humanoid")
 		local root = findCharacterPart(target, "HumanoidRootPart")
 		local position = root and root.Position
+		-- Keep roster generation non-yielding. Player data adapters may yield while
+		-- loading profile/DataStore state; a player picker must never wait on them.
 		local progress = {}
-		if playerDataAdapter and playerDataAdapter:IsA("BindableFunction") then
-			local ok, saved = pcall(function()
-				return playerDataAdapter:Invoke(target)
-			end)
-			if ok and type(saved) == "table" then
-				for _, key in ipairs({"money", "earnedToday", "level", "xp", "xpNeeded", "totalPlaytime"}) do
-					local value = tonumber(saved[key])
-					if value and value == value and value >= 0 and value < math.huge then
-						progress[key] = value
-					end
-				end
-			end
-		end
 		table.insert(roster, {
 			userId = target.UserId,
 			username = target.Name,
