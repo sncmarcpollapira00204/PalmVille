@@ -6,8 +6,8 @@ local CROW_SOUND_ID = "rbxassetid://135218417"
 local DEFAULT_IDLE_ANIMATION_ID = ""
 
 local CONFIG = {
-	MinCrowDelay = 85,
-	MaxCrowDelay = 155,
+	MinCrowDelay = 45,
+	MaxCrowDelay = 85,
 	CrowVolume = 0.55,
 	CrowRollOffMinDistance = 8,
 	CrowRollOffMaxDistance = 75,
