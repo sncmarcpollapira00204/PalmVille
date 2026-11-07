@@ -28,6 +28,51 @@ local CONFIG = {
 	CrowDistance = 85,
 }
 
+local function makeCollisionProbe(model)
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = {model}
+	params.IgnoreWater = true
+	params.RespectCanCollide = true
+
+	local boxCFrame, boxSize = model:GetBoundingBox()
+	local pivot = model:GetPivot()
+	local boxOffset = pivot:PointToObjectSpace(boxCFrame.Position)
+	local halfWidth = math.max(0.35, math.min(boxSize.X, boxSize.Z) * 0.32)
+	local halfHeight = math.max(0.6, boxSize.Y * 0.34)
+
+	return {
+		params = params,
+		boxOffset = boxOffset,
+		sideOffset = halfWidth,
+		heightOffset = halfHeight,
+	}
+end
+
+local function canMove(state, direction, distance)
+	if distance <= 0 then
+		return true
+	end
+
+	local probe = state.collisionProbe
+	local side = Vector3.new(-direction.Z, 0, direction.X)
+	local originBase = state.position + probe.boxOffset
+	local castVector = direction * (distance + 0.35)
+
+	for _, sideScale in ipairs({0, -1, 1}) do
+		local lateral = side * probe.sideOffset * sideScale
+		for _, heightScale in ipairs({-1, 0, 1}) do
+			local origin = originBase + lateral + Vector3.yAxis * probe.heightOffset * heightScale
+			local hit = Workspace:Raycast(origin, castVector, probe.params)
+			if hit and hit.Instance and hit.Instance.CanCollide then
+				return false
+			end
+		end
+	end
+
+	return true
+end
+
 local states = {}
 local registering = setmetatable({}, {__mode = "k"})
 
