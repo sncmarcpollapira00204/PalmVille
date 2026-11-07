@@ -1147,7 +1147,19 @@ local function handleAction(player, data)
 			logActivity(player, action, nil, "Success")
 			return
 		end
-		if not target or not requireTarget() then return end
+		local actorRole = getRoleById(player.UserId)
+		local targetRole = target and getRoleById(target.UserId)
+		local headAdminMovementException = actorRole == "HEAD ADMIN"
+			and (targetRole == "OWNER" or targetRole == "MASTER DEVELOPER")
+		local movementAllowed = target and targetId and (
+			canAffect(player, targetId)
+			or ((action == "Bring" or action == "Teleport") and headAdminMovementException)
+		)
+		if not movementAllowed then
+			notify(player, "That player is protected or unavailable.")
+			logActivity(player, action, target, "Denied", {target = targetName, targetUserId = targetId})
+			return
+		end
 		if not player.Character or not target.Character then notify(player, "A character is not ready."); return end
 		if action == "Teleport" then
 			previousPositions[player.UserId] = player.Character:GetPivot()
