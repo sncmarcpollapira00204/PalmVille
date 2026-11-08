@@ -32,7 +32,7 @@ local Theme = {
 	Spacing = {
 		PanelWidth = 890, PanelHeight = 520, HeaderHeight = 76, SidebarWidth = 230,
 		SidebarTop = 18, SidebarRowHeight = 52, SidebarGap = 7,
-		GridInsetX = 16, GridInsetY = 14, GridCell = 110, GridGap = 14,
+		GridInsetX = 16, GridInsetY = 14, GridCell = 102, GridGap = 14,
 	},
 	Fonts = {Title = Enum.Font.FredokaOne, Body = Enum.Font.GothamMedium, Quantity = Enum.Font.GothamBold},
 	Assets = {
@@ -44,9 +44,6 @@ local Theme = {
 		CategoryIcons = {
 			["All Items"] = "", Tools = "", Seeds = "", Crops = "", Product = "", Misc = "",
 		},
-	},
-	Glyphs = {
-		Categories = {["All Items"] = "▦", Tools = "⚒", Seeds = "❧", Crops = "♧", Product = "◉", Misc = "▣"},
 	},
 }
 local COLORS = {
@@ -143,6 +140,94 @@ local function magnifierGlyph(parent, position)
 	return holder
 end
 
+
+local function categoryShape(parent, name, x, y, width, height, color, rotation, rounded)
+	local shape = make("Frame", {
+		Name = name,
+		BackgroundColor3 = color,
+		BackgroundTransparency = 0,
+		BorderSizePixel = 0,
+		Position = UDim2.fromScale(x, y),
+		Size = UDim2.fromScale(width, height),
+		Rotation = rotation or 0,
+		ZIndex = 4,
+	}, parent)
+	if rounded then corner(shape, rounded) end
+	return shape
+end
+
+local function buildCategoryIcon(parent, category, position, size, color)
+	local holder = make("Frame", {
+		Name = "CategoryIcon",
+		BackgroundTransparency = 1,
+		Position = position,
+		Size = size,
+		ZIndex = 3,
+	}, parent)
+
+	if category == "All Items" then
+		for row = 0, 1 do
+			for column = 0, 1 do
+				categoryShape(holder, "GridTile", 0.16 + column * 0.38, 0.16 + row * 0.38, 0.28, 0.28, color, 0, 2)
+			end
+		end
+	elseif category == "Tools" then
+		categoryShape(holder, "PickaxeHandle", 0.47, 0.28, 0.09, 0.64, color, 38, 3)
+		categoryShape(holder, "PickaxeBlade", 0.12, 0.15, 0.76, 0.12, color, -24, 3)
+		categoryShape(holder, "PickaxeTip", 0.12, 0.15, 0.25, 0.12, color, 25, 3)
+	elseif category == "Seeds" then
+		categoryShape(holder, "SeedStem", 0.47, 0.38, 0.08, 0.5, color, 0, 3)
+		categoryShape(holder, "SeedLeafLeft", 0.13, 0.25, 0.42, 0.24, color, -28, 9)
+		categoryShape(holder, "SeedLeafRight", 0.48, 0.12, 0.39, 0.24, color, 28, 9)
+	elseif category == "Crops" then
+		categoryShape(holder, "CropStem", 0.46, 0.22, 0.08, 0.7, color, 0, 3)
+		categoryShape(holder, "CropLeafLeftLow", 0.12, 0.54, 0.42, 0.2, color, -28, 8)
+		categoryShape(holder, "CropLeafRightLow", 0.48, 0.39, 0.4, 0.2, color, 28, 8)
+		categoryShape(holder, "CropLeafLeftTop", 0.23, 0.25, 0.34, 0.18, color, -32, 8)
+		categoryShape(holder, "CropLeafRightTop", 0.48, 0.12, 0.33, 0.18, color, 32, 8)
+	elseif category == "Product" then
+		categoryShape(holder, "BottleNeck", 0.39, 0.08, 0.22, 0.2, color, 0, 3)
+		categoryShape(holder, "BottleCap", 0.35, 0.02, 0.3, 0.09, color, 0, 3)
+		local bottle = make("Frame", {
+			Name = "BottleBody",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromScale(0.2, 0.26),
+			Size = UDim2.fromScale(0.6, 0.64),
+			ZIndex = 4,
+		}, holder)
+		corner(bottle, 6)
+		local stroke = outline(bottle, color, 0.02, 2)
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	elseif category == "Misc" then
+		local box = make("Frame", {
+			Name = "MiscBox",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromScale(0.16, 0.25),
+			Size = UDim2.fromScale(0.68, 0.62),
+			ZIndex = 4,
+		}, holder)
+		corner(box, 3)
+		outline(box, color, 0.02, 2)
+		categoryShape(holder, "BoxTop", 0.2, 0.17, 0.6, 0.09, color, 0, 2)
+		categoryShape(holder, "BoxSeam", 0.47, 0.29, 0.07, 0.55, color, 0, 2)
+	end
+
+	return holder
+end
+
+local function tintCategoryIcon(icon, color)
+	if not icon then return end
+	for _, descendant in ipairs(icon:GetDescendants()) do
+		if descendant:IsA("Frame") and descendant.BackgroundTransparency < 1 then
+			descendant.BackgroundColor3 = color
+		elseif descendant:IsA("UIStroke") then
+			descendant.Color = color
+		elseif descendant:IsA("ImageLabel") then
+			descendant.ImageColor3 = color
+		end
+	end
+end
+
 local gui = make("ScreenGui", {
 	Name = "PalmVilleInventoryGui",
 	ResetOnSpawn = false,
@@ -200,7 +285,7 @@ make("ImageLabel", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.new(0.5, 0, 0.43, 0),
 	Size = UDim2.fromOffset(70, 70),
-	Image = "rbxassetid://113023659142897",
+	Image = Theme.Assets.BackpackIcon,
 	ScaleType = Enum.ScaleType.Fit,
 }, openButton)
 label(openButton, "Inventory", UDim2.new(1, -6, 0, 22), UDim2.new(0, 3, 1, -24), 13, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
@@ -275,15 +360,7 @@ local headerLine = make("Frame", {
 	BackgroundTransparency = 0.72,
 	BorderSizePixel = 0,
 }, header)
-local headerIcon = make("ImageLabel", {
-	Name = "HeaderBackpackIcon",
-	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(35, 19),
-	Size = UDim2.fromOffset(38, 38),
-	Image = Theme.Assets.BackpackIcon,
-	ImageColor3 = Color3.new(1, 1, 1),
-	ScaleType = Enum.ScaleType.Fit,
-}, header)
+local headerIcon = backpackGlyph(header, UDim2.fromOffset(35, 19), UDim2.fromOffset(42, 42))
 local titleText = label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 16), 30, COLORS.text, Theme.Fonts.Title)
 
 local search = make("TextBox", {
@@ -374,7 +451,6 @@ local selectedCategory = "All Items"
 local categoryButtons = {}
 local setSelectedCategory
 local categoryIconObjects = {}
-local categoryIconTextLabels = {}
 local categoryTextLabels = {}
 local itemCards = {}
 local currentItems = {}
@@ -649,13 +725,11 @@ for index, category in ipairs(categoryNames) do
 			Image = categoryAsset, ImageColor3 = Theme.Colors.Text, ScaleType = Enum.ScaleType.Fit, ZIndex = 2,
 		}, button)
 	else
-		categoryIcon = label(button, Theme.Glyphs.Categories[category] or "•",
-			UDim2.fromOffset(26, 30), UDim2.fromOffset(12, 11), 19,
-			category == selectedCategory and COLORS.text or COLORS.muted,
-			Theme.Fonts.Body, Enum.TextXAlignment.Center)
+		categoryIcon = buildCategoryIcon(button, category,
+			UDim2.fromOffset(12, 11), UDim2.fromOffset(26, 30),
+			category == selectedCategory and COLORS.text or COLORS.muted)
 	end
 	categoryIconObjects[category] = categoryIcon
-	if categoryIcon:IsA("TextLabel") then categoryIconTextLabels[category] = categoryIcon end
 	categoryTextLabels[category] = label(button, category, UDim2.new(1, -58, 1, 0),
 		UDim2.fromOffset(52, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Theme.Fonts.Body)
 	corner(button, Theme.Radius.Tab)
@@ -680,6 +754,7 @@ setSelectedCategory = function(category)
 				child.ImageColor3 = active and COLORS.text or COLORS.muted
 			end
 		end
+		tintCategoryIcon(categoryIconObjects[name], active and COLORS.text or COLORS.muted)
 		if active then
 			local stroke = other:FindFirstChildOfClass("UIStroke")
 			if not stroke then outline(other, Theme.Colors.ActiveEnd, 0.38, 1.15) end
@@ -777,7 +852,7 @@ applyResponsiveLayout = function(viewport, compact)
 		local contentHeight = height - headerHeight
 		local cellByWidth = math.floor((contentWidth - 24 - gridGap * 4) / 5)
 		local cellByHeight = math.floor((contentHeight - 68 - gridGap * 2) / 3)
-		local cellSize = math.max(30, math.min(cellByWidth, cellByHeight, 110))
+		local cellSize = math.max(30, math.min(cellByWidth, cellByHeight, Theme.Spacing.GridCell))
 
 		panelCorner.CornerRadius = UDim.new(0, radius)
 		panelOutline.Thickness = 1.25
@@ -816,7 +891,6 @@ applyResponsiveLayout = function(viewport, compact)
 			categoryButtons[category].Size = UDim2.new(1, 0, 0, rowHeight)
 			categoryIconObjects[category].Position = UDim2.fromOffset(5, math.floor((rowHeight - 24) / 2))
 			categoryIconObjects[category].Size = UDim2.fromOffset(22, 24)
-			if categoryIconTextLabels[category] then categoryIconTextLabels[category].TextSize = 16 end
 			categoryTextLabels[category].Position = UDim2.fromOffset(31, 0)
 			categoryTextLabels[category].Size = UDim2.new(1, -36, 1, 0)
 			categoryTextLabels[category].TextSize = 10
@@ -891,7 +965,6 @@ applyResponsiveLayout = function(viewport, compact)
 			categoryButtons[category].Size = UDim2.new(1, 0, 0, Theme.Spacing.SidebarRowHeight)
 			categoryIconObjects[category].Position = UDim2.fromOffset(12, 11)
 			categoryIconObjects[category].Size = UDim2.fromOffset(26, 30)
-			if categoryIconTextLabels[category] then categoryIconTextLabels[category].TextSize = 19 end
 			categoryTextLabels[category].Position = UDim2.fromOffset(52, 0)
 			categoryTextLabels[category].Size = UDim2.new(1, -58, 1, 0)
 			categoryTextLabels[category].TextSize = 14
