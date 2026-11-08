@@ -57,6 +57,59 @@ local function label(parent, text, size, position, fontSize, color, font, alignm
 		TextYAlignment = Enum.TextYAlignment.Center,
 	}, parent)
 end
+local function backpackGlyph(parent, position, size)
+	local holder = make("Frame", {
+		Name = "WhiteBackpackIcon",
+		BackgroundTransparency = 1,
+		Position = position,
+		Size = size,
+	}, parent)
+	local white = Color3.fromRGB(241, 247, 252)
+	local body = make("Frame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0.16, 0, 0.27, 0),
+		Size = UDim2.new(0.68, 0, 0.65, 0),
+	}, holder)
+	corner(body, 5)
+	outline(body, white, 0.02, 2)
+	local flap = make("Frame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0.28, 0, 0.12, 0),
+		Size = UDim2.new(0.44, 0, 0.28, 0),
+	}, holder)
+	corner(flap, 5)
+	outline(flap, white, 0.02, 2)
+	make("Frame", {
+		BackgroundColor3 = white,
+		BorderSizePixel = 0,
+		Position = UDim2.new(0.42, 0, 0.51, 0),
+		Size = UDim2.new(0.16, 0, 0.08, 0),
+	}, holder)
+	local leftStrap = make("Frame", {
+		BackgroundColor3 = white,
+		BorderSizePixel = 0,
+		Position = UDim2.new(0.08, 0, 0.39, 0),
+		Size = UDim2.new(0.09, 0, 0.42, 0),
+	}, holder)
+	corner(leftStrap, 3)
+	local rightStrap = make("Frame", {
+		BackgroundColor3 = white,
+		BorderSizePixel = 0,
+		Position = UDim2.new(0.83, 0, 0.39, 0),
+		Size = UDim2.new(0.09, 0, 0.42, 0),
+	}, holder)
+	corner(rightStrap, 3)
+	return holder
+end
+local function magnifierGlyph(parent, position)
+	local holder = make("Frame", {Name = "SearchIcon", BackgroundTransparency = 1, Position = position, Size = UDim2.fromOffset(22, 22)}, parent)
+	local ring = make("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(1, 1), Size = UDim2.fromOffset(14, 14)}, holder)
+	corner(ring, 10)
+	outline(ring, COLORS.muted, 0.02, 2)
+	local handle = make("Frame", {BackgroundColor3 = COLORS.muted, BorderSizePixel = 0, Position = UDim2.fromOffset(14, 14), Size = UDim2.fromOffset(7, 2), Rotation = 45}, holder)
+	corner(handle, 2)
+	return holder
+end
 
 local gui = make("ScreenGui", {
 	Name = "PalmVilleInventoryGui",
@@ -127,6 +180,23 @@ local panel = make("Frame", {
 }, gui)
 corner(panel, 24)
 outline(panel, COLORS.blue, 0.12, 1.6)
+make("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 43, 63)),
+		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(14, 31, 48)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 25, 40)),
+	}),
+	Rotation = 90,
+}, panel)
+outline(panel, Color3.fromRGB(115, 211, 255), 0.76, 4)
+local Lighting = game:GetService("Lighting")
+local inventoryBlur = Lighting:FindFirstChild("PalmVilleInventoryBlur")
+if not inventoryBlur then
+	inventoryBlur = Instance.new("BlurEffect")
+	inventoryBlur.Name = "PalmVilleInventoryBlur"
+	inventoryBlur.Size = 0
+	inventoryBlur.Parent = Lighting
+end
 
 local header = make("Frame", {
 	Name = "Header",
@@ -138,6 +208,10 @@ local header = make("Frame", {
 -- UICorner does not clip child backgrounds, so round the header itself and
 -- restore its straight lower edge with a matching strip.
 corner(header, 24)
+make("UIGradient", {
+	Color = ColorSequence.new(Color3.fromRGB(27, 49, 70), Color3.fromRGB(18, 35, 53)),
+	Rotation = 90,
+}, header)
 make("Frame", {
 	Name = "HeaderBottomMask",
 	Position = UDim2.new(0, 0, 1, -24),
@@ -153,41 +227,45 @@ local headerLine = make("Frame", {
 	BackgroundTransparency = 0.72,
 	BorderSizePixel = 0,
 }, header)
-make("ImageLabel", {Name = "InventoryIcon", BackgroundTransparency = 1, Position = UDim2.fromOffset(34, 17), Size = UDim2.fromOffset(42, 42), Image = "rbxassetid://113023659142897", ScaleType = Enum.ScaleType.Fit}, header)
-label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 13), 30, COLORS.text, Enum.Font.GothamBold)
-label(header, "Your collected items and tools", UDim2.fromOffset(300, 20), UDim2.fromOffset(90, 46), 11, COLORS.muted)
+backpackGlyph(header, UDim2.fromOffset(35, 19), UDim2.fromOffset(38, 38))
+label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 16), 30, COLORS.text, Enum.Font.GothamBold)
 
 local search = make("TextBox", {
 	Name = "Search",
-	PlaceholderText = "⌕  Search item...",
+	PlaceholderText = "Search item...",
 	Text = "",
 	ClearTextOnFocus = false,
-	Size = UDim2.fromOffset(245, 44),
+	Size = UDim2.fromOffset(252, 44),
 	Position = UDim2.new(1, -315, 0, 15),
 	BackgroundColor3 = COLORS.slot,
 	TextColor3 = COLORS.text,
 	PlaceholderColor3 = COLORS.muted,
-	Font = Enum.Font.FredokaOne,
+	Font = Enum.Font.GothamMedium,
 	TextSize = 14,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
 corner(search, 22)
 outline(search, COLORS.stroke, 0.38, 1)
-make("UIPadding", {PaddingLeft = UDim.new(0, 18), PaddingRight = UDim.new(0, 12)}, search)
+make("UIGradient", {
+	Color = ColorSequence.new(Color3.fromRGB(25, 47, 67), Color3.fromRGB(17, 35, 53)),
+	Rotation = 90,
+}, search)
+make("UIPadding", {PaddingLeft = UDim.new(0, 43), PaddingRight = UDim.new(0, 14)}, search)
+magnifierGlyph(search, UDim2.fromOffset(14, 11))
 
 local close = make("TextButton", {
 	Name = "Close",
 	Text = "×",
 	Font = Enum.Font.GothamMedium,
-	TextSize = 30,
+	TextSize = 27,
 	TextColor3 = COLORS.text,
-	BackgroundColor3 = COLORS.slot,
-	Size = UDim2.fromOffset(46, 44),
+	BackgroundColor3 = Color3.fromRGB(24, 43, 62),
+	Size = UDim2.fromOffset(44, 44),
 	Position = UDim2.new(1, -58, 0, 15),
 	AutoButtonColor = false,
 }, header)
 corner(close, 22)
-outline(close, COLORS.stroke, 0.45, 1)
+outline(close, COLORS.stroke, 0.62, 1)
 
 local sidebar = make("Frame", {
 	Name = "Categories",
@@ -269,14 +347,7 @@ local capacityPill = make("Frame", {
 	BackgroundTransparency = 0.12,
 }, footer)
 corner(capacityPill, 18)
-make("ImageLabel", {
-	Name = "CapacityIcon",
-	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(10, 7),
-	Size = UDim2.fromOffset(20, 20),
-	Image = "rbxassetid://113023659142897",
-	ScaleType = Enum.ScaleType.Fit,
-}, capacityPill)
+backpackGlyph(capacityPill, UDim2.fromOffset(9, 7), UDim2.fromOffset(20, 20))
 local capacity = label(capacityPill, "0 / 50", UDim2.new(1, -38, 1, 0), UDim2.fromOffset(32, 0), 14, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 
 local function getTools()
@@ -402,6 +473,10 @@ local function renderItems()
 			}, gridScroll)
 			corner(card, 17)
 			outline(card, COLORS.stroke, 0.42, 1)
+make("UIGradient", {
+				Color = ColorSequence.new(Color3.fromRGB(29, 51, 71), Color3.fromRGB(18, 37, 55)),
+				Rotation = 90,
+			}, card)
 			if item.icon and item.icon ~= "" then
 				make("ImageLabel", {
 					Name = "ItemIcon",
@@ -435,6 +510,10 @@ local function renderItems()
 		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = COLORS.slot, BackgroundTransparency = 0.22, LayoutOrder = slotIndex}, gridScroll)
 		corner(emptySlot, 18)
 		outline(emptySlot, COLORS.stroke, 0.62, 1)
+make("UIGradient", {
+			Color = ColorSequence.new(Color3.fromRGB(27, 48, 67), Color3.fromRGB(17, 35, 52)),
+			Rotation = 90,
+		}, emptySlot)
 		table.insert(itemCards, emptySlot)
 	end
 end
@@ -445,15 +524,17 @@ for index, category in ipairs(categoryNames) do
 		Size = UDim2.new(1, 0, 0, 44),
 		BackgroundColor3 = COLORS.panel2,
 		BackgroundTransparency = 1,
-		Text = ({["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◈", Misc="▣"})[category] .. "   " .. category,
+		Text = "",
 		TextColor3 = category == selectedCategory and COLORS.text or COLORS.muted,
 		TextSize = 14,
-		Font = Enum.Font.FredokaOne,
+		Font = Enum.Font.GothamMedium,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		AutoButtonColor = false,
 		LayoutOrder = index,
 	}, sidebar)
-	make("UIPadding", {PaddingLeft = UDim.new(0, 14)}, button)
+	local categoryGlyphs = {["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◈", Misc="▣"}
+	label(button, categoryGlyphs[category], UDim2.fromOffset(24, 28), UDim2.fromOffset(12, 8), 19, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
+	label(button, category, UDim2.new(1, -48, 1, 0), UDim2.fromOffset(46, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium)
 	corner(button, 14)
 	categoryButtons[category] = button
 	button.Activated:Connect(function()
@@ -463,6 +544,8 @@ for index, category in ipairs(categoryNames) do
 			other.BackgroundTransparency = active and 0 or 1
 			other.BackgroundColor3 = active and COLORS.blueSoft or COLORS.panel2
 			other.TextColor3 = active and COLORS.text or COLORS.muted
+			local iconLabel = other:FindFirstChildWhichIsA("TextLabel")
+			if iconLabel then iconLabel.TextColor3 = active and COLORS.text or COLORS.muted end
 			if active then
 				local stroke = other:FindFirstChildOfClass("UIStroke")
 				if not stroke then outline(other, COLORS.blue, 0.25, 1.2) end
@@ -532,6 +615,8 @@ end
 local function setOpen(open)
 	panel.Visible = open
 	shade.Visible = open
+	inventoryBlur.Enabled = open
+	TweenService:Create(inventoryBlur, TweenInfo.new(0.18), {Size = open and 8 or 0}):Play()
 	openButton.Visible = not open
 	if open then
 		search.Text = ""
