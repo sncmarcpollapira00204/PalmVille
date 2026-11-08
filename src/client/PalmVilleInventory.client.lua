@@ -14,15 +14,44 @@ pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 end)
 
+local Theme = {
+	Colors = {
+		Panel = Color3.fromRGB(21, 39, 57),
+		PanelTop = Color3.fromRGB(28, 52, 74),
+		PanelBottom = Color3.fromRGB(17, 33, 49),
+		Slot = Color3.fromRGB(25, 46, 65),
+		Stroke = Color3.fromRGB(92, 129, 157),
+		Blue = Color3.fromRGB(77, 184, 255),
+		ActiveStart = Color3.fromRGB(30, 111, 217), -- #1E6FD9
+		ActiveEnd = Color3.fromRGB(58, 160, 255), -- #3AA0FF
+		Text = Color3.fromRGB(242, 247, 252),
+		Muted = Color3.fromRGB(177, 194, 209),
+		Shadow = Color3.fromRGB(5, 15, 25),
+	},
+	Radius = {Panel = 28, Header = 28, Search = 22, Close = 22, Tab = 14, Slot = 18, Capacity = 18},
+	Spacing = {
+		PanelWidth = 890, PanelHeight = 520, HeaderHeight = 76, SidebarWidth = 230,
+		SidebarTop = 18, SidebarRowHeight = 52, SidebarGap = 7,
+		GridInsetX = 16, GridInsetY = 14, GridCell = 110, GridGap = 14,
+	},
+	Fonts = {Title = Enum.Font.FredokaOne, Body = Enum.Font.GothamMedium, Quantity = Enum.Font.GothamBold},
+	Assets = {
+		BackpackIcon = "rbxassetid://113023659142897",
+		SearchIcon = "", -- Optional 64x64 transparent PNG uploaded by the developer.
+		CloseIcon = "", -- Optional 64x64 transparent PNG uploaded by the developer.
+		ItemFallback = "", -- Optional 256x256 transparent PNG uploaded by the developer.
+		CategoryIcons = {
+			["All Items"] = "", Tools = "", Seeds = "", Crops = "", Product = "", Misc = "",
+		},
+	},
+	Glyphs = {
+		Categories = {["All Items"] = "▦", Tools = "⚒", Seeds = "❧", Crops = "♧", Product = "◉", Misc = "▣"},
+	},
+}
 local COLORS = {
-	panel = Color3.fromRGB(21, 39, 57),
-	panel2 = Color3.fromRGB(24, 45, 64),
-	slot = Color3.fromRGB(25, 46, 65),
-	stroke = Color3.fromRGB(92, 129, 157),
-	blue = Color3.fromRGB(69, 179, 246),
-	blueSoft = Color3.fromRGB(35, 96, 139),
-	text = Color3.fromRGB(242, 247, 252),
-	muted = Color3.fromRGB(177, 194, 209),
+	panel = Theme.Colors.Panel, panel2 = Theme.Colors.Panel, slot = Theme.Colors.Slot,
+	stroke = Theme.Colors.Stroke, blue = Theme.Colors.Blue, blueSoft = Theme.Colors.ActiveStart,
+	text = Theme.Colors.Text, muted = Theme.Colors.Muted,
 }
 
 local function make(className, properties, parent)
@@ -50,7 +79,7 @@ local function label(parent, text, size, position, fontSize, color, font, alignm
 		Text = text,
 		Size = size,
 		Position = position,
-		Font = font or Enum.Font.FredokaOne,
+		Font = font or Theme.Fonts.Body,
 		TextSize = fontSize or 14,
 		TextColor3 = color or COLORS.text,
 		TextXAlignment = alignment or Enum.TextXAlignment.Left,
@@ -123,7 +152,7 @@ local gui = make("ScreenGui", {
 
 local scale = make("UIScale", {Scale = 1}, gui)
 local applyResponsiveLayout
-local panelTargetSize = Vector2.new(890, 520)
+local panelTargetSize = Vector2.new(Theme.Spacing.PanelWidth, Theme.Spacing.PanelHeight)
 local compactLayout = false
 
 local function updateScale()
@@ -141,7 +170,7 @@ local function updateScale()
 	else
 		local factor = math.min(viewport.X / 980, viewport.Y / 610, 1)
 		scale.Scale = math.clamp(factor, 0.32, 1)
-		panelTargetSize = Vector2.new(890, 520)
+		panelTargetSize = Vector2.new(Theme.Spacing.PanelWidth, Theme.Spacing.PanelHeight)
 	end
 
 	if applyResponsiveLayout then
@@ -189,19 +218,19 @@ local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(890, 520),
+	Size = UDim2.fromOffset(Theme.Spacing.PanelWidth, Theme.Spacing.PanelHeight),
 	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.12,
 	Visible = false,
 	ClipsDescendants = true,
 }, gui)
-local panelCorner = corner(panel, 30)
+local panelCorner = corner(panel, Theme.Radius.Panel)
 local panelOutline = outline(panel, COLORS.blue, 0.16, 1.4)
 make("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 52, 74)),
+		ColorSequenceKeypoint.new(0, Theme.Colors.PanelTop),
 		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(21, 40, 59)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(17, 33, 49)),
+		ColorSequenceKeypoint.new(1, Theme.Colors.PanelBottom),
 	}),
 	Rotation = 90,
 }, panel)
@@ -218,14 +247,14 @@ inventoryBlur.Enabled = false
 
 local header = make("Frame", {
 	Name = "Header",
-	Size = UDim2.new(1, 0, 0, 76),
+	Size = UDim2.new(1, 0, 0, Theme.Spacing.HeaderHeight),
 	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.1,
 	BorderSizePixel = 0,
 }, panel)
 -- UICorner does not clip child backgrounds, so round the header itself and
 -- restore its straight lower edge with a matching strip.
-local headerCorner = corner(header, 30)
+local headerCorner = corner(header, Theme.Radius.Header)
 make("UIGradient", {
 	Color = ColorSequence.new(Color3.fromRGB(31, 57, 80), Color3.fromRGB(22, 42, 61)),
 	Rotation = 90,
@@ -245,8 +274,16 @@ local headerLine = make("Frame", {
 	BackgroundTransparency = 0.72,
 	BorderSizePixel = 0,
 }, header)
-local headerIcon = backpackGlyph(header, UDim2.fromOffset(35, 19), UDim2.fromOffset(38, 38))
-local titleText = label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 16), 30, COLORS.text, Enum.Font.GothamBold)
+local headerIcon = make("ImageLabel", {
+	Name = "HeaderBackpackIcon",
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(35, 19),
+	Size = UDim2.fromOffset(38, 38),
+	Image = Theme.Assets.BackpackIcon,
+	ImageColor3 = Color3.new(1, 1, 1),
+	ScaleType = Enum.ScaleType.Fit,
+}, header)
+local titleText = label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 16), 30, COLORS.text, Theme.Fonts.Title)
 
 local search = make("TextBox", {
 	Name = "Search",
@@ -266,11 +303,21 @@ local search = make("TextBox", {
 	TextSize = 14,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
-local searchCorner = corner(search, 24)
+local searchCorner = corner(search, Theme.Radius.Search)
 outline(search, Color3.fromRGB(112, 157, 190), 0.2, 1.25)
 local searchPadding = make("UIPadding", {PaddingLeft = UDim.new(0, 46), PaddingRight = UDim.new(0, 14)}, search)
 -- Keep the magnifier outside the padded TextBox: UIPadding also offsets child UI instances.
-local searchIcon = magnifierGlyph(header, UDim2.new(1, -348, 0, 27))
+local searchIcon
+if Theme.Assets.SearchIcon ~= "" then
+	searchIcon = make("ImageLabel", {
+		Name = "SearchIcon", BackgroundTransparency = 1,
+		Position = UDim2.new(1, -348, 0, 27), Size = UDim2.fromOffset(22, 22),
+		Image = Theme.Assets.SearchIcon, ImageColor3 = Theme.Colors.Text,
+		ScaleType = Enum.ScaleType.Fit, ZIndex = 7,
+	}, header)
+else
+	searchIcon = magnifierGlyph(header, UDim2.new(1, -348, 0, 27))
+end
 
 local close = make("TextButton", {
 	Name = "Close",
@@ -284,63 +331,49 @@ local close = make("TextButton", {
 	ZIndex = 4,
 	AutoButtonColor = false,
 }, header)
-local closeCorner = corner(close, 24)
+local closeCorner = corner(close, Theme.Radius.Close)
 outline(close, COLORS.stroke, 0.48, 1)
+local closeIconImage
+if Theme.Assets.CloseIcon ~= "" then
+	close.Text = ""
+	closeIconImage = make("ImageLabel", {
+		Name = "CloseIcon", BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.56, 0.56), Image = Theme.Assets.CloseIcon,
+		ImageColor3 = Theme.Colors.Text, ScaleType = Enum.ScaleType.Fit, ZIndex = 5,
+	}, close)
+end
 
 local sidebar = make("Frame", {
 	Name = "Categories",
-	Position = UDim2.fromOffset(0, 76),
-	Size = UDim2.new(0, 230, 1, -77),
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BackgroundTransparency = 0.12,
+	Position = UDim2.fromOffset(0, Theme.Spacing.HeaderHeight),
+	Size = UDim2.new(0, Theme.Spacing.SidebarWidth, 1, -77),
+	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 }, panel)
-make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(25, 46, 66), Color3.fromRGB(18, 34, 51)),
-	Rotation = 90,
-}, sidebar)
--- Round the lower-left edge of the category rail so it cannot protrude
--- beyond the inventory panel's rounded bottom corner.
-local sidebarCorner = corner(sidebar, 30)
-local sidebarTopMask = make("Frame", {
-	Name = "SidebarTopMask",
-	Position = UDim2.fromOffset(0, 0),
-	Size = UDim2.new(1, 0, 0, 28),
-	BackgroundColor3 = Color3.fromRGB(25, 46, 66),
-	BackgroundTransparency = 0.14,
-	BorderSizePixel = 0,
-}, sidebar)
 local sidePadding = make("UIPadding", {
-	PaddingTop = UDim.new(0, 18),
+	PaddingTop = UDim.new(0, Theme.Spacing.SidebarTop),
 	PaddingLeft = UDim.new(0, 20),
 	PaddingRight = UDim.new(0, 12),
 }, sidebar)
 local sideLayout = make("UIListLayout", {
-	Padding = UDim.new(0, 7),
+	Padding = UDim.new(0, Theme.Spacing.SidebarGap),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, sidebar)
 
-local sidebarDivider = make("Frame", {
-	Name = "SidebarDivider",
-	Position = UDim2.new(0, 229, 0, 76),
-	Size = UDim2.new(0, 1, 1, -77),
-	BackgroundColor3 = Color3.fromRGB(105, 148, 178),
-	BackgroundTransparency = 0.72,
-	BorderSizePixel = 0,
-}, panel)
-
 local content = make("Frame", {
 	Name = "ItemsArea",
-	Position = UDim2.fromOffset(230, 76),
-	Size = UDim2.new(1, -230, 1, -77),
+	Position = UDim2.fromOffset(Theme.Spacing.SidebarWidth, Theme.Spacing.HeaderHeight),
+	Size = UDim2.new(1, -Theme.Spacing.SidebarWidth, 1, -77),
 	BackgroundTransparency = 1,
 }, panel)
 
-local categoryNames = {"All Items", "Seeds", "Crops", "Tools", "Materials", "Consumables", "Misc"}
+local categoryNames = {"All Items", "Tools", "Seeds", "Crops", "Product", "Misc"}
 local selectedCategory = "All Items"
 local categoryButtons = {}
 local setSelectedCategory
-local categoryIconLabels = {}
+local categoryIconObjects = {}
+local categoryIconTextLabels = {}
 local categoryTextLabels = {}
 local itemCards = {}
 local currentItems = {}
@@ -350,7 +383,7 @@ local HOTBAR_SLOTS = 5
 
 local gridScroll = make("ScrollingFrame", {
 	Name = "ItemGrid",
-	Position = UDim2.fromOffset(16, 14),
+	Position = UDim2.fromOffset(Theme.Spacing.GridInsetX, Theme.Spacing.GridInsetY),
 	Size = UDim2.new(1, -32, 1, -78),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
@@ -359,8 +392,8 @@ local gridScroll = make("ScrollingFrame", {
 	CanvasSize = UDim2.fromOffset(0, 0),
 }, content)
 local grid = make("UIGridLayout", {
-	CellSize = UDim2.fromOffset(110, 110),
-	CellPadding = UDim2.fromOffset(14, 14),
+	CellSize = UDim2.fromOffset(Theme.Spacing.GridCell, Theme.Spacing.GridCell),
+	CellPadding = UDim2.fromOffset(Theme.Spacing.GridGap, Theme.Spacing.GridGap),
 	FillDirectionMaxCells = 5,
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, gridScroll)
@@ -378,12 +411,12 @@ local capacityPill = make("Frame", {
 	Name = "CapacityPill",
 	AnchorPoint = Vector2.new(1, 0.5),
 	Position = UDim2.new(1, 0, 0.5, 0),
-	Size = UDim2.fromOffset(130, 40),
+	Size = UDim2.fromOffset(122, 36),
 	BackgroundColor3 = Color3.fromRGB(20, 39, 57),
 	BackgroundTransparency = 0.08,
 }, footer)
-local capacityCorner = corner(capacityPill, 20)
-local capacityIcon = backpackGlyph(capacityPill, UDim2.fromOffset(10, 8), UDim2.fromOffset(24, 24))
+local capacityCorner = corner(capacityPill, Theme.Radius.Capacity)
+local capacityIcon = backpackGlyph(capacityPill, UDim2.fromOffset(9, 7), UDim2.fromOffset(22, 22))
 local capacity = label(capacityPill, "0 / 50", UDim2.new(1, -46, 1, 0), UDim2.fromOffset(37, 0), 14, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 
 local function getTools()
@@ -427,8 +460,8 @@ local function getCategory(tool)
 		if normalized:find("seed") then return "Seeds" end
 		if normalized:find("crop") or normalized:find("fruit") then return "Crops" end
 		if normalized:find("tool") then return "Tools" end
-		if normalized:find("material") then return "Materials" end
-		if normalized:find("consum") or normalized:find("product") then return "Consumables" end
+		if normalized:find("material") then return "Misc" end
+		if normalized:find("consum") or normalized:find("product") then return "Product" end
 	end
 	if tool:GetAttribute("PalmVilleSeedPack") or tool:GetAttribute("SeedCode") then return "Seeds" end
 	local name = tool.Name:lower()
@@ -510,7 +543,6 @@ local function renderItems()
 	local shown = 0
 	for _, item in ipairs(displayItems) do
 		local category = item.category or "Misc"
-			if category == "Product" then category = "Consumables" end
 		local name = tostring(item.name or "Item")
 		local matchesCategory = selectedCategory == "All Items" or category == selectedCategory
 		local matchesSearch = query == "" or name:lower():find(query, 1, true) ~= nil
@@ -524,7 +556,7 @@ local function renderItems()
 				AutoButtonColor = false,
 				LayoutOrder = shown,
 			}, gridScroll)
-			corner(card, 20)
+			corner(card, Theme.Radius.Slot)
 			outline(card, Color3.fromRGB(103, 143, 171), 0.5, 1)
 			make("UIGradient", {
 				Color = ColorSequence.new(Color3.fromRGB(27, 49, 68), Color3.fromRGB(19, 37, 55)),
@@ -536,6 +568,9 @@ local function renderItems()
 			end
 			local cellSize = math.max(32, grid.CellSize.X.Offset)
 			local iconSize = math.max(26, math.floor(cellSize * 0.74))
+			if (not itemIcon or itemIcon == "") and Theme.Assets.ItemFallback ~= "" then
+				itemIcon = Theme.Assets.ItemFallback
+			end
 			if itemIcon and itemIcon ~= "" then
 				make("ImageLabel", {
 					Name = "ItemIcon",
@@ -553,11 +588,13 @@ local function renderItems()
 			-- Item names stay hidden; quantities remain anchored to the lower-right corner.
 			local quantityWidth = math.max(28, math.floor(cellSize * 0.44))
 			local quantityHeight = math.max(16, math.floor(cellSize * 0.2))
-			label(card, "x" .. tostring(item.amount or 1),
+			local quantityLabel = label(card, "x" .. tostring(item.amount or 1),
 				UDim2.fromOffset(quantityWidth, quantityHeight),
 				UDim2.new(1, -quantityWidth - 5, 1, -quantityHeight - 3),
 				math.clamp(math.floor(cellSize * 0.14), 10, 16),
-				COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
+				COLORS.text, Theme.Fonts.Quantity, Enum.TextXAlignment.Right)
+			quantityLabel.TextStrokeColor3 = Theme.Colors.Shadow
+			quantityLabel.TextStrokeTransparency = 0.42
 			if item.tool and item.tool.Parent == player.Character then
 				local equippedStroke = card:FindFirstChildOfClass("UIStroke")
 				if equippedStroke then equippedStroke.Color = COLORS.blue equippedStroke.Thickness = 2 end
@@ -587,7 +624,7 @@ end
 for index, category in ipairs(categoryNames) do
 	local button = make("TextButton", {
 		Name = "Category_" .. category:gsub("%s+", ""),
-		Size = UDim2.new(1, 0, 0, 52),
+		Size = UDim2.new(1, 0, 0, Theme.Spacing.SidebarRowHeight),
 		BackgroundColor3 = COLORS.panel2,
 		BackgroundTransparency = 1,
 		Text = "",
@@ -598,10 +635,25 @@ for index, category in ipairs(categoryNames) do
 		AutoButtonColor = false,
 		LayoutOrder = index,
 	}, sidebar)
-	local categoryGlyphs = {["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="⚗", Misc="▣"}
-	categoryIconLabels[category] = label(button, categoryGlyphs[category], UDim2.fromOffset(26, 30), UDim2.fromOffset(12, 11), 19, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
-	categoryTextLabels[category] = label(button, category, UDim2.new(1, -58, 1, 0), UDim2.fromOffset(52, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium)
-	corner(button, 14)
+	local categoryAsset = Theme.Assets.CategoryIcons[category]
+	local categoryIcon
+	if categoryAsset and categoryAsset ~= "" then
+		categoryIcon = make("ImageLabel", {
+			Name = "CategoryIcon", BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(12, 11), Size = UDim2.fromOffset(26, 30),
+			Image = categoryAsset, ImageColor3 = Theme.Colors.Text, ScaleType = Enum.ScaleType.Fit, ZIndex = 2,
+		}, button)
+	else
+		categoryIcon = label(button, Theme.Glyphs.Categories[category] or "•",
+			UDim2.fromOffset(26, 30), UDim2.fromOffset(12, 11), 19,
+			category == selectedCategory and COLORS.text or COLORS.muted,
+			Theme.Fonts.Body, Enum.TextXAlignment.Center)
+	end
+	categoryIconObjects[category] = categoryIcon
+	if categoryIcon:IsA("TextLabel") then categoryIconTextLabels[category] = categoryIcon end
+	categoryTextLabels[category] = label(button, category, UDim2.new(1, -58, 1, 0),
+		UDim2.fromOffset(52, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Theme.Fonts.Body)
+	corner(button, Theme.Radius.Tab)
 	categoryButtons[category] = button
 	button.Activated:Connect(function()
 		setSelectedCategory(category)
@@ -613,23 +665,24 @@ setSelectedCategory = function(category)
 	selectedCategory = category
 	for name, other in pairs(categoryButtons) do
 		local active = name == selectedCategory
-		other.BackgroundTransparency = active and 0 or 1
-		other.BackgroundColor3 = active and COLORS.blueSoft or COLORS.panel2
+		other.BackgroundTransparency = active and 0.02 or 1
+		other.BackgroundColor3 = active and Color3.new(1, 1, 1) or COLORS.panel2
 		other.TextColor3 = active and COLORS.text or COLORS.muted
 		for _, child in ipairs(other:GetChildren()) do
 			if child:IsA("TextLabel") then
 				child.TextColor3 = active and COLORS.text or COLORS.muted
+			elseif child:IsA("ImageLabel") then
+				child.ImageColor3 = active and COLORS.text or COLORS.muted
 			end
 		end
-
 		if active then
 			local stroke = other:FindFirstChildOfClass("UIStroke")
-			if not stroke then outline(other, COLORS.blue, 0.25, 1.2) end
+			if not stroke then outline(other, Theme.Colors.ActiveEnd, 0.38, 1.15) end
 			local gradient = other:FindFirstChild("ActiveGradient")
 			if not gradient then
 				make("UIGradient", {
 					Name = "ActiveGradient",
-					Color = ColorSequence.new(Color3.fromRGB(48, 132, 183), Color3.fromRGB(31, 86, 127)),
+					Color = ColorSequence.new(Theme.Colors.ActiveStart, Theme.Colors.ActiveEnd),
 					Rotation = 0,
 				}, other)
 			end
@@ -713,7 +766,7 @@ applyResponsiveLayout = function(viewport, compact)
 		local radius = math.clamp(math.floor(math.min(width, height) * 0.055), 14, 22)
 		local headerHeight = math.clamp(math.floor(height * 0.105), 52, 68)
 		local sidebarWidth = math.clamp(math.floor(width * 0.31), 90, 156)
-		local rowHeight = math.clamp(math.floor((height - headerHeight - 48) / 7), 26, 50)
+		local rowHeight = math.clamp(math.floor((height - headerHeight - 48) / #categoryNames), 26, 50)
 		local gridGap = 8
 		local contentWidth = width - sidebarWidth
 		local contentHeight = height - headerHeight
@@ -750,19 +803,15 @@ applyResponsiveLayout = function(viewport, compact)
 
 		sidebar.Position = UDim2.fromOffset(0, headerHeight)
 		sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
-		sidebarCorner.CornerRadius = UDim.new(0, radius)
-		sidebarTopMask.Size = UDim2.new(1, 0, 0, math.min(22, radius))
-		sidebarDivider.Position = UDim2.new(0, sidebarWidth - 1, 0, headerHeight)
-		sidebarDivider.Size = UDim2.new(0, 1, 1, -headerHeight)
-		sidePadding.PaddingTop = UDim.new(0, 8)
+				sidePadding.PaddingTop = UDim.new(0, 8)
 		sidePadding.PaddingLeft = UDim.new(0, 8)
 		sidePadding.PaddingRight = UDim.new(0, 8)
 		sideLayout.Padding = UDim.new(0, 3)
 		for _, category in ipairs(categoryNames) do
 			categoryButtons[category].Size = UDim2.new(1, 0, 0, rowHeight)
-			categoryIconLabels[category].Position = UDim2.fromOffset(5, math.floor((rowHeight - 24) / 2))
-			categoryIconLabels[category].Size = UDim2.fromOffset(22, 24)
-			categoryIconLabels[category].TextSize = 16
+			categoryIconObjects[category].Position = UDim2.fromOffset(5, math.floor((rowHeight - 24) / 2))
+			categoryIconObjects[category].Size = UDim2.fromOffset(22, 24)
+			if categoryIconTextLabels[category] then categoryIconTextLabels[category].TextSize = 16 end
 			categoryTextLabels[category].Position = UDim2.fromOffset(31, 0)
 			categoryTextLabels[category].Size = UDim2.new(1, -36, 1, 0)
 			categoryTextLabels[category].TextSize = 10
@@ -803,11 +852,11 @@ applyResponsiveLayout = function(viewport, compact)
 			openCaption.Position = UDim2.new(0, 2, 1, -18)
 		end
 	else
-		panelCorner.CornerRadius = UDim.new(0, 30)
+		panelCorner.CornerRadius = UDim.new(0, Theme.Radius.Panel)
 		panelOutline.Thickness = 1.4
 		panelGlow.Thickness = 3
 		header.Size = UDim2.new(1, 0, 0, 76)
-		headerCorner.CornerRadius = UDim.new(0, 30)
+		headerCorner.CornerRadius = UDim.new(0, Theme.Radius.Header)
 		headerBottomMask.Position = UDim2.new(0, 0, 1, -28)
 		headerBottomMask.Size = UDim2.new(1, 0, 0, 28)
 		headerIcon.Position = UDim2.fromOffset(35, 19)
@@ -817,7 +866,7 @@ applyResponsiveLayout = function(viewport, compact)
 		titleText.TextSize = 30
 		search.Size = UDim2.fromOffset(270, 48)
 		search.Position = UDim2.new(1, -362, 0, 14)
-		searchCorner.CornerRadius = UDim.new(0, 24)
+		searchCorner.CornerRadius = UDim.new(0, Theme.Radius.Search)
 		search.TextSize = 14
 		searchPadding.PaddingLeft = UDim.new(0, 46)
 		searchPadding.PaddingRight = UDim.new(0, 14)
@@ -825,45 +874,41 @@ applyResponsiveLayout = function(viewport, compact)
 		close.Size = UDim2.fromOffset(48, 48)
 		close.Position = UDim2.new(1, -75, 0, 14)
 		close.TextSize = 28
-		closeCorner.CornerRadius = UDim.new(0, 24)
+		closeCorner.CornerRadius = UDim.new(0, Theme.Radius.Close)
 
 		sidebar.Position = UDim2.fromOffset(0, 76)
 		sidebar.Size = UDim2.new(0, 230, 1, -77)
-		sidebarCorner.CornerRadius = UDim.new(0, 30)
-		sidebarTopMask.Size = UDim2.new(1, 0, 0, 28)
-		sidebarDivider.Position = UDim2.new(0, 229, 0, 76)
-		sidebarDivider.Size = UDim2.new(0, 1, 1, -77)
-		sidePadding.PaddingTop = UDim.new(0, 18)
+				sidePadding.PaddingTop = UDim.new(0, Theme.Spacing.SidebarTop)
 		sidePadding.PaddingLeft = UDim.new(0, 20)
 		sidePadding.PaddingRight = UDim.new(0, 12)
-		sideLayout.Padding = UDim.new(0, 7)
+		sideLayout.Padding = UDim.new(0, Theme.Spacing.SidebarGap)
 		for _, category in ipairs(categoryNames) do
-			categoryButtons[category].Size = UDim2.new(1, 0, 0, 52)
-			categoryIconLabels[category].Position = UDim2.fromOffset(12, 11)
-			categoryIconLabels[category].Size = UDim2.fromOffset(26, 30)
-			categoryIconLabels[category].TextSize = 19
+			categoryButtons[category].Size = UDim2.new(1, 0, 0, Theme.Spacing.SidebarRowHeight)
+			categoryIconObjects[category].Position = UDim2.fromOffset(12, 11)
+			categoryIconObjects[category].Size = UDim2.fromOffset(26, 30)
+			if categoryIconTextLabels[category] then categoryIconTextLabels[category].TextSize = 19 end
 			categoryTextLabels[category].Position = UDim2.fromOffset(52, 0)
 			categoryTextLabels[category].Size = UDim2.new(1, -58, 1, 0)
 			categoryTextLabels[category].TextSize = 14
 		end
 
-		content.Position = UDim2.fromOffset(230, 76)
-		content.Size = UDim2.new(1, -230, 1, -77)
-		gridScroll.Position = UDim2.fromOffset(16, 14)
+		content.Position = UDim2.fromOffset(Theme.Spacing.SidebarWidth, Theme.Spacing.HeaderHeight)
+		content.Size = UDim2.new(1, -Theme.Spacing.SidebarWidth, 1, -77)
+		gridScroll.Position = UDim2.fromOffset(Theme.Spacing.GridInsetX, Theme.Spacing.GridInsetY)
 		gridScroll.Size = UDim2.new(1, -32, 1, -78)
 		gridScroll.ScrollBarThickness = 5
-		grid.CellSize = UDim2.fromOffset(110, 110)
-		grid.CellPadding = UDim2.fromOffset(14, 14)
+		grid.CellSize = UDim2.fromOffset(Theme.Spacing.GridCell, Theme.Spacing.GridCell)
+		grid.CellPadding = UDim2.fromOffset(Theme.Spacing.GridGap, Theme.Spacing.GridGap)
 
 		footer.Position = UDim2.new(0, 16, 1, -59)
 		footer.Size = UDim2.new(1, -38, 0, 40)
-		capacityPill.Size = UDim2.fromOffset(130, 40)
-		capacityCorner.CornerRadius = UDim.new(0, 20)
-		capacityIcon.Position = UDim2.fromOffset(10, 8)
-		capacityIcon.Size = UDim2.fromOffset(24, 24)
+		capacityPill.Size = UDim2.fromOffset(122, 36)
+		capacityCorner.CornerRadius = UDim.new(0, Theme.Radius.Capacity)
+		capacityIcon.Position = UDim2.fromOffset(9, 7)
+		capacityIcon.Size = UDim2.fromOffset(22, 22)
 		capacity.TextSize = 14
-		capacity.Position = UDim2.fromOffset(37, 0)
-		capacity.Size = UDim2.new(1, -46, 1, 0)
+		capacity.Position = UDim2.fromOffset(34, 0)
+		capacity.Size = UDim2.new(1, -42, 1, 0)
 
 		hotbar.Size = UDim2.fromOffset(HOTBAR_SLOTS * 76 + (HOTBAR_SLOTS - 1) * 9, 82)
 		for index, button in ipairs(hotbarButtons) do
