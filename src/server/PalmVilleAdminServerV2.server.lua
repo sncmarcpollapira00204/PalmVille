@@ -920,7 +920,7 @@ local function beginSpectate(admin, target, watchScreen)
 		remote:FireClient(target, "BeginCameraFeed", {token = token, adminUserId = admin.UserId})
 	end
 	remote:FireClient(target, "SpectateNotice", {admin = admin.Name, active = true})
-	if getRoleById(admin.UserId) == "MASTER DEVELOPER" then
+	if getRoleById(target.UserId) == "MASTER DEVELOPER" then
 		notificationRemote:FireClient(target, "INFO", "@" .. admin.Name .. " is spectating you")
 	end
 	remote:FireClient(admin, "SpectateStarted", {
