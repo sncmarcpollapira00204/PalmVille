@@ -119,7 +119,7 @@ local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(900, 500),
+	Size = UDim2.fromOffset(900, 520),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.035,
 	Visible = false,
@@ -260,7 +260,24 @@ local footer = make("Frame", {
 	BackgroundTransparency = 1,
 }, content)
 label(footer, "Select an item to equip it to your hotbar", UDim2.new(1, -140, 1, 0), UDim2.fromOffset(2, 0), 11, COLORS.muted)
-local capacity = label(footer, "0 / 50", UDim2.fromOffset(110, 36), UDim2.new(1, -110, 0, 0), 14, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
+local capacityPill = make("Frame", {
+	Name = "CapacityPill",
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, 0, 0.5, 0),
+	Size = UDim2.fromOffset(118, 34),
+	BackgroundColor3 = Color3.fromRGB(9, 22, 35),
+	BackgroundTransparency = 0.12,
+}, footer)
+corner(capacityPill, 18)
+make("ImageLabel", {
+	Name = "CapacityIcon",
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(10, 7),
+	Size = UDim2.fromOffset(20, 20),
+	Image = "rbxassetid://113023659142897",
+	ScaleType = Enum.ScaleType.Fit,
+}, capacityPill)
+local capacity = label(capacityPill, "0 / 50", UDim2.new(1, -38, 1, 0), UDim2.fromOffset(32, 0), 14, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 
 local function getTools()
 	local result, seen = {}, {}
@@ -520,7 +537,7 @@ local function setOpen(open)
 		search.Text = ""
 		refreshSavedItems()
 		renderItems()
-		panel.Size = UDim2.fromOffset(870, 470)
+		panel.Size = UDim2.fromOffset(870, 490)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 			Size = UDim2.fromOffset(900, 500),
 		}):Play()
