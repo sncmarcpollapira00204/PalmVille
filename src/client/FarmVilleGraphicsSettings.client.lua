@@ -109,7 +109,7 @@ local QUALITY_PROFILES = {
 	-- HD preset: sharper contrast, richer reflections and more detailed atmospheric depth.
 	-- Still uses ShadowMap to avoid the heavier Future renderer.
 	HIGH = {
-		Technology = Enum.Technology.Future,
+		Technology = Enum.Technology.ShadowMap,
 		Brightness = 2.02,
 		Ambient = Color3.fromRGB(96, 108, 127),
 		OutdoorAmbient = Color3.fromRGB(151, 169, 190),
