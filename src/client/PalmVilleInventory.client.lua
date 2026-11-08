@@ -175,7 +175,7 @@ local panel = make("Frame", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.fromOffset(900, 520),
-	BackgroundColor3 = COLORS.panel,
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.06,
 	Visible = false,
 	ClipsDescendants = true,
@@ -204,7 +204,7 @@ inventoryBlur.Enabled = false
 local header = make("Frame", {
 	Name = "Header",
 	Size = UDim2.new(1, 0, 0, 74),
-	BackgroundColor3 = Color3.fromRGB(30, 52, 73),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, panel)
@@ -219,8 +219,8 @@ make("Frame", {
 	Name = "HeaderBottomMask",
 	Position = UDim2.new(0, 0, 1, -24),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = header.BackgroundColor3,
-	BackgroundTransparency = header.BackgroundTransparency,
+	BackgroundColor3 = Color3.fromRGB(29, 51, 73),
+	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, header)
 local headerLine = make("Frame", {
@@ -241,7 +241,7 @@ local search = make("TextBox", {
 	Size = UDim2.fromOffset(252, 44),
 	Position = UDim2.new(1, -315, 0, 15),
 	ZIndex = 4,
-	BackgroundColor3 = Color3.fromRGB(28, 52, 74),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.04,
 	TextColor3 = Color3.fromRGB(247, 250, 253),
 	PlaceholderColor3 = Color3.fromRGB(198, 213, 226),
@@ -277,7 +277,7 @@ local sidebar = make("Frame", {
 	Name = "Categories",
 	Position = UDim2.fromOffset(0, 75),
 	Size = UDim2.new(0, 205, 1, -76),
-	BackgroundColor3 = Color3.fromRGB(24, 43, 61),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.12,
 	BorderSizePixel = 0,
 }, panel)
@@ -292,8 +292,8 @@ make("Frame", {
 	Name = "SidebarTopMask",
 	Position = UDim2.fromOffset(0, 0),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = sidebar.BackgroundColor3,
-	BackgroundTransparency = sidebar.BackgroundTransparency,
+	BackgroundColor3 = Color3.fromRGB(24, 43, 61),
+	BackgroundTransparency = 0.12,
 	BorderSizePixel = 0,
 }, sidebar)
 local sidePadding = make("UIPadding", {
@@ -477,7 +477,8 @@ local function renderItems()
 			local card = make("TextButton", {
 				Name = "Item_" .. name:gsub("%W", ""),
 				Text = "",
-				BackgroundColor3 = COLORS.slot,
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BackgroundTransparency = 0.08,
 				AutoButtonColor = false,
 				LayoutOrder = shown,
 			}, gridScroll)
@@ -517,7 +518,7 @@ make("UIGradient", {
 		end
 	end
 	for slotIndex = shown + 1, 15 do
-		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = COLORS.slot, BackgroundTransparency = 0.08, LayoutOrder = slotIndex}, gridScroll)
+		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.08, LayoutOrder = slotIndex}, gridScroll)
 		corner(emptySlot, 18)
 		outline(emptySlot, Color3.fromRGB(91, 128, 157), 0.3, 1.1)
 make("UIGradient", {
