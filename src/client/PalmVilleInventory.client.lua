@@ -135,6 +135,17 @@ local header = make("Frame", {
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, panel)
+-- UICorner does not clip child backgrounds, so round the header itself and
+-- restore its straight lower edge with a matching strip.
+corner(header, 24)
+make("Frame", {
+	Name = "HeaderBottomMask",
+	Position = UDim2.new(0, 0, 1, -24),
+	Size = UDim2.new(1, 0, 0, 24),
+	BackgroundColor3 = header.BackgroundColor3,
+	BackgroundTransparency = header.BackgroundTransparency,
+	BorderSizePixel = 0,
+}, header)
 local headerLine = make("Frame", {
 	Position = UDim2.new(0, 0, 1, -1),
 	Size = UDim2.new(1, 0, 0, 1),
@@ -185,6 +196,17 @@ local sidebar = make("Frame", {
 	BackgroundTransparency = 0.18,
 	BorderSizePixel = 0,
 }, panel)
+-- Round the lower-left edge of the category rail so it cannot protrude
+-- beyond the inventory panel's rounded bottom corner.
+corner(sidebar, 24)
+make("Frame", {
+	Name = "SidebarTopMask",
+	Position = UDim2.fromOffset(0, 0),
+	Size = UDim2.new(1, 0, 0, 24),
+	BackgroundColor3 = sidebar.BackgroundColor3,
+	BackgroundTransparency = sidebar.BackgroundTransparency,
+	BorderSizePixel = 0,
+}, sidebar)
 local sidePadding = make("UIPadding", {
 	PaddingTop = UDim.new(0, 18),
 	PaddingLeft = UDim.new(0, 14),
