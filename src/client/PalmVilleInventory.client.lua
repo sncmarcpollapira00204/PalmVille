@@ -15,10 +15,10 @@ pcall(function()
 end)
 
 local COLORS = {
-	panel = Color3.fromRGB(13, 29, 45),
-	panel2 = Color3.fromRGB(18, 37, 55),
-	slot = Color3.fromRGB(20, 39, 57),
-	stroke = Color3.fromRGB(73, 104, 132),
+	panel = Color3.fromRGB(22, 43, 63),
+	panel2 = Color3.fromRGB(25, 47, 67),
+	slot = Color3.fromRGB(30, 55, 77),
+	stroke = Color3.fromRGB(91, 128, 157),
 	blue = Color3.fromRGB(65, 174, 242),
 	blueSoft = Color3.fromRGB(38, 91, 130),
 	text = Color3.fromRGB(242, 247, 252),
@@ -102,12 +102,14 @@ local function backpackGlyph(parent, position, size)
 	return holder
 end
 local function magnifierGlyph(parent, position)
-	local holder = make("Frame", {Name = "SearchIcon", BackgroundTransparency = 1, Position = position, Size = UDim2.fromOffset(22, 22)}, parent)
+	local holder = make("Frame", {Name = "SearchIcon", BackgroundTransparency = 1, Position = position, Size = UDim2.fromOffset(22, 22), ZIndex = 5}, parent)
 	local ring = make("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(1, 1), Size = UDim2.fromOffset(14, 14)}, holder)
 	corner(ring, 10)
-	outline(ring, COLORS.muted, 0.02, 2)
+	ring.ZIndex = 5
+	outline(ring, Color3.fromRGB(218, 232, 243), 0.02, 2)
 	local handle = make("Frame", {BackgroundColor3 = COLORS.muted, BorderSizePixel = 0, Position = UDim2.fromOffset(14, 14), Size = UDim2.fromOffset(7, 2), Rotation = 45}, holder)
 	corner(handle, 2)
+	handle.ZIndex = 5
 	return holder
 end
 
@@ -174,7 +176,7 @@ local panel = make("Frame", {
 	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.fromOffset(900, 520),
 	BackgroundColor3 = COLORS.panel,
-	BackgroundTransparency = 0.035,
+	BackgroundTransparency = 0.06,
 	Visible = false,
 	ClipsDescendants = true,
 }, gui)
@@ -182,9 +184,9 @@ corner(panel, 24)
 outline(panel, COLORS.blue, 0.12, 1.6)
 make("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 43, 63)),
-		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(14, 31, 48)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 25, 40)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 61, 84)),
+		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(25, 48, 70)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(19, 39, 59)),
 	}),
 	Rotation = 90,
 }, panel)
@@ -202,7 +204,7 @@ inventoryBlur.Enabled = false
 local header = make("Frame", {
 	Name = "Header",
 	Size = UDim2.new(1, 0, 0, 74),
-	BackgroundColor3 = Color3.fromRGB(21, 38, 56),
+	BackgroundColor3 = Color3.fromRGB(30, 52, 73),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, panel)
@@ -210,7 +212,7 @@ local header = make("Frame", {
 -- restore its straight lower edge with a matching strip.
 corner(header, 24)
 make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(27, 49, 70), Color3.fromRGB(18, 35, 53)),
+	Color = ColorSequence.new(Color3.fromRGB(38, 65, 89), Color3.fromRGB(25, 47, 68)),
 	Rotation = 90,
 }, header)
 make("Frame", {
@@ -238,20 +240,22 @@ local search = make("TextBox", {
 	ClearTextOnFocus = false,
 	Size = UDim2.fromOffset(252, 44),
 	Position = UDim2.new(1, -315, 0, 15),
-	BackgroundColor3 = COLORS.slot,
-	TextColor3 = COLORS.text,
-	PlaceholderColor3 = COLORS.muted,
+	ZIndex = 4,
+	BackgroundColor3 = Color3.fromRGB(28, 52, 74),
+	BackgroundTransparency = 0.04,
+	TextColor3 = Color3.fromRGB(247, 250, 253),
+	PlaceholderColor3 = Color3.fromRGB(198, 213, 226),
 	Font = Enum.Font.GothamMedium,
 	TextSize = 14,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
 corner(search, 22)
-outline(search, COLORS.stroke, 0.38, 1)
+outline(search, Color3.fromRGB(112, 157, 190), 0.16, 1.35)
 make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(25, 47, 67), Color3.fromRGB(17, 35, 53)),
+	Color = ColorSequence.new(Color3.fromRGB(39, 67, 91), Color3.fromRGB(26, 49, 70)),
 	Rotation = 90,
 }, search)
-make("UIPadding", {PaddingLeft = UDim.new(0, 43), PaddingRight = UDim.new(0, 14)}, search)
+make("UIPadding", {PaddingLeft = UDim.new(0, 45), PaddingRight = UDim.new(0, 14)}, search)
 magnifierGlyph(search, UDim2.fromOffset(14, 11))
 
 local close = make("TextButton", {
@@ -263,19 +267,24 @@ local close = make("TextButton", {
 	BackgroundColor3 = Color3.fromRGB(24, 43, 62),
 	Size = UDim2.fromOffset(44, 44),
 	Position = UDim2.new(1, -58, 0, 15),
+	ZIndex = 4,
 	AutoButtonColor = false,
 }, header)
 corner(close, 22)
-outline(close, COLORS.stroke, 0.62, 1)
+outline(close, COLORS.stroke, 0.38, 1)
 
 local sidebar = make("Frame", {
 	Name = "Categories",
 	Position = UDim2.fromOffset(0, 75),
 	Size = UDim2.new(0, 205, 1, -76),
-	BackgroundColor3 = Color3.fromRGB(16, 28, 42),
-	BackgroundTransparency = 0.18,
+	BackgroundColor3 = Color3.fromRGB(24, 43, 61),
+	BackgroundTransparency = 0.12,
 	BorderSizePixel = 0,
 }, panel)
+make("UIGradient", {
+	Color = ColorSequence.new(Color3.fromRGB(27, 49, 69), Color3.fromRGB(20, 38, 56)),
+	Rotation = 90,
+}, sidebar)
 -- Round the lower-left edge of the category rail so it cannot protrude
 -- beyond the inventory panel's rounded bottom corner.
 corner(sidebar, 24)
@@ -344,8 +353,8 @@ local capacityPill = make("Frame", {
 	AnchorPoint = Vector2.new(1, 0.5),
 	Position = UDim2.new(1, 0, 0.5, 0),
 	Size = UDim2.fromOffset(118, 34),
-	BackgroundColor3 = Color3.fromRGB(9, 22, 35),
-	BackgroundTransparency = 0.12,
+	BackgroundColor3 = Color3.fromRGB(20, 39, 57),
+	BackgroundTransparency = 0.08,
 }, footer)
 corner(capacityPill, 18)
 backpackGlyph(capacityPill, UDim2.fromOffset(9, 7), UDim2.fromOffset(20, 20))
@@ -473,9 +482,9 @@ local function renderItems()
 				LayoutOrder = shown,
 			}, gridScroll)
 			corner(card, 17)
-			outline(card, COLORS.stroke, 0.42, 1)
+			outline(card, Color3.fromRGB(103, 143, 171), 0.28, 1.1)
 make("UIGradient", {
-				Color = ColorSequence.new(Color3.fromRGB(29, 51, 71), Color3.fromRGB(18, 37, 55)),
+				Color = ColorSequence.new(Color3.fromRGB(39, 67, 91), Color3.fromRGB(27, 50, 71)),
 				Rotation = 90,
 			}, card)
 			if item.icon and item.icon ~= "" then
@@ -508,11 +517,11 @@ make("UIGradient", {
 		end
 	end
 	for slotIndex = shown + 1, 15 do
-		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = COLORS.slot, BackgroundTransparency = 0.22, LayoutOrder = slotIndex}, gridScroll)
+		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = COLORS.slot, BackgroundTransparency = 0.08, LayoutOrder = slotIndex}, gridScroll)
 		corner(emptySlot, 18)
-		outline(emptySlot, COLORS.stroke, 0.62, 1)
+		outline(emptySlot, Color3.fromRGB(91, 128, 157), 0.3, 1.1)
 make("UIGradient", {
-			Color = ColorSequence.new(Color3.fromRGB(27, 48, 67), Color3.fromRGB(17, 35, 52)),
+			Color = ColorSequence.new(Color3.fromRGB(35, 61, 83), Color3.fromRGB(24, 45, 65)),
 			Rotation = 90,
 		}, emptySlot)
 		table.insert(itemCards, emptySlot)
@@ -533,7 +542,7 @@ for index, category in ipairs(categoryNames) do
 		AutoButtonColor = false,
 		LayoutOrder = index,
 	}, sidebar)
-	local categoryGlyphs = {["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◈", Misc="▣"}
+	local categoryGlyphs = {["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◉", Misc="▣"}
 	label(button, categoryGlyphs[category], UDim2.fromOffset(24, 28), UDim2.fromOffset(12, 8), 19, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
 	label(button, category, UDim2.new(1, -48, 1, 0), UDim2.fromOffset(46, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium)
 	corner(button, 14)
