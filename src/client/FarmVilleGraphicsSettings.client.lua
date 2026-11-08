@@ -74,53 +74,57 @@ local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
 local QUALITY_PROFILES = {
 	-- Lightweight cool daylight with a restrained blue atmosphere.
 	LOW = {
-		-- Low-cost profile: keep the scene readable and colorful without bloom,
-		-- sun rays, clouds, or expensive per-particle effects.
+		-- Clear tropical afternoon with inexpensive distance haze and readable shadows.
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2.0,
-		Ambient = Color3.fromRGB(112, 122, 137),
-		OutdoorAmbient = Color3.fromRGB(145, 160, 178),
-		EnvironmentDiffuseScale = 0.42,
-		EnvironmentSpecularScale = 0.22,
-		ExposureCompensation = 0,
-		ShadowSoftness = 0.32,
-		Atmosphere = {Density = 0.19, Offset = 0.025, Color = Color3.fromRGB(197, 218, 239), Decay = Color3.fromRGB(119, 143, 168), Haze = 0.55, Glare = 0},
-		Color = {Brightness = 0.01, Contrast = 0.035, Saturation = 0.025, TintColor = Color3.fromRGB(244, 248, 255)},
+		ClockTime = 15.5,
+		Brightness = 2.15,
+		Ambient = Color3.fromRGB(135, 145, 158),
+		OutdoorAmbient = Color3.fromRGB(164, 178, 194),
+		EnvironmentDiffuseScale = 0.48,
+		EnvironmentSpecularScale = 0.28,
+		ExposureCompensation = 0.02,
+		ShadowSoftness = 0.38,
+		Atmosphere = {Density = 0.14, Offset = 0.08, Color = Color3.fromRGB(198, 222, 242), Decay = Color3.fromRGB(133, 163, 190), Haze = 0.65, Glare = 0.015},
+		Color = {Brightness = 0.015, Contrast = 0.025, Saturation = 0.045, TintColor = Color3.fromRGB(250, 250, 246)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
 		SunRays = {Intensity = 0, Spread = 0.8},
 		Clouds = false,
 	},
 	-- Recommended PalmVille look: cinematic blue haze, realistic depth, soft natural daylight.
 	MID = {
-		Technology = Enum.Technology.ShadowMap,
-		Brightness = 1.98,
-		Ambient = Color3.fromRGB(101, 113, 130),
-		OutdoorAmbient = Color3.fromRGB(139, 157, 177),
-		EnvironmentDiffuseScale = 0.58,
-		EnvironmentSpecularScale = 0.36,
-		ExposureCompensation = -0.015,
-		ShadowSoftness = 0.24,
-		Atmosphere = {Density = 0.30, Offset = 0.025, Color = Color3.fromRGB(186, 210, 235), Decay = Color3.fromRGB(94, 119, 151), Haze = 1.2, Glare = 0.04},
-		Color = {Brightness = 0.005, Contrast = 0.075, Saturation = -0.025, TintColor = Color3.fromRGB(235, 244, 255)},
-		Bloom = {Intensity = 0.03, Size = 18, Threshold = 1.85},
-		SunRays = {Intensity = 0.018, Spread = 0.84},
+		-- PalmVille's recommended tropical cinematic preset.
+		Technology = Enum.Technology.Future,
+		ClockTime = 15.5,
+		Brightness = 2.1,
+		Ambient = Color3.fromRGB(126, 138, 153),
+		OutdoorAmbient = Color3.fromRGB(159, 176, 194),
+		EnvironmentDiffuseScale = 0.72,
+		EnvironmentSpecularScale = 0.58,
+		ExposureCompensation = 0.015,
+		ShadowSoftness = 0.42,
+		Atmosphere = {Density = 0.20, Offset = 0.06, Color = Color3.fromRGB(191, 218, 241), Decay = Color3.fromRGB(111, 145, 177), Haze = 1.05, Glare = 0.035},
+		Color = {Brightness = 0.012, Contrast = 0.045, Saturation = 0.035, TintColor = Color3.fromRGB(248, 250, 255)},
+		Bloom = {Intensity = 0.12, Size = 22, Threshold = 1.65},
+		SunRays = {Intensity = 0.045, Spread = 0.82},
 		Clouds = true,
 	},
 	-- HD preset: sharper contrast, richer reflections and more detailed atmospheric depth.
 	-- Still uses ShadowMap to avoid the heavier Future renderer.
 	HIGH = {
-		Technology = Enum.Technology.ShadowMap,
-		Brightness = 2.02,
-		Ambient = Color3.fromRGB(96, 108, 127),
-		OutdoorAmbient = Color3.fromRGB(151, 169, 190),
-		EnvironmentDiffuseScale = 0.82,
-		EnvironmentSpecularScale = 0.72,
-		ExposureCompensation = 0.015,
-		ShadowSoftness = 0.18,
-		Atmosphere = {Density = 0.33, Offset = 0.025, Color = Color3.fromRGB(184, 208, 235), Decay = Color3.fromRGB(88, 112, 145), Haze = 1.35, Glare = 0.05},
-		Color = {Brightness = 0.008, Contrast = 0.095, Saturation = 0.01, TintColor = Color3.fromRGB(235, 244, 255)},
-		Bloom = {Intensity = 0.05, Size = 18, Threshold = 1.8},
-		SunRays = {Intensity = 0.02, Spread = 0.84},
+		-- Maximum visual fidelity; Future lighting and richer reflections.
+		Technology = Enum.Technology.Future,
+		ClockTime = 15.5,
+		Brightness = 2.12,
+		Ambient = Color3.fromRGB(119, 132, 150),
+		OutdoorAmbient = Color3.fromRGB(163, 181, 201),
+		EnvironmentDiffuseScale = 0.9,
+		EnvironmentSpecularScale = 0.85,
+		ExposureCompensation = 0.025,
+		ShadowSoftness = 0.48,
+		Atmosphere = {Density = 0.22, Offset = 0.06, Color = Color3.fromRGB(188, 216, 240), Decay = Color3.fromRGB(102, 137, 170), Haze = 1.25, Glare = 0.05},
+		Color = {Brightness = 0.015, Contrast = 0.055, Saturation = 0.045, TintColor = Color3.fromRGB(250, 250, 255)},
+		Bloom = {Intensity = 0.16, Size = 24, Threshold = 1.6},
+		SunRays = {Intensity = 0.06, Spread = 0.84},
 		Clouds = true,
 	},
 }
@@ -259,14 +263,22 @@ local function applyObject(object)
 		end
 	end
 	if saved.Density ~= nil then
-		local atmosphere = profile.Atmosphere
-		if graphicsToggles.Effects then
-			object.Density = atmosphere.Density
-			object.Offset = atmosphere.Offset
-			object.Color = atmosphere.Color
-			object.Decay = atmosphere.Decay
-			object.Haze = atmosphere.Haze
-			object.Glare = atmosphere.Glare
+		-- Only the single managed PalmVille atmosphere should contribute haze.
+		-- Extra Atmosphere instances can stack density and create uneven, overly dark fog.
+		if managedEffects[object] then
+			local atmosphere = profile.Atmosphere
+			if graphicsToggles.Effects then
+				object.Density = atmosphere.Density
+				object.Offset = atmosphere.Offset
+				object.Color = atmosphere.Color
+				object.Decay = atmosphere.Decay
+				object.Haze = atmosphere.Haze
+				object.Glare = atmosphere.Glare
+			else
+				object.Density = 0
+				object.Haze = 0
+				object.Glare = 0
+			end
 		else
 			object.Density = 0
 			object.Haze = 0
@@ -281,6 +293,7 @@ local function applyLightingProfile()
 		Lighting.Technology = profile.Technology
 	end)
 	Lighting.Brightness = profile.Brightness
+	Lighting.ClockTime = profile.ClockTime
 	Lighting.Ambient = profile.Ambient
 	Lighting.OutdoorAmbient = profile.OutdoorAmbient
 	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale
