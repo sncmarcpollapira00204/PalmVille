@@ -1641,7 +1641,7 @@ local function onPlayerAdded(player)
 	local assignedRole = getRoleById(player.UserId)
 	player:SetAttribute("PalmVilleAdminRole", assignedRole or "")
 	local staffEntry = staff[tostring(player.UserId)]
-	player:SetAttribute("PalmVilleAdminNickname", staffEntry and staffEntry.nickname or "")
+	player:SetAttribute("PalmVilleAdminNickname", staffNicknames[tostring(player.UserId)] or (staffEntry and staffEntry.nickname) or "")
 	if assignedRole and player:GetAttribute("PalmVilleAdminTitleVisible") == nil then
 		player:SetAttribute("PalmVilleAdminTitleVisible", true)
 	end
