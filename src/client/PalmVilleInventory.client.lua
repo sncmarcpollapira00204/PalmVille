@@ -219,7 +219,7 @@ make("Frame", {
 	Name = "HeaderBottomMask",
 	Position = UDim2.new(0, 0, 1, -24),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = Color3.new(1, 1, 1),
+	BackgroundColor3 = Color3.fromRGB(23, 43, 63),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, header)
@@ -290,7 +290,7 @@ make("Frame", {
 	Name = "SidebarTopMask",
 	Position = UDim2.fromOffset(0, 0),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = Color3.new(1, 1, 1),
+	BackgroundColor3 = Color3.fromRGB(26, 47, 68),
 	BackgroundTransparency = 0.12,
 	BorderSizePixel = 0,
 }, sidebar)
