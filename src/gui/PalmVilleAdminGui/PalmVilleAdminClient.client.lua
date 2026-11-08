@@ -526,12 +526,12 @@ make("UIListLayout", {
 }, bannerStack)
 
 local bannerColors = {
-	OWNER = Color3.fromRGB(234, 197, 108),
-	["MASTER DEVELOPER"] = Color3.fromRGB(234, 197, 108),
-	["HEAD ADMIN"] = Color3.fromRGB(166, 201, 133),
-	ADMIN = Color3.fromRGB(166, 201, 133),
-	MODERATOR = Color3.fromRGB(166, 201, 133),
-	HELPER = Color3.fromRGB(166, 201, 133),
+	OWNER = Color3.fromRGB(255, 59, 79),
+	["MASTER DEVELOPER"] = Color3.fromRGB(234, 197, 108), -- Keep the existing Developer color.
+	["HEAD ADMIN"] = Color3.fromRGB(255, 105, 180),
+	ADMIN = Color3.fromRGB(77, 163, 255),
+	MODERATOR = Color3.fromRGB(82, 210, 115),
+	HELPER = Color3.fromRGB(66, 221, 235),
 }
 
 local activeAnnouncements = {}
@@ -1765,7 +1765,7 @@ local previewButton = iconButton(previewRow, "Preview", "eye", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
-	showAnnouncement({role = role, by = managerRole() and "Lupin" or player.DisplayName, text = value, duration = 8}, true)
+	showAnnouncement({role = role, by = player.DisplayName, text = value, duration = 8}, true)
 	setStatus("Preview shown. Only you can see it.")
 end, {size = UDim2.new(1, 0, 0, 50), textSize = 17})
 local sendRow = addRow(announceCard, 56)
