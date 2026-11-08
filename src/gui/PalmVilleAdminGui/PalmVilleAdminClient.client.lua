@@ -916,31 +916,12 @@ local header = make("Frame", {
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
-local logoMark = make("Frame", {
-	Position = UDim2.fromOffset(22, 14),
-	Size = UDim2.fromOffset(48, 56),
-	BackgroundColor3 = C.amber,
-	BorderSizePixel = 0,
-	ZIndex = 24,
-}, header)
-addCorner(logoMark, 17)
-local logoInset = make("Frame", {
-	Position = UDim2.fromOffset(3, 3),
-	Size = UDim2.new(1, -6, 1, -6),
-	BackgroundColor3 = C.panel,
-	BorderSizePixel = 0,
-	ZIndex = 25,
-}, logoMark)
-addCorner(logoInset, 14)
-local logoIcon = drawIcon(logoInset, "shield", 30, C.amber)
-logoIcon.Position = UDim2.fromOffset(6, 10)
-logoIcon.ZIndex = 26
 local pageTitle = text(header, "PalmVille Admin", 29, C.text, 38, true)
-pageTitle.Position = UDim2.fromOffset(88, 9)
-pageTitle.Size = UDim2.new(1, -180, 0, 38)
+pageTitle.Position = UDim2.fromOffset(22, 9)
+pageTitle.Size = UDim2.new(1, -114, 0, 38)
 local pageSubtitle = text(header, "Overview", 15, C.muted, 22)
-pageSubtitle.Position = UDim2.fromOffset(90, 46)
-pageSubtitle.Size = UDim2.new(1, -180, 0, 22)
+pageSubtitle.Position = UDim2.fromOffset(24, 46)
+pageSubtitle.Size = UDim2.new(1, -116, 0, 22)
 local closeButton = button(header, "×", function()
 	panelOpen = false
 end, {size = UDim2.fromOffset(44, 44), textSize = 29, radius = 11})
