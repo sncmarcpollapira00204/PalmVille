@@ -74,16 +74,18 @@ local VISIBILITY_TAG_LIST = {"GraphicsBush", "GraphicsTree", "GraphicsGrass"}
 local QUALITY_PROFILES = {
 	-- Lightweight cool daylight with a restrained blue atmosphere.
 	LOW = {
+		-- Low-cost profile: keep the scene readable and colorful without bloom,
+		-- sun rays, clouds, or expensive per-particle effects.
 		Technology = Enum.Technology.ShadowMap,
-		Brightness = 1.95,
-		Ambient = Color3.fromRGB(99, 109, 124),
-		OutdoorAmbient = Color3.fromRGB(132, 148, 166),
-		EnvironmentDiffuseScale = 0.32,
-		EnvironmentSpecularScale = 0.16,
-		ExposureCompensation = -0.02,
-		ShadowSoftness = 0.1,
-		Atmosphere = {Density = 0.25, Offset = 0.03, Color = Color3.fromRGB(190, 211, 232), Decay = Color3.fromRGB(105, 126, 151), Haze = 0.8, Glare = 0.015},
-		Color = {Brightness = 0, Contrast = 0.045, Saturation = -0.025, TintColor = Color3.fromRGB(237, 245, 255)},
+		Brightness = 2.0,
+		Ambient = Color3.fromRGB(112, 122, 137),
+		OutdoorAmbient = Color3.fromRGB(145, 160, 178),
+		EnvironmentDiffuseScale = 0.42,
+		EnvironmentSpecularScale = 0.22,
+		ExposureCompensation = 0,
+		ShadowSoftness = 0.32,
+		Atmosphere = {Density = 0.19, Offset = 0.025, Color = Color3.fromRGB(197, 218, 239), Decay = Color3.fromRGB(119, 143, 168), Haze = 0.55, Glare = 0},
+		Color = {Brightness = 0.01, Contrast = 0.035, Saturation = 0.025, TintColor = Color3.fromRGB(244, 248, 255)},
 		Bloom = {Intensity = 0, Size = 12, Threshold = 2},
 		SunRays = {Intensity = 0, Spread = 0.8},
 		Clouds = false,
@@ -107,7 +109,7 @@ local QUALITY_PROFILES = {
 	-- HD preset: sharper contrast, richer reflections and more detailed atmospheric depth.
 	-- Still uses ShadowMap to avoid the heavier Future renderer.
 	HIGH = {
-		Technology = Enum.Technology.ShadowMap,
+		Technology = Enum.Technology.Future,
 		Brightness = 2.02,
 		Ambient = Color3.fromRGB(96, 108, 127),
 		OutdoorAmbient = Color3.fromRGB(151, 169, 190),
@@ -320,6 +322,7 @@ local function applyLightingProfile()
 	local rays = ensureEffect("SunRaysEffect", "PalmVilleRealisticSunRays")
 	for property, value in pairs(profile.SunRays) do rays[property] = value end
 
+	-- Keep lightweight atmosphere and color grading on LOW; heavier effects stay off.
 	atmosphere.Enabled = graphicsToggles.Effects
 	color.Enabled = graphicsToggles.Effects
 	bloom.Enabled = graphicsToggles.Effects and currentPreset ~= "LOW"
@@ -338,12 +341,70 @@ local function applyGraphicsSettings()
 	end
 end
 
+local FOLIAGE_LOD = {
+	GrassShadow = false,
+	TreeBushShadowDistance = 115,
+	UpdateInterval = 0.8,
+}
+
+local function eachTaggedPart(tag, callback)
+	for _, root in ipairs(CollectionService:GetTagged(tag)) do
+		if root:IsA("BasePart") then
+			callback(root)
+		end
+		for _, descendant in ipairs(root:GetDescendants()) do
+			if descendant:IsA("BasePart") then
+				callback(descendant)
+			end
+		end
+	end
+end
+
+local function updateFoliageShadowLod()
+	if currentPreset ~= "LOW" then
+		return
+	end
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local cameraPosition = camera.CFrame.Position
+	local function updatePart(part, tag)
+		remember(part)
+		local saved = originals[part]
+		if not saved or saved.CastShadow == nil then
+			return
+		end
+		local reduceShadow = tag == "GraphicsGrass"
+		if not reduceShadow then
+			reduceShadow = (part.Position - cameraPosition).Magnitude > FOLIAGE_LOD.TreeBushShadowDistance
+		end
+		part.CastShadow = graphicsToggles.Shadows and saved.CastShadow and not reduceShadow or false
+	end
+	for _, tag in ipairs({"GraphicsGrass", "GraphicsBush", "GraphicsTree"}) do
+		eachTaggedPart(tag, function(part)
+			updatePart(part, tag)
+		end)
+	end
+end
+
+task.spawn(function()
+	while script.Parent do
+		if currentPreset == "LOW" then
+			updateFoliageShadowLod()
+		end
+		task.wait(FOLIAGE_LOD.UpdateInterval)
+	end
+end)
+
 local function applyPreset(preset)
 	currentPreset = QUALITY_PROFILES[preset] and preset or "MID"
 	-- HIGH remains selectable on mobile; users can lower it if performance drops.
 	presetModified = false
-	graphicsToggles.Shadows = currentPreset ~= "LOW" and originalGlobalShadows
-	graphicsToggles.Effects = currentPreset ~= "LOW"
+	graphicsToggles.Shadows = originalGlobalShadows
+	-- The LOW preset keeps subtle atmosphere/color grading while applyObject
+	-- removes costly particles, trails, beams, and other optional effects.
+	graphicsToggles.Effects = true
 	applyGraphicsSettings()
 end
 
