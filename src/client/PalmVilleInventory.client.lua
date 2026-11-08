@@ -15,9 +15,9 @@ pcall(function()
 end)
 
 local COLORS = {
-	panel = Color3.fromRGB(18, 30, 45),
-	panel2 = Color3.fromRGB(24, 39, 56),
-	slot = Color3.fromRGB(25, 42, 59),
+	panel = Color3.fromRGB(13, 29, 45),
+	panel2 = Color3.fromRGB(18, 37, 55),
+	slot = Color3.fromRGB(20, 39, 57),
 	stroke = Color3.fromRGB(73, 104, 132),
 	blue = Color3.fromRGB(65, 174, 242),
 	blueSoft = Color3.fromRGB(38, 91, 130),
@@ -118,8 +118,8 @@ local shade = make("TextButton", {
 local panel = make("Frame", {
 	Name = "InventoryPanel",
 	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.455),
-	Size = UDim2.fromOffset(980, 520),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromOffset(900, 500),
 	BackgroundColor3 = COLORS.panel,
 	BackgroundTransparency = 0.035,
 	Visible = false,
@@ -130,7 +130,7 @@ outline(panel, COLORS.blue, 0.12, 1.6)
 
 local header = make("Frame", {
 	Name = "Header",
-	Size = UDim2.new(1, 0, 0, 72),
+	Size = UDim2.new(1, 0, 0, 74),
 	BackgroundColor3 = Color3.fromRGB(21, 38, 56),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
@@ -153,8 +153,9 @@ local headerLine = make("Frame", {
 	BackgroundTransparency = 0.72,
 	BorderSizePixel = 0,
 }, header)
-label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(78, 17), 26, COLORS.text, Enum.Font.GothamBold)
-label(header, "Your collected items and tools", UDim2.fromOffset(300, 20), UDim2.fromOffset(80, 49), 11, COLORS.muted)
+make("ImageLabel", {Name = "InventoryIcon", BackgroundTransparency = 1, Position = UDim2.fromOffset(34, 17), Size = UDim2.fromOffset(42, 42), Image = "rbxassetid://113023659142897", ScaleType = Enum.ScaleType.Fit}, header)
+label(header, "Inventory", UDim2.fromOffset(250, 42), UDim2.fromOffset(88, 13), 30, COLORS.text, Enum.Font.GothamBold)
+label(header, "Your collected items and tools", UDim2.fromOffset(300, 20), UDim2.fromOffset(90, 46), 11, COLORS.muted)
 
 local search = make("TextBox", {
 	Name = "Search",
@@ -162,7 +163,7 @@ local search = make("TextBox", {
 	Text = "",
 	ClearTextOnFocus = false,
 	Size = UDim2.fromOffset(245, 44),
-	Position = UDim2.new(1, -315, 0, 17),
+	Position = UDim2.new(1, -315, 0, 15),
 	BackgroundColor3 = COLORS.slot,
 	TextColor3 = COLORS.text,
 	PlaceholderColor3 = COLORS.muted,
@@ -182,7 +183,7 @@ local close = make("TextButton", {
 	TextColor3 = COLORS.text,
 	BackgroundColor3 = COLORS.slot,
 	Size = UDim2.fromOffset(46, 44),
-	Position = UDim2.new(1, -58, 0, 17),
+	Position = UDim2.new(1, -58, 0, 15),
 	AutoButtonColor = false,
 }, header)
 corner(close, 22)
@@ -190,8 +191,8 @@ outline(close, COLORS.stroke, 0.45, 1)
 
 local sidebar = make("Frame", {
 	Name = "Categories",
-	Position = UDim2.fromOffset(0, 73),
-	Size = UDim2.new(0, 190, 1, -74),
+	Position = UDim2.fromOffset(0, 75),
+	Size = UDim2.new(0, 205, 1, -76),
 	BackgroundColor3 = Color3.fromRGB(16, 28, 42),
 	BackgroundTransparency = 0.18,
 	BorderSizePixel = 0,
@@ -209,7 +210,7 @@ make("Frame", {
 }, sidebar)
 local sidePadding = make("UIPadding", {
 	PaddingTop = UDim.new(0, 18),
-	PaddingLeft = UDim.new(0, 14),
+	PaddingLeft = UDim.new(0, 20),
 	PaddingRight = UDim.new(0, 12),
 }, sidebar)
 local sideLayout = make("UIListLayout", {
@@ -219,12 +220,12 @@ local sideLayout = make("UIListLayout", {
 
 local content = make("Frame", {
 	Name = "ItemsArea",
-	Position = UDim2.fromOffset(190, 73),
-	Size = UDim2.new(1, -190, 1, -74),
+	Position = UDim2.fromOffset(205, 75),
+	Size = UDim2.new(1, -205, 1, -76),
 	BackgroundTransparency = 1,
 }, panel)
 
-local categoryNames = {"All Items", "Tools", "Seeds", "Crops", "Product", "Misc"}
+local categoryNames = {"All Items", "Seeds", "Crops", "Tools", "Materials", "Consumables", "Misc"}
 local selectedCategory = "All Items"
 local categoryButtons = {}
 local itemCards = {}
@@ -235,8 +236,8 @@ local HOTBAR_SLOTS = 5
 
 local gridScroll = make("ScrollingFrame", {
 	Name = "ItemGrid",
-	Position = UDim2.fromOffset(18, 14),
-	Size = UDim2.new(1, -36, 1, -82),
+	Position = UDim2.fromOffset(16, 14),
+	Size = UDim2.new(1, -32, 1, -78),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 	ScrollBarThickness = 5,
@@ -244,8 +245,9 @@ local gridScroll = make("ScrollingFrame", {
 	CanvasSize = UDim2.fromOffset(0, 0),
 }, content)
 local grid = make("UIGridLayout", {
-	CellSize = UDim2.fromOffset(112, 116),
+	CellSize = UDim2.fromOffset(100, 100),
 	CellPadding = UDim2.fromOffset(12, 12),
+	FillDirectionMaxCells = 5,
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, gridScroll)
 grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -253,8 +255,8 @@ grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 local footer = make("Frame", {
-	Position = UDim2.new(0, 18, 1, -50),
-	Size = UDim2.new(1, -36, 0, 34),
+	Position = UDim2.new(0, 16, 1, -48),
+	Size = UDim2.new(1, -32, 0, 34),
 	BackgroundTransparency = 1,
 }, content)
 label(footer, "Select an item to equip it to your hotbar", UDim2.new(1, -140, 1, 0), UDim2.fromOffset(2, 0), 11, COLORS.muted)
@@ -300,7 +302,7 @@ local function getCategory(tool)
 		if normalized:find("crop") or normalized:find("fruit") then return "Crops" end
 		if normalized:find("tool") then return "Tools" end
 		if normalized:find("material") then return "Materials" end
-		if normalized:find("consum") then return "Consumables" end
+		if normalized:find("consum") or normalized:find("product") then return "Consumables" end
 	end
 	if tool:GetAttribute("PalmVilleSeedPack") or tool:GetAttribute("SeedCode") then return "Seeds" end
 	local name = tool.Name:lower()
@@ -361,11 +363,14 @@ local function renderItems()
 		end
 	end
 	currentItems = displayItems
-	capacity.Text = tostring(#displayItems) .. " / 50"
+	local usedCapacity = 0
+	for _, entry in ipairs(displayItems) do usedCapacity += math.max(0, math.floor(tonumber(entry.amount) or 1)) end
+	capacity.Text = tostring(usedCapacity) .. " / " .. tostring(50)
 	local query = search.Text:lower()
 	local shown = 0
 	for _, item in ipairs(displayItems) do
 		local category = item.category or "Misc"
+			if category == "Product" then category = "Consumables" end
 		local name = tostring(item.name or "Item")
 		local matchesCategory = selectedCategory == "All Items" or category == selectedCategory
 		local matchesSearch = query == "" or name:lower():find(query, 1, true) ~= nil
@@ -386,7 +391,7 @@ local function renderItems()
 					BackgroundTransparency = 1,
 					AnchorPoint = Vector2.new(0.5, 0),
 					Position = UDim2.new(0.5, 0, 0, 7),
-					Size = UDim2.fromOffset(76, 70),
+					Size = UDim2.fromOffset(76, 76),
 					Image = item.icon,
 					ScaleType = Enum.ScaleType.Fit,
 				}, card)
@@ -394,8 +399,8 @@ local function renderItems()
 				local glyph = category == "Seeds" and "❧" or (category == "Tools" and "⚒" or (category == "Crops" and "♧" or "✿"))
 				label(card, glyph, UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 5), 38, COLORS.muted, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
 			end
-			label(card, name, UDim2.new(1, -12, 0, 24), UDim2.new(0, 6, 1, -27), 11, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
-			label(card, "x" .. tostring(item.amount or 1), UDim2.fromOffset(42, 22), UDim2.new(1, -47, 0, 4), 13, COLORS.text, Enum.Font.FredokaOne, Enum.TextXAlignment.Right)
+			-- Item names are intentionally hidden to match the compact icon-only reference.
+			label(card, "x" .. tostring(item.amount or 1), UDim2.fromOffset(44, 22), UDim2.new(1, -48, 1, -25), 15, COLORS.text, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 			if item.tool and item.tool.Parent == player.Character then
 				local equippedStroke = card:FindFirstChildOfClass("UIStroke")
 				if equippedStroke then equippedStroke.Color = COLORS.blue equippedStroke.Thickness = 2 end
@@ -409,20 +414,21 @@ local function renderItems()
 			table.insert(itemCards, card)
 		end
 	end
-	if shown == 0 then
-		local message = inventoryLoaded and "Your inventory is empty" or "Loading saved inventory..."
-		local empty = label(gridScroll, message, UDim2.new(1, 0, 0, 70), UDim2.fromOffset(0, 18), 16, COLORS.muted, Enum.Font.FredokaOne, Enum.TextXAlignment.Center)
-		table.insert(itemCards, empty)
+	for slotIndex = shown + 1, 15 do
+		local emptySlot = make("Frame", {Name = "EmptySlot" .. slotIndex, BackgroundColor3 = COLORS.slot, BackgroundTransparency = 0.22, LayoutOrder = slotIndex}, gridScroll)
+		corner(emptySlot, 18)
+		outline(emptySlot, COLORS.stroke, 0.62, 1)
+		table.insert(itemCards, emptySlot)
 	end
 end
 
 for index, category in ipairs(categoryNames) do
 	local button = make("TextButton", {
 		Name = "Category_" .. category:gsub("%s+", ""),
-		Size = UDim2.new(1, 0, 0, 48),
+		Size = UDim2.new(1, 0, 0, 44),
 		BackgroundColor3 = COLORS.panel2,
 		BackgroundTransparency = 1,
-		Text = category,
+		Text = ({["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◈", Misc="▣"})[category] .. "   " .. category,
 		TextColor3 = category == selectedCategory and COLORS.text or COLORS.muted,
 		TextSize = 14,
 		Font = Enum.Font.FredokaOne,
@@ -514,9 +520,9 @@ local function setOpen(open)
 		search.Text = ""
 		refreshSavedItems()
 		renderItems()
-		panel.Size = UDim2.fromOffset(940, 490)
+		panel.Size = UDim2.fromOffset(870, 470)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(980, 520),
+			Size = UDim2.fromOffset(900, 500),
 		}):Play()
 	end
 end
