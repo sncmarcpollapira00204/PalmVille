@@ -102,14 +102,14 @@ local function backpackGlyph(parent, position, size)
 	return holder
 end
 local function magnifierGlyph(parent, position)
-	local holder = make("Frame", {Name = "SearchIcon", BackgroundTransparency = 1, Position = position, Size = UDim2.fromOffset(22, 22), ZIndex = 5}, parent)
+	local holder = make("Frame", {Name = "SearchIcon", BackgroundTransparency = 1, Position = position, Size = UDim2.fromOffset(22, 22), ZIndex = 7}, parent)
 	local ring = make("Frame", {BackgroundTransparency = 1, Position = UDim2.fromOffset(1, 1), Size = UDim2.fromOffset(14, 14)}, holder)
 	corner(ring, 10)
-	ring.ZIndex = 5
+	ring.ZIndex = 7
 	outline(ring, Color3.fromRGB(218, 232, 243), 0.02, 2)
 	local handle = make("Frame", {BackgroundColor3 = COLORS.muted, BorderSizePixel = 0, Position = UDim2.fromOffset(14, 14), Size = UDim2.fromOffset(7, 2), Rotation = 45}, holder)
 	corner(handle, 2)
-	handle.ZIndex = 5
+	handle.ZIndex = 7
 	return holder
 end
 
@@ -164,7 +164,7 @@ local shade = make("TextButton", {
 	Name = "Backdrop",
 	Size = UDim2.fromScale(1, 1),
 	BackgroundColor3 = Color3.fromRGB(3, 9, 17),
-	BackgroundTransparency = 0.42,
+	BackgroundTransparency = 0.58,
 	Text = "",
 	Visible = false,
 	AutoButtonColor = false,
@@ -184,9 +184,9 @@ corner(panel, 24)
 outline(panel, COLORS.blue, 0.12, 1.6)
 make("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 61, 84)),
-		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(25, 48, 70)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(19, 39, 59)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(29, 52, 74)),
+		ColorSequenceKeypoint.new(0.48, Color3.fromRGB(22, 42, 62)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 36, 55)),
 	}),
 	Rotation = 90,
 }, panel)
@@ -212,14 +212,14 @@ local header = make("Frame", {
 -- restore its straight lower edge with a matching strip.
 corner(header, 24)
 make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(38, 65, 89), Color3.fromRGB(25, 47, 68)),
+	Color = ColorSequence.new(Color3.fromRGB(30, 53, 75), Color3.fromRGB(23, 43, 63)),
 	Rotation = 90,
 }, header)
 make("Frame", {
 	Name = "HeaderBottomMask",
 	Position = UDim2.new(0, 0, 1, -24),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = Color3.fromRGB(29, 51, 73),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.08,
 	BorderSizePixel = 0,
 }, header)
@@ -240,21 +240,19 @@ local search = make("TextBox", {
 	ClearTextOnFocus = false,
 	Size = UDim2.fromOffset(252, 44),
 	Position = UDim2.new(1, -315, 0, 15),
-	ZIndex = 4,
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BackgroundTransparency = 0.04,
+	ZIndex = 6,
+	BackgroundColor3 = Color3.fromRGB(29, 52, 74),
+	BackgroundTransparency = 0.02,
 	TextColor3 = Color3.fromRGB(247, 250, 253),
-	PlaceholderColor3 = Color3.fromRGB(198, 213, 226),
+	TextTransparency = 0,
+	PlaceholderColor3 = Color3.fromRGB(220, 231, 241),
+	PlaceholderText = "Search item...",
 	Font = Enum.Font.GothamMedium,
 	TextSize = 14,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
 corner(search, 22)
-outline(search, Color3.fromRGB(112, 157, 190), 0.16, 1.35)
-make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(39, 67, 91), Color3.fromRGB(26, 49, 70)),
-	Rotation = 90,
-}, search)
+outline(search, Color3.fromRGB(112, 157, 190), 0.12, 1.35)
 make("UIPadding", {PaddingLeft = UDim.new(0, 45), PaddingRight = UDim.new(0, 14)}, search)
 magnifierGlyph(search, UDim2.fromOffset(14, 11))
 
@@ -282,7 +280,7 @@ local sidebar = make("Frame", {
 	BorderSizePixel = 0,
 }, panel)
 make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(27, 49, 69), Color3.fromRGB(20, 38, 56)),
+	Color = ColorSequence.new(Color3.fromRGB(26, 47, 68), Color3.fromRGB(20, 38, 57)),
 	Rotation = 90,
 }, sidebar)
 -- Round the lower-left edge of the category rail so it cannot protrude
@@ -292,7 +290,7 @@ make("Frame", {
 	Name = "SidebarTopMask",
 	Position = UDim2.fromOffset(0, 0),
 	Size = UDim2.new(1, 0, 0, 24),
-	BackgroundColor3 = Color3.fromRGB(24, 43, 61),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BackgroundTransparency = 0.12,
 	BorderSizePixel = 0,
 }, sidebar)
@@ -543,7 +541,7 @@ for index, category in ipairs(categoryNames) do
 		AutoButtonColor = false,
 		LayoutOrder = index,
 	}, sidebar)
-	local categoryGlyphs = {["All Items"]="▦", Seeds="❧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◉", Misc="▣"}
+	local categoryGlyphs = {["All Items"]="▦", Seeds="♧", Crops="♧", Tools="⚒", Materials="▤", Consumables="◉", Misc="▣"}
 	label(button, categoryGlyphs[category], UDim2.fromOffset(24, 28), UDim2.fromOffset(12, 8), 19, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium, Enum.TextXAlignment.Center)
 	label(button, category, UDim2.new(1, -48, 1, 0), UDim2.fromOffset(46, 0), 14, category == selectedCategory and COLORS.text or COLORS.muted, Enum.Font.GothamMedium)
 	corner(button, 14)
@@ -640,7 +638,7 @@ local function setOpen(open)
 	panel.Visible = open
 	shade.Visible = open
 	inventoryBlur.Enabled = open
-	TweenService:Create(inventoryBlur, TweenInfo.new(0.18), {Size = open and 8 or 0}):Play()
+	TweenService:Create(inventoryBlur, TweenInfo.new(0.18), {Size = open and 3 or 0}):Play()
 	openButton.Visible = not open
 	if open then
 		search.Text = ""
