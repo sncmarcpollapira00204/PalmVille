@@ -269,7 +269,8 @@ local search = make("TextBox", {
 local searchCorner = corner(search, 24)
 outline(search, Color3.fromRGB(112, 157, 190), 0.2, 1.25)
 local searchPadding = make("UIPadding", {PaddingLeft = UDim.new(0, 46), PaddingRight = UDim.new(0, 14)}, search)
-local searchIcon = magnifierGlyph(search, UDim2.fromOffset(14, 13))
+-- Keep the magnifier outside the padded TextBox: UIPadding also offsets child UI instances.
+local searchIcon = magnifierGlyph(header, UDim2.new(1, -348, 0, 27))
 
 local close = make("TextButton", {
 	Name = "Close",
@@ -338,6 +339,7 @@ local content = make("Frame", {
 local categoryNames = {"All Items", "Seeds", "Crops", "Tools", "Materials", "Consumables", "Misc"}
 local selectedCategory = "All Items"
 local categoryButtons = {}
+local setSelectedCategory
 local categoryIconLabels = {}
 local categoryTextLabels = {}
 local itemCards = {}
@@ -363,7 +365,8 @@ local grid = make("UIGridLayout", {
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, gridScroll)
 grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	gridScroll.CanvasSize = UDim2.fromOffset(0, grid.AbsoluteContentSize.Y + 12)
+	-- Avoid manufacturing a scrollbar when exactly three rows already fit.
+	gridScroll.CanvasSize = UDim2.fromOffset(0, grid.AbsoluteContentSize.Y)
 end)
 
 local footer = make("Frame", {
@@ -601,46 +604,45 @@ for index, category in ipairs(categoryNames) do
 	corner(button, 14)
 	categoryButtons[category] = button
 	button.Activated:Connect(function()
-		selectedCategory = category
-		for name, other in pairs(categoryButtons) do
-			local active = name == selectedCategory
-			other.BackgroundTransparency = active and 0 or 1
-			other.BackgroundColor3 = active and COLORS.blueSoft or COLORS.panel2
-			other.TextColor3 = active and COLORS.text or COLORS.muted
-			for _, child in ipairs(other:GetChildren()) do
-				if child:IsA("TextLabel") then
-					child.TextColor3 = active and COLORS.text or COLORS.muted
-				end
-			end
-			if active then
-				local stroke = other:FindFirstChildOfClass("UIStroke")
-				if not stroke then outline(other, COLORS.blue, 0.25, 1.2) end
-				local glow = other:FindFirstChild("ActiveGradient")
-				if not glow then
-					glow = make("UIGradient", {
-						Name = "ActiveGradient",
-						Color = ColorSequence.new(Color3.fromRGB(47, 122, 169), Color3.fromRGB(34, 83, 119)),
-						Rotation = 0,
-					}, other)
-				end
-			else
-				local stroke = other:FindFirstChildOfClass("UIStroke")
-				if stroke then stroke:Destroy() end
-				local glow = other:FindFirstChild("ActiveGradient")
-				if glow then glow:Destroy() end
-			end
-		end
+		setSelectedCategory(category)
 		renderItems()
 	end)
 end
-categoryButtons[selectedCategory].BackgroundTransparency = 0
-categoryButtons[selectedCategory].BackgroundColor3 = COLORS.blueSoft
-outline(categoryButtons[selectedCategory], COLORS.blue, 0.25, 1.2)
-make("UIGradient", {
-	Name = "ActiveGradient",
-	Color = ColorSequence.new(Color3.fromRGB(48, 132, 183), Color3.fromRGB(31, 86, 127)),
-	Rotation = 0,
-}, categoryButtons[selectedCategory])
+
+setSelectedCategory = function(category)
+	selectedCategory = category
+	for name, other in pairs(categoryButtons) do
+		local active = name == selectedCategory
+		other.BackgroundTransparency = active and 0 or 1
+		other.BackgroundColor3 = active and COLORS.blueSoft or COLORS.panel2
+		other.TextColor3 = active and COLORS.text or COLORS.muted
+		for _, child in ipairs(other:GetChildren()) do
+			if child:IsA("TextLabel") then
+				child.TextColor3 = active and COLORS.text or COLORS.muted
+			end
+		end
+
+		if active then
+			local stroke = other:FindFirstChildOfClass("UIStroke")
+			if not stroke then outline(other, COLORS.blue, 0.25, 1.2) end
+			local gradient = other:FindFirstChild("ActiveGradient")
+			if not gradient then
+				make("UIGradient", {
+					Name = "ActiveGradient",
+					Color = ColorSequence.new(Color3.fromRGB(48, 132, 183), Color3.fromRGB(31, 86, 127)),
+					Rotation = 0,
+				}, other)
+			end
+		else
+			local stroke = other:FindFirstChildOfClass("UIStroke")
+			if stroke then stroke:Destroy() end
+			local gradient = other:FindFirstChild("ActiveGradient")
+			if gradient then gradient:Destroy() end
+		end
+	end
+end
+
+setSelectedCategory("All Items")
 
 local hotbar = make("Frame", {
 	Name = "CustomHotbar",
@@ -744,7 +746,7 @@ applyResponsiveLayout = function(viewport, compact)
 		search.TextSize = 11
 		searchPadding.PaddingLeft = UDim.new(0, 36)
 		searchPadding.PaddingRight = UDim.new(0, 8)
-		searchIcon.Position = UDim2.fromOffset(10, 7)
+		searchIcon.Position = UDim2.new(1, -searchWidth - 38, 0, math.floor((headerHeight - 22) / 2))
 
 		sidebar.Position = UDim2.fromOffset(0, headerHeight)
 		sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
@@ -819,7 +821,7 @@ applyResponsiveLayout = function(viewport, compact)
 		search.TextSize = 14
 		searchPadding.PaddingLeft = UDim.new(0, 46)
 		searchPadding.PaddingRight = UDim.new(0, 14)
-		searchIcon.Position = UDim2.fromOffset(14, 13)
+		searchIcon.Position = UDim2.new(1, -348, 0, 27)
 		close.Size = UDim2.fromOffset(48, 48)
 		close.Position = UDim2.new(1, -75, 0, 14)
 		close.TextSize = 28
@@ -894,6 +896,8 @@ local function setOpen(open)
 	TweenService:Create(inventoryBlur, TweenInfo.new(0.18), {Size = open and 3 or 0}):Play()
 	openButton.Visible = not open
 	if open then
+		-- Always return to the full inventory when reopened so saved items are not hidden by a stale filter.
+		setSelectedCategory("All Items")
 		search.Text = ""
 		refreshSavedItems()
 		renderItems()
