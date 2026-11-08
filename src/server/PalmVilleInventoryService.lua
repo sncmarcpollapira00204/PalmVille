@@ -5,7 +5,75 @@ local Economy = require(ServerScriptService:WaitForChild("PalmVilleEconomy"))
 local ItemRegistry = require(ServerScriptService:WaitForChild("PalmVilleItemRegistry"))
 
 local InventoryService = {}
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local inventorySnapshot = ReplicatedStorage:FindFirstChild("PalmVilleGetInventory")
+if not inventorySnapshot then
+	inventorySnapshot = Instance.new("RemoteFunction")
+	inventorySnapshot.Name = "PalmVilleGetInventory"
+	inventorySnapshot.Parent = ReplicatedStorage
+end
+
+local function buildSnapshot(player)
+	local profile = Economy.GetProfile(player)
+	if not profile then return nil end
+
+	local items = {}
+	local function addEntries(source, category, registryCategory)
+		if type(source) ~= "table" then return end
+		for code, rawValue in pairs(source) do
+			local amount = type(rawValue) == "table"
+				and math.floor(tonumber(rawValue.amount or rawValue.count or rawValue.quantity) or 0)
+				or math.floor(tonumber(rawValue) or 0)
+			if amount > 0 then
+				local definition = ItemRegistry[code]
+				if not registryCategory or (definition and definition.inventoryCategory == registryCategory) then
+					local displayName = definition and definition.displayName
+						or (type(rawValue) == "table" and (rawValue.displayName or rawValue.name))
+						or tostring(code):gsub("_", " ")
+					local icon = nil
+					if definition and definition.template then
+						local handle = definition.template:FindFirstChild("Handle")
+						local decal = handle and handle:FindFirstChildWhichIsA("Decal")
+						icon = decal and decal.Texture or nil
+					end
+					table.insert(items, {
+						code = tostring(code),
+						name = tostring(displayName),
+						amount = math.clamp(amount, 1, 999999),
+						category = category,
+						icon = icon,
+					})
+				end
+			end
+		end
+	end
+
+	local inventory = type(profile.inventory) == "table" and profile.inventory or {}
+	addEntries(inventory.seedPacks, "Seeds", "seedPacks")
+	addEntries(profile.seeds, "Seeds")
+	addEntries(inventory.crops, "Crops")
+	addEntries(inventory.products, "Product")
+	addEntries(inventory.misc, "Misc")
+	return {items = items, capacity = 50}
+end
+
+inventorySnapshot.OnServerInvoke = function(player)
+	if not Economy.IsLoaded(player) then
+		return {items = {}, capacity = 50, loaded = false}
+	end
+	return buildSnapshot(player) or {items = {}, capacity = 50, loaded = false}
+end
+
+
 local MAX_STACK = 999
+local ServerScriptService = game:GetService("ServerScriptService")
+local auditEvent = ServerScriptService:FindFirstChild("PalmVilleAuditEvent")
+if not auditEvent then
+	auditEvent = Instance.new("BindableEvent")
+	auditEvent.Name = "PalmVilleAuditEvent"
+	auditEvent.Parent = ServerScriptService
+end
 
 local function getSeedFolder(profile)
 	profile.inventory = type(profile.inventory) == "table" and profile.inventory or {}
@@ -69,6 +137,12 @@ function InventoryService.GiveSeedPacks(player, code, amount)
 
 	seedPacks[code] = current + addAmount
 	InventoryService.SyncPlayer(player)
+	auditEvent:Fire("Inventory Received", player, {
+		itemCode = code,
+		amount = addAmount,
+		balance = seedPacks[code],
+		reason = item.displayName,
+	})
 	return true, seedPacks[code]
 end
 

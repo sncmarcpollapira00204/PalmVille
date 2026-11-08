@@ -34,13 +34,13 @@ if not feedback then
 	feedback.Parent = ReplicatedStorage
 end
 
+local notificationRemote = ReplicatedStorage:WaitForChild("PalmVilleNotificationEvent")
+
 local function sendFeedback(player, title, message, kind)
 	if player and player.Parent == Players then
-		feedback:FireClient(player, {
-			title = title,
-			message = message,
-			kind = kind or "normal",
-		})
+		local category = kind == "jackpot" and "SUCCESS" or (kind == "empty" and "WARNING" or "INFO")
+		local prefix = kind == "jackpot" and "JACKPOT! " or ""
+		notificationRemote:FireClient(player, category, prefix .. tostring(title) .. ": " .. tostring(message))
 	end
 end
 

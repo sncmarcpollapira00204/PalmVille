@@ -46,6 +46,9 @@ local staffRows = {}
 local allPermissions = {}
 local logs = {}
 local history = {}
+local selectedLogUserIds = {}
+local sortLogsByPlayer = false
+local renderLogs
 local selectedUserId
 local selectedUsername
 local selectedStaffId
@@ -316,7 +319,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		enabled = not enabled
 		local track, knob = row:FindFirstChild("ToggleTrack"), row:FindFirstChild("ToggleKnob", true)
 		if track and knob then
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end
@@ -345,7 +348,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 	local knob = make("Frame", {
 		Name = "ToggleKnob",
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
+		Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
 		Size = UDim2.fromOffset(16, 16),
 		BackgroundColor3 = enabled and C.bg or C.text,
 		BorderSizePixel = 0,
@@ -356,7 +359,7 @@ local function toggleRow(parent, labelText, initialState, callback, options)
 		row = row,
 		set = function(value)
 			enabled = value == true
-			knob.Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+			knob.Position = enabled and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 			track.BackgroundColor3 = enabled and C.text or C.surfaceHover
 			knob.BackgroundColor3 = enabled and C.bg or C.text
 		end,
@@ -523,12 +526,12 @@ make("UIListLayout", {
 }, bannerStack)
 
 local bannerColors = {
-	OWNER = Color3.fromRGB(234, 197, 108),
-	["MASTER DEVELOPER"] = Color3.fromRGB(234, 197, 108),
-	["HEAD ADMIN"] = Color3.fromRGB(166, 201, 133),
-	ADMIN = Color3.fromRGB(166, 201, 133),
-	MODERATOR = Color3.fromRGB(166, 201, 133),
-	HELPER = Color3.fromRGB(166, 201, 133),
+	OWNER = Color3.fromRGB(255, 59, 79),
+	["MASTER DEVELOPER"] = Color3.fromRGB(234, 197, 108), -- Keep the existing Developer color.
+	["HEAD ADMIN"] = Color3.fromRGB(255, 105, 180),
+	ADMIN = Color3.fromRGB(77, 163, 255),
+	MODERATOR = Color3.fromRGB(82, 210, 115),
+	HELPER = Color3.fromRGB(66, 221, 235),
 }
 
 local activeAnnouncements = {}
@@ -545,7 +548,7 @@ local function fitAnnouncement(entry)
 	local available = math.max(220, math.min(1180, viewport.X - 40))
 	local incomingRole = tostring(data.role or "")
 	local roleTag = incomingRole == "MASTER DEVELOPER" and "DEV" or displayRole(incomingRole)
-	local authorName = tostring(data.by or (incomingRole == "MASTER DEVELOPER" and "Lupin" or "Staff")):gsub("[\r\n]", " ")
+	local authorName = tostring(data.by or "Staff"):gsub("[\r\n]", " ")
 	local plainPrefix = "[" .. roleTag .. "] " .. authorName
 	local prefixWidth = TextService:GetTextSize(
 		plainPrefix,
@@ -902,31 +905,12 @@ local header = make("Frame", {
 	BorderSizePixel = 0,
 	ZIndex = 22,
 }, panel)
-local logoMark = make("Frame", {
-	Position = UDim2.fromOffset(22, 14),
-	Size = UDim2.fromOffset(48, 56),
-	BackgroundColor3 = C.amber,
-	BorderSizePixel = 0,
-	ZIndex = 24,
-}, header)
-addCorner(logoMark, 17)
-local logoInset = make("Frame", {
-	Position = UDim2.fromOffset(3, 3),
-	Size = UDim2.new(1, -6, 1, -6),
-	BackgroundColor3 = C.panel,
-	BorderSizePixel = 0,
-	ZIndex = 25,
-}, logoMark)
-addCorner(logoInset, 14)
-local logoIcon = drawIcon(logoInset, "shield", 30, C.amber)
-logoIcon.Position = UDim2.fromOffset(6, 10)
-logoIcon.ZIndex = 26
 local pageTitle = text(header, "PalmVille Admin", 29, C.text, 38, true)
-pageTitle.Position = UDim2.fromOffset(88, 9)
-pageTitle.Size = UDim2.new(1, -180, 0, 38)
+pageTitle.Position = UDim2.fromOffset(22, 9)
+pageTitle.Size = UDim2.new(1, -114, 0, 38)
 local pageSubtitle = text(header, "Overview", 15, C.muted, 22)
-pageSubtitle.Position = UDim2.fromOffset(90, 46)
-pageSubtitle.Size = UDim2.new(1, -180, 0, 22)
+pageSubtitle.Position = UDim2.fromOffset(24, 46)
+pageSubtitle.Size = UDim2.new(1, -116, 0, 22)
 local closeButton = button(header, "×", function()
 	panelOpen = false
 end, {size = UDim2.fromOffset(44, 44), textSize = 29, radius = 11})
@@ -1051,12 +1035,21 @@ make("UIListLayout", {
 local modalCallback
 local modalPickerCallback
 local closeAdminModal
+local logFilterModalOpen = false
 
+local modalPickerRosterKey = nil
 local function renderModalPlayerPicker()
+	local roster = snapshot.players or {}
+	local keyParts = {}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rosterKey = table.concat(keyParts, "|")
+	if rosterKey == modalPickerRosterKey then return end
+	modalPickerRosterKey = rosterKey
 	for _, child in ipairs(modalPicker:GetChildren()) do
 		if child:IsA("GuiObject") then child:Destroy() end
 	end
-	local roster = snapshot.players or {}
 	if #roster == 0 then
 		local empty = text(modalPicker, "No online players available.", 14, C.muted, 36)
 		empty.Position = UDim2.fromOffset(4, 4)
@@ -1074,6 +1067,7 @@ local function renderModalPlayerPicker()
 end
 
 closeAdminModal = function()
+	logFilterModalOpen = false
 	modalShade.Visible = false
 	modalCallback = nil
 	modalPickerCallback = nil
@@ -1152,6 +1146,10 @@ local navIcons = {
 for navIndex, entry in ipairs(navOrder) do
 	local key, caption = entry[1], entry[2]
 	local nav = button(sidebar, "", function()
+		if key == "STAFF" and role ~= "OWNER" and role ~= "MASTER DEVELOPER" then
+			setStatus("Admin Management is restricted to Owner and Developer.", true)
+			return
+		end
 		activeTab = key
 	end, {size = UDim2.new(1, -32, 0, 48), textSize = 15, radius = 10})
 	nav.Name = "Nav_" .. key
@@ -1219,7 +1217,7 @@ local function refreshNavigation()
 
 	for _, entry in ipairs(navOrder) do
 		local key, area = entry[1], entry[3]
-		local allowed = area == nil or (area == "MANAGER" and managerRole()) or (area ~= "MANAGER" and canAccess(area))
+		local allowed = area == "MANAGER" or area == nil or canAccess(area)
 		local nav = navButtons[key]
 		nav.Visible = allowed
 		local active = activeTab == key
@@ -1281,30 +1279,30 @@ local function metric(parent, caption, initial, iconName)
 	local iconBox = make("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 22, 0.5, 0),
-		Size = UDim2.fromOffset(72, 72),
+		Size = UDim2.fromOffset(60, 60),
 		BackgroundColor3 = C.green,
 		BorderSizePixel = 0,
 	}, box)
 	addCorner(iconBox, 16)
-	local metricIcon = drawIcon(iconBox, iconName, 36, C.amber)
-	metricIcon.Position = UDim2.fromOffset(18, 18)
+	local metricIcon = drawIcon(iconBox, iconName, 30, C.amber)
+	metricIcon.Position = UDim2.fromOffset(15, 15)
 	make("Frame", {
-		Position = UDim2.new(0, 112, 0.18, 0),
+		Position = UDim2.new(0, 96, 0.18, 0),
 		Size = UDim2.new(0, 1, 0.64, 0),
 		BackgroundColor3 = C.line,
 		BorderSizePixel = 0,
 	}, box)
-	local small = text(box, caption, 18, C.muted, 26, true)
-	small.Position = UDim2.fromOffset(136, 30)
-	small.Size = UDim2.new(1, -158, 0, 26)
-	local value = text(box, initial or "—", 32, C.text, 42, true)
-	value.Position = UDim2.fromOffset(136, 62)
-	value.Size = UDim2.new(1, -158, 0, 42)
+	local small = text(box, caption, 15, C.muted, 22, true)
+	small.Position = UDim2.fromOffset(116, 20)
+	small.Size = UDim2.new(1, -132, 0, 22)
+	local value = text(box, initial or "—", 27, C.text, 34, true)
+	value.Position = UDim2.fromOffset(116, 49)
+	value.Size = UDim2.new(1, -132, 0, 34)
 	value.TextTruncate = Enum.TextTruncate.AtEnd
 	return value
 end
 
-local overviewMetricRow = addRow(pages.OVERVIEW, 148)
+local overviewMetricRow = addRow(pages.OVERVIEW, 116)
 local metricPlayers = metric(overviewMetricRow, "Online", "0", "users")
 local metricUptime = metric(overviewMetricRow, "Server Uptime", "0m 0s", "clock")
 
@@ -1334,6 +1332,13 @@ local titleControl = abilityControl("Developer Role Title", adminTitleEnabled, f
 	sendAction("SetAdminTitle", {enabled = not adminTitleEnabled})
 	setStatus(adminTitleEnabled and "Hiding your role title..." or "Showing your role title...")
 end)
+local nicknameCard = card(pages.OVERVIEW, "OVERHEAD NAME (BELOW YOUR ROLE)", "Change only the name shown on the second line beneath your Owner, Developer, or Head Admin title.")
+local ownNicknameInput = addField(nicknameCard, "BOTTOM-LINE NICKNAME", "Enter the name shown below your role", player:GetAttribute("PalmVilleAdminNickname") or player.DisplayName)
+button(nicknameCard, "SAVE NICKNAME", function()
+	local nickname = ownNicknameInput.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	if nickname == "" then setStatus("Enter a nickname first.", true); return end
+	sendAction("UpdateStaffNickname", {nickname = nickname})
+end, {primary = true, textSize = 14})
 local flyButton = flyControl.button
 local invisibleButton = invisibleControl.button
 local adminTitleButton = titleControl.button
@@ -1588,12 +1593,15 @@ local function updatePlayerDetails(row)
 	end
 end
 
+local renderedPlayerRowsKey = nil
 local function renderPlayers()
-	for _, child in ipairs(playerRows:GetChildren()) do
-		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
-	end
 	local query = string.lower(playerSearch.Text or "")
 	local roster = snapshot.players or {}
+	local keyParts = {query}
+	for _, row in ipairs(roster) do
+		table.insert(keyParts, tostring(row.userId) .. ":" .. tostring(row.username) .. ":" .. tostring(row.displayName))
+	end
+	local rowsKey = table.concat(keyParts, "|")
 	local visibleCount = 0
 	local selectedStillOnline = false
 	local selectedRow
@@ -1612,6 +1620,13 @@ local function renderPlayers()
 		updatePlayerDetails(selectedRow)
 	end
 	playersScope.Text = string.format("This server · %d online", #roster)
+	-- Snapshot polling updates live stats every 1.5 seconds. Keep existing row
+	-- instances and avatar images when the roster/search identity has not changed.
+	if rowsKey == renderedPlayerRowsKey then return end
+	renderedPlayerRowsKey = rowsKey
+	for _, child in ipairs(playerRows:GetChildren()) do
+		if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+	end
 	for _, row in ipairs(roster) do
 		local username = tostring(row.username or "")
 		local displayName = tostring(row.displayName or username)
@@ -1671,6 +1686,9 @@ end
 playerSearch:GetPropertyChangedSignal("Text"):Connect(renderPlayers)
 
 local announceCard = card(pages.ANNOUNCEMENTS, "NEW ANNOUNCEMENT", "Create and send a message to players.", "megaphone")
+-- Fill the available announcement page so the panel has no exposed black strip below the form.
+announceCard.AutomaticSize = Enum.AutomaticSize.None
+announceCard.Size = UDim2.new(1, 0, 1, -22)
 text(announceCard, "Message", 18, C.text, 26, true)
 local announceBox = make("TextBox", {
 	Size = UDim2.new(1, 0, 0, 156),
@@ -1717,7 +1735,7 @@ local previewButton = iconButton(previewRow, "Preview", "eye", function()
 	local value = announceBox.Text
 	if value:gsub("%s", "") == "" then setStatus("Enter an announcement first.", true); return end
 	if #value > 280 or not utf8.len(value) then setStatus("Announcement must be 280 characters or fewer.", true); return end
-	showAnnouncement({role = role, by = managerRole() and "Lupin" or player.DisplayName, text = value, duration = 8}, true)
+	showAnnouncement({role = role, by = player.DisplayName, text = value, duration = 8}, true)
 	setStatus("Preview shown. Only you can see it.")
 end, {size = UDim2.new(1, 0, 0, 50), textSize = 17})
 local sendRow = addRow(announceCard, 56)
@@ -1815,8 +1833,9 @@ end, {primary = true})
 local historyText = text(historyCard, "No history loaded.", 14, C.muted, 110)
 historyText.TextYAlignment = Enum.TextYAlignment.Top
 
-local staffCard = card(pages.STAFF, "STAFF MANAGEMENT", "Owner and Developer only. The server validates all role changes.")
-local staffUsername = addField(staffCard, "ROBLOX USERNAME", "Username to assign")
+local staffCard = card(pages.STAFF, "ADD ADMIN", "Choose the Roblox account, assign its role, and set its PalmVille nickname.")
+local staffUsername = addField(staffCard, "ROBLOX USERNAME", "Roblox username to add")
+local staffNickname = addField(staffCard, "NICKNAME", "Name shown in PalmVille")
 local staffRole = "ADMIN"
 local staffRoleRow = addRow(staffCard, 48)
 for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) do
@@ -1828,9 +1847,12 @@ for _, staffRoleName in ipairs({"HEAD ADMIN", "ADMIN", "MODERATOR", "HELPER"}) d
 	end, {size = UDim2.new(0.25, -6, 0, 46), textSize = 13})
 end
 local staffActions = addRow(staffCard, 48)
-button(staffActions, "ASSIGN ROLE", function()
-	if staffUsername.Text:gsub("%s", "") == "" then setStatus("Enter a Roblox username.", true); return end
-	sendAction("AddStaff", {username = staffUsername.Text, role = staffRole})
+button(staffActions, "ADD ADMIN", function()
+	local username = staffUsername.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	local nickname = staffNickname.Text:gsub("^%s+", ""):gsub("%s+$", "")
+	if username == "" then setStatus("Enter a Roblox username.", true); return end
+	if nickname == "" then setStatus("Enter a nickname for this admin.", true); return end
+	sendAction("AddStaff", {username = username, nickname = nickname, role = staffRole})
 end, {size = UDim2.new(0.5, -6, 0, 46), primary = true, textSize = 14})
 button(staffActions, "REMOVE SELECTED", function()
 	if not selectedStaffId then setStatus("Select a staff account first.", true); return end
@@ -1875,8 +1897,80 @@ button(toolsCard, "GIVE REGISTERED ITEM", function()
 	})
 end, {primary = true})
 
-local logsCard = card(pages.LOGS, "SERVER ACTIVITY", "Recent server-side administrative actions.")
+local logsCard = card(pages.LOGS, "PLAYER ACTIVITY & AUDIT LOG", "Server-recorded player sessions, currency, inventory, XP and staff actions.")
 button(logsCard, "REFRESH LOGS", function() remote:FireServer("RequestLogs") end, {primary = true})
+local logControls = make("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1}, logsCard)
+local logControlLayout = make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Padding = UDim.new(0, 8),
+}, logControls)
+local function collectLogPlayerChoices()
+	local byId = {}
+	for _, row in ipairs(logs) do
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local actorName = tostring(row.actor or "")
+		local targetName = tostring(row.target or "")
+		if actorId > 0 then byId[actorId] = actorName ~= "" and actorName or tostring(actorId) end
+		if targetId > 0 then byId[targetId] = targetName ~= "" and targetName or tostring(targetId) end
+	end
+	local choices = {}
+	for userId, name in pairs(byId) do table.insert(choices, {userId = userId, name = name}) end
+	table.sort(choices, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+	return choices
+end
+
+local logFilterButton = button(logControls, "PLAYERS: ALL", function()
+	local choices = collectLogPlayerChoices()
+	logFilterModalOpen = true
+	local draft = {}
+	for userId, enabled in pairs(selectedLogUserIds) do if enabled then draft[userId] = true end end
+	local function drawChoices()
+		for _, child in ipairs(modalPicker:GetChildren()) do if child:IsA("GuiObject") then child:Destroy() end end
+		if #choices == 0 then
+			local empty = text(modalPicker, "No players found in the current log history.", 14, C.muted, 36)
+			empty.Position = UDim2.fromOffset(4, 4)
+			return
+		end
+		for _, choice in ipairs(choices) do
+			local userId = choice.userId
+			local checked = draft[userId] == true
+			button(modalPicker, (checked and "✓   " or "□   ") .. choice.name .. "   ·   " .. tostring(userId), function()
+				draft[userId] = not draft[userId] or nil
+				drawChoices()
+			end, {size = UDim2.new(1, -6, 0, 42), textSize = 13})
+		end
+	end
+	modalTitle.Text = "FILTER LOGS BY PLAYERS"
+	modalDescription.Text = "Select one or more players. Leave all unchecked to show everyone."
+	modalReason.Visible = false
+	modalPicker.Visible = true
+	modalConfirmButton.Visible = true
+	modalConfirmButton.Text = "APPLY FILTER"
+	modalCancelButton.Visible = true
+	modalCancelButton.Text = "CANCEL"
+	modalCancelButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalConfirmButton.Size = UDim2.new(0.5, -5, 0, 42)
+	modalButtonRow.Position = UDim2.new(0, 24, 1, -62)
+	modalCard.Size = UDim2.fromOffset(500, 470)
+	modalPicker.Position = UDim2.fromOffset(24, 112)
+	modalPicker.Size = UDim2.new(1, -48, 0, 300)
+	drawChoices()
+	modalCallback = function()
+		selectedLogUserIds = draft
+		closeAdminModal()
+		renderLogs()
+	end
+	modalPickerCallback = nil
+	modalShade.Visible = true
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
+local logSortButton
+logSortButton = button(logControls, "SORT: NEWEST", function()
+	sortLogsByPlayer = not sortLogsByPlayer
+	logSortButton.Text = sortLogsByPlayer and "SORT: PLAYER" or "SORT: NEWEST"
+	renderLogs()
+end, {size = UDim2.new(0.5, -4, 0, 40), textSize = 12})
 local logList = make("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, logsCard)
 vertical(logList, 5)
 
@@ -1889,20 +1983,26 @@ local function renderStaff()
 	else
 		table.sort(staffRows, function(a, b) return tostring(a.role) < tostring(b.role) end)
 		for _, row in ipairs(staffRows) do
-			local name = tostring(row.username or row.name or row.userId or "Staff")
-			local item = button(staffList, string.format("%s  ·  %s  ·  %s", name, displayRole(row.role), row.online and "ONLINE" or "OFFLINE"), function(b)
+			local username = tostring(row.username or row.name or row.userId or "Staff")
+			local roleName = displayRole(row.role)
+			local statusName = row.online and "ONLINE" or "OFFLINE"
+			local item = button(staffList, string.format("%s  -  %s  -  %s", username, roleName, statusName), function(b)
 				selectedStaffId = tonumber(row.userId)
 				selectedUserId = tonumber(row.userId)
-				selectedUsername = name
+				selectedUsername = username
 				moderationTargetUserId = tonumber(row.userId)
-				moderationTargetUsername = name
-				moderationTargetButton.Text = name .. "  ·  @" .. name
-				selectedLabel.Text = "SELECTED  ·  " .. name
+				moderationTargetUsername = username
+				moderationTargetButton.Text = username .. "  ·  @" .. username
+				selectedLabel.Text = "SELECTED  ·  " .. username
 				updatePlayerDetails(row)
 				for _, other in ipairs(staffList:GetChildren()) do
 					if other:IsA("TextButton") then setButtonBackground(other, other == b and C.green or C.surface) end
 				end
 			end, {size = UDim2.new(1, 0, 0, 44), textSize = 14})
+			item.TextXAlignment = Enum.TextXAlignment.Left
+			item.TextWrapped = false
+			item.TextTruncate = Enum.TextTruncate.AtEnd
+			item.Text = "   " .. string.format("%s  -  %s  -  %s", username, roleName, statusName)
 			setButtonBackground(item, selectedStaffId == tonumber(row.userId) and C.green or C.surface)
 		end
 	end
@@ -1919,26 +2019,53 @@ local function renderStaff()
 	end
 end
 
-local function renderLogs()
+renderLogs = function()
 	for _, child in ipairs(logList:GetChildren()) do
 		if child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
 	end
-	if #logs == 0 then
-		showPageStatus(logList, "No activity records received.")
+
+	local filtered = {}
+	local selectedCount = 0
+	for _, enabled in pairs(selectedLogUserIds) do if enabled then selectedCount += 1 end end
+	for _, row in ipairs(logs) do
+		local actorId = tonumber(row.actorUserId) or 0
+		local targetId = tonumber(row.targetUserId) or 0
+		local matches = selectedCount == 0
+			or selectedLogUserIds[actorId] == true
+			or selectedLogUserIds[targetId] == true
+		if matches then table.insert(filtered, row) end
+	end
+	logFilterButton.Text = selectedCount == 0 and "PLAYERS: ALL" or ("PLAYERS: " .. tostring(selectedCount) .. " SELECTED")
+
+	table.sort(filtered, function(a, b)
+		if sortLogsByPlayer then
+			local aName = string.lower(tostring(a.target or a.actor or "SYSTEM"))
+			local bName = string.lower(tostring(b.target or b.actor or "SYSTEM"))
+			if aName ~= bName then return aName < bName end
+		end
+		return (tonumber(a.time) or 0) > (tonumber(b.time) or 0)
+	end)
+
+	if #filtered == 0 then
+		showPageStatus(logList, selectedCount > 0 and "No activity found for the selected players." or "No activity records received.")
 		return
 	end
-	for index = 1, math.min(#logs, 40) do
-		local row = logs[index]
-		local titleLine = tostring(row.action or row.event or "Admin action")
-		local detail = string.format("%s  ·  %s  ·  %s", tostring(row.actor or row.username or "Unknown"), tostring(row.target or "—"), tostring(row.result or row.status or "Recorded"))
-		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
+
+	for index = 1, math.min(#filtered, 40) do
+		local row = filtered[index]
+		local titleLine = tostring(row.action or row.event or "Player activity")
+		local playerName = tostring(row.target or row.actor or row.username or "Unknown")
+		local resultText = tostring(row.result or row.status or "Recorded")
+		local timestamp = os.date("%b %d  %H:%M", tonumber(row.time) or 0)
+		local detail = string.format("%s  ·  %s  ·  %s", playerName, resultText, timestamp)
+		local line = make("Frame", {Size = UDim2.new(1, 0, 0, 66), BackgroundColor3 = C.surface, BorderSizePixel = 0}, logList)
 		addCorner(line, 11)
 		local titleLabel = text(line, titleLine, 15, C.text, 22, true)
-		titleLabel.Position = UDim2.fromOffset(14, 7)
+		titleLabel.Position = UDim2.fromOffset(14, 6)
 		titleLabel.Size = UDim2.new(1, -28, 0, 22)
-		local detailLabel = text(line, detail, 13, C.muted, 20)
-		detailLabel.Position = UDim2.fromOffset(14, 32)
-		detailLabel.Size = UDim2.new(1, -28, 0, 20)
+		local detailLabel = text(line, detail, 12, C.muted, 28)
+		detailLabel.Position = UDim2.fromOffset(14, 31)
+		detailLabel.Size = UDim2.new(1, -28, 0, 28)
 	end
 end
 
@@ -1974,12 +2101,8 @@ end
 gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPanel)
 task.defer(fitPanel)
 
-launcher.Activated:Connect(function()
-	if authorized then
-		panelOpen = not panelOpen
-		applyPanel()
-	end
-end)
+-- The top-right launcher is intentionally disabled; /tx opens the menu.
+launcher.Visible = false
 closeButton.Activated:Connect(function()
 	panelOpen = false
 	applyPanel()
@@ -2138,7 +2261,7 @@ remote.OnClientEvent:Connect(function(event, data)
 		role = data.role
 		permissions = type(data.permissions) == "table" and data.permissions or {}
 		authorized = true
-		launcher.Visible = true
+		launcher.Visible = false
 		profileName.Text = player.Name
 		profileUser.Text = "@" .. player.Name
 		profileRole.Text = role == "MASTER DEVELOPER" and "DEV" or displayRole(role)
@@ -2152,14 +2275,21 @@ remote.OnClientEvent:Connect(function(event, data)
 		if managerRole() then remote:FireServer("RequestStaff") end
 	elseif event == "AccessDenied" then
 		authorized = false
+		panelOpen = false
 		launcher.Visible = false
+		applyPanel()
+	elseif event == "OpenAdminMenu" then
+		if authorized then
+			panelOpen = true
+			applyPanel()
+		end
 	elseif event == "Notice" then
 		setStatus(tostring(data), true)
 	elseif event == "Snapshot" then
 		if type(data) == "table" then
 			snapshot = data
 			updateMetrics()
-			if modalPicker.Visible then renderModalPlayerPicker() end
+			if modalPicker.Visible and not logFilterModalOpen then renderModalPlayerPicker() end
 			if activeTab == "PLAYERS" then renderPlayers() end
 			if managerRole() and activeTab == "STAFF" then remote:FireServer("RequestStaff") end
 		end
