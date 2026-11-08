@@ -539,7 +539,7 @@ local function setOpen(open)
 		renderItems()
 		panel.Size = UDim2.fromOffset(870, 490)
 		TweenService:Create(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(900, 500),
+			Size = UDim2.fromOffset(900, 520),
 		}):Play()
 	end
 end
