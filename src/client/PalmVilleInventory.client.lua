@@ -39,7 +39,8 @@ local Theme = {
 		BackpackIcon = "rbxassetid://113023659142897",
 		SearchIcon = "", -- Optional 64x64 transparent PNG uploaded by the developer.
 		CloseIcon = "", -- Optional 64x64 transparent PNG uploaded by the developer.
-		ItemFallback = "", -- Optional 256x256 transparent PNG uploaded by the developer.
+		ItemFallback = "", -- Optional generic 256x256 transparent PNG.
+		ItemIcons = {}, -- Map existing item codes to optional 256x256 transparent PNGs.
 		CategoryIcons = {
 			["All Items"] = "", Tools = "", Seeds = "", Crops = "", Product = "", Misc = "",
 		},
@@ -563,6 +564,10 @@ local function renderItems()
 				Rotation = 90,
 			}, card)
 			local itemIcon = item.icon
+			if (not itemIcon or itemIcon == "") and item.code then
+				local configuredIcon = Theme.Assets.ItemIcons[tostring(item.code)]
+				if configuredIcon and configuredIcon ~= "" then itemIcon = configuredIcon end
+			end
 			if (not itemIcon or itemIcon == "") and item.tool then
 				itemIcon = getItemIcon(item.tool)
 			end
@@ -803,7 +808,7 @@ applyResponsiveLayout = function(viewport, compact)
 
 		sidebar.Position = UDim2.fromOffset(0, headerHeight)
 		sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
-				sidePadding.PaddingTop = UDim.new(0, 8)
+		sidePadding.PaddingTop = UDim.new(0, 8)
 		sidePadding.PaddingLeft = UDim.new(0, 8)
 		sidePadding.PaddingRight = UDim.new(0, 8)
 		sideLayout.Padding = UDim.new(0, 3)
@@ -878,7 +883,7 @@ applyResponsiveLayout = function(viewport, compact)
 
 		sidebar.Position = UDim2.fromOffset(0, 76)
 		sidebar.Size = UDim2.new(0, 230, 1, -77)
-				sidePadding.PaddingTop = UDim.new(0, Theme.Spacing.SidebarTop)
+		sidePadding.PaddingTop = UDim.new(0, Theme.Spacing.SidebarTop)
 		sidePadding.PaddingLeft = UDim.new(0, 20)
 		sidePadding.PaddingRight = UDim.new(0, 12)
 		sideLayout.Padding = UDim.new(0, Theme.Spacing.SidebarGap)
