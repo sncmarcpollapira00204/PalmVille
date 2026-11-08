@@ -334,30 +334,17 @@ inventoryBlur.Enabled = false
 local header = make("Frame", {
 	Name = "Header",
 	Size = UDim2.new(1, 0, 0, Theme.Spacing.HeaderHeight),
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BackgroundTransparency = 0.1,
+	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 }, panel)
--- UICorner does not clip child backgrounds, so round the header itself and
--- restore its straight lower edge with a matching strip.
-local headerCorner = corner(header, Theme.Radius.Header)
-make("UIGradient", {
-	Color = ColorSequence.new(Color3.fromRGB(31, 57, 80), Color3.fromRGB(22, 42, 61)),
-	Rotation = 90,
-}, header)
-local headerBottomMask = make("Frame", {
-	Name = "HeaderBottomMask",
-	Position = UDim2.new(0, 0, 1, -28),
-	Size = UDim2.new(1, 0, 0, 28),
-	BackgroundColor3 = Color3.fromRGB(22, 42, 61),
-	BackgroundTransparency = 0.1,
-	BorderSizePixel = 0,
-}, header)
+-- The header uses the panel's single glass gradient instead of layering a
+-- second translucent surface over it, preventing a separate color band.
 local headerLine = make("Frame", {
+	Name = "HeaderDivider",
 	Position = UDim2.new(0, 0, 1, -1),
 	Size = UDim2.new(1, 0, 0, 1),
-	BackgroundColor3 = COLORS.blue,
-	BackgroundTransparency = 0.72,
+	BackgroundColor3 = Theme.Colors.Stroke,
+	BackgroundTransparency = 0.82,
 	BorderSizePixel = 0,
 }, header)
 local headerIcon = backpackGlyph(header, UDim2.fromOffset(35, 19), UDim2.fromOffset(42, 42))
@@ -858,9 +845,6 @@ applyResponsiveLayout = function(viewport, compact)
 		panelOutline.Thickness = 1.25
 		panelGlow.Thickness = 2
 		header.Size = UDim2.new(1, 0, 0, headerHeight)
-		headerCorner.CornerRadius = UDim.new(0, radius)
-		headerBottomMask.Position = UDim2.new(0, 0, 1, -math.min(22, radius))
-		headerBottomMask.Size = UDim2.new(1, 0, 0, math.min(22, radius))
 		headerIcon.Position = UDim2.fromOffset(17, math.floor((headerHeight - 30) / 2))
 		headerIcon.Size = UDim2.fromOffset(30, 30)
 		titleText.Position = UDim2.fromOffset(55, 6)
@@ -934,10 +918,7 @@ applyResponsiveLayout = function(viewport, compact)
 		panelCorner.CornerRadius = UDim.new(0, Theme.Radius.Panel)
 		panelOutline.Thickness = 1.4
 		panelGlow.Thickness = 3
-		header.Size = UDim2.new(1, 0, 0, 76)
-		headerCorner.CornerRadius = UDim.new(0, Theme.Radius.Header)
-		headerBottomMask.Position = UDim2.new(0, 0, 1, -28)
-		headerBottomMask.Size = UDim2.new(1, 0, 0, 28)
+		header.Size = UDim2.new(1, 0, 0, Theme.Spacing.HeaderHeight)
 		headerIcon.Position = UDim2.fromOffset(35, 19)
 		headerIcon.Size = UDim2.fromOffset(38, 38)
 		titleText.Position = UDim2.fromOffset(88, 16)
