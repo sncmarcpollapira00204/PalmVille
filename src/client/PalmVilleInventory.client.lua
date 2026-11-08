@@ -197,6 +197,7 @@ if not inventoryBlur then
 	inventoryBlur.Size = 0
 	inventoryBlur.Parent = Lighting
 end
+inventoryBlur.Enabled = false
 
 local header = make("Frame", {
 	Name = "Header",
@@ -544,14 +545,27 @@ for index, category in ipairs(categoryNames) do
 			other.BackgroundTransparency = active and 0 or 1
 			other.BackgroundColor3 = active and COLORS.blueSoft or COLORS.panel2
 			other.TextColor3 = active and COLORS.text or COLORS.muted
-			local iconLabel = other:FindFirstChildWhichIsA("TextLabel")
-			if iconLabel then iconLabel.TextColor3 = active and COLORS.text or COLORS.muted end
+			for _, child in ipairs(other:GetChildren()) do
+				if child:IsA("TextLabel") then
+					child.TextColor3 = active and COLORS.text or COLORS.muted
+				end
+			end
 			if active then
 				local stroke = other:FindFirstChildOfClass("UIStroke")
 				if not stroke then outline(other, COLORS.blue, 0.25, 1.2) end
+				local glow = other:FindFirstChild("ActiveGradient")
+				if not glow then
+					glow = make("UIGradient", {
+						Name = "ActiveGradient",
+						Color = ColorSequence.new(Color3.fromRGB(47, 122, 169), Color3.fromRGB(34, 83, 119)),
+						Rotation = 0,
+					}, other)
+				end
 			else
 				local stroke = other:FindFirstChildOfClass("UIStroke")
 				if stroke then stroke:Destroy() end
+				local glow = other:FindFirstChild("ActiveGradient")
+				if glow then glow:Destroy() end
 			end
 		end
 		renderItems()
